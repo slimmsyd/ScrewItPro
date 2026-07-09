@@ -73,13 +73,22 @@ export const metadata: Metadata = {
     siteName: "ScrewIt Pros",
     title,
     description,
-    // opengraph-image.tsx generates the share image automatically
+    // Explicit logo share card (src/app/opengraph-image.tsx - brand mark, not people photo)
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "ScrewIt Pros logo",
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title,
     description,
-    // twitter-image.tsx generates the share image automatically
+    images: ["/twitter-image"],
   },
   robots: {
     index: true,

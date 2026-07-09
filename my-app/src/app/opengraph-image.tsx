@@ -2,22 +2,24 @@ import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-export const alt =
-  "ScrewIt Pros - Furniture assembly without the hassle. Houston Metro.";
+export const alt = "ScrewIt Pros logo";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 /**
- * Shared Open Graph / social share image - brand deep + electric blue + S mark.
- * Used site-wide via Next.js file-based metadata.
+ * Shareable Open Graph image - brand LOGO only (not community photo).
+ * Full-color wordmark centered on clean white + soft blue brand field.
  */
 export default async function OpenGraphImage() {
-  const logoPath = join(
-    process.cwd(),
-    "public/assets/logo-s-white.png"
-  );
-  const logoData = await readFile(logoPath);
-  const logoSrc = `data:image/png;base64,${logoData.toString("base64")}`;
+  const assets = join(process.cwd(), "public/assets");
+
+  const [wordmarkData, markData] = await Promise.all([
+    readFile(join(assets, "logo-primary-full-color.jpg")),
+    readFile(join(assets, "logo-icon-deep-blue.png")),
+  ]);
+
+  const wordmarkSrc = `data:image/jpeg;base64,${wordmarkData.toString("base64")}`;
+  const markSrc = `data:image/png;base64,${markData.toString("base64")}`;
 
   return new ImageResponse(
     (
@@ -29,121 +31,74 @@ export default async function OpenGraphImage() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "#04209B",
+          background: "#FFFFFF",
           position: "relative",
           overflow: "hidden",
         }}
       >
-        {/* Soft electric accent glow (top-right) */}
+        {/* Soft brand wash */}
         <div
           style={{
             position: "absolute",
-            top: -80,
-            right: -80,
-            width: 420,
-            height: 420,
-            borderRadius: "50%",
-            background: "#1D6EFE",
-            opacity: 0.35,
+            inset: 0,
+            background: "#EEF3FF",
+            opacity: 0.55,
           }}
         />
-        {/* Soft accent (bottom-left) */}
+        <div
+          style={{
+            position: "absolute",
+            top: -100,
+            right: -80,
+            width: 360,
+            height: 360,
+            borderRadius: "50%",
+            background: "#1D6EFE",
+            opacity: 0.12,
+          }}
+        />
         <div
           style={{
             position: "absolute",
             bottom: -120,
-            left: -100,
-            width: 380,
-            height: 380,
+            left: -90,
+            width: 400,
+            height: 400,
             borderRadius: "50%",
-            background: "#0A3BC0",
-            opacity: 0.5,
+            background: "#04209B",
+            opacity: 0.1,
           }}
         />
 
-        {/* Brand mark */}
-        <img
-          src={logoSrc}
-          width={200}
-          height={200}
-          alt=""
-          style={{
-            objectFit: "contain",
-            marginBottom: 36,
-          }}
-        />
-
+        {/* Primary logo lockup - the shareable brand mark */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: 14,
-            padding: "0 64px",
+            justifyContent: "center",
+            gap: 28,
+            padding: "0 80px",
           }}
         >
-          <div
+          <img
+            src={markSrc}
+            width={120}
+            height={120}
+            alt=""
+            style={{ objectFit: "contain" }}
+          />
+          <img
+            src={wordmarkSrc}
+            width={720}
+            height={160}
+            alt="ScrewIt Pros"
             style={{
-              fontSize: 64,
-              fontWeight: 700,
-              color: "#FFFFFF",
-              letterSpacing: "-0.02em",
-              textAlign: "center",
-              lineHeight: 1.1,
-            }}
-          >
-            ScrewIt Pros
-          </div>
-          <div
-            style={{
-              fontSize: 28,
-              fontWeight: 500,
-              color: "#B3CCFF",
-              textAlign: "center",
-              lineHeight: 1.35,
-              maxWidth: 820,
-            }}
-          >
-            Furniture assembly without the hassle
-          </div>
-          <div
-            style={{
-              marginTop: 12,
-              fontSize: 22,
-              fontWeight: 600,
-              color: "#1D6EFE",
-              textAlign: "center",
-              fontStyle: "italic",
-            }}
-          >
-            If You Don&apos;t Want to Do It, ScrewIt!
-          </div>
-        </div>
-
-        {/* Footer chip */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 36,
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            background: "rgba(255,255,255,0.12)",
-            borderRadius: 999,
-            padding: "10px 22px",
-          }}
-        >
-          <div
-            style={{
-              width: 10,
-              height: 10,
-              borderRadius: "50%",
-              background: "#1D6EFE",
+              objectFit: "contain",
+              width: 720,
+              height: 160,
             }}
           />
-          <div style={{ fontSize: 18, color: "#DCE7FF", fontWeight: 600 }}>
-            Houston Metro · Private Beta
-          </div>
         </div>
       </div>
     ),
