@@ -318,7 +318,48 @@ subject to: job_minimum (≈ $52, IKEA-parity)
 
 ## 10. Phased Build Plan
 
-<!-- BUILD_PLAN -->
+Ordered by revenue-criticality; each phase ships alone and has a review gate. Estimates assume one focused builder + Claude.
+
+### Phase 0 — Make the waitlist real (≈2–3 days)
+The site currently lies to users (fake save, random queue position). Fix trust first.
+- Supabase: create `waitlist_signups` (+ `markets` seed for Houston/expanding cities). First real schema + migrations in repo.
+- `POST /api/waitlist` (Zod-validated — the dependency is already installed), called from `join/page.tsx` and from Chip's unserved/expanding branches; real `position` from serial.
+- Resend confirmation email (helper already built, never called); wire GA4.
+- **Review gate:** signup lands in DB, email arrives, duplicate email handled, `/api/health` stays green.
+
+### Phase 1 — Catalog + real quotes (≈1 week)
+- `catalog_items`, `price_tiers`, `zones` tables; seed ~50 top IKEA/Wayfair SKUs with tier, `fulfillment_mode`, assembled dimensions.
+- `POST /api/quote` pure pricing engine + `quotes` persistence.
+- Chip v2: replace `PRICES`/`LOCATION_TIER`/fake `thinkDelay` with real `/api/quote` + `markets` lookups; optionally add DeepSeek (`/api/chat`) for free-text item → SKU mapping. Flip `SITE_MODE` to `"quote"`; build `/quote` page (SKU search → running total).
+- **Review gate:** same item list yields identical price via Chip, `/quote`, and API; unknown-item fallback works; quotes visible in admin SQL.
+
+### Phase 2 — Booking + payments (≈1–2 weeks)
+- `orders`, `order_items`, `delivery_windows`, `order_events`; transition module.
+- `/book`: address (validate inside market radius — reuse map/hub math) → window picker (capacity-aware) → Stripe PaymentIntent **manual capture** → confirmation email/SMS.
+- `/api/webhooks/stripe`; cancellation/reschedule with cutoff policy (clone TaskRabbit's); customer portal `/account` v1 from the existing wireframe: order status timeline fed by `order_events`, order-scoped chat thread.
+- **Review gate:** end-to-end test booking in Stripe test mode; auth-at-booking/capture-only-on-delivered enforced; double-booked window impossible (capacity constraint).
+
+### Phase 3 — Warehouse ops (≈2 weeks)
+- Staff roles on existing auth; `/admin` from wireframe: orders board (kanban = state machine), receiving flow (scan/photo → `receiving_records`, damage branch), assembly queue (job cards, assign, start/stop timing), QC checklist with photos.
+- Supabase Storage for intake/QC photos; `order_events` → customer notifications ("Your desk passed inspection ✅" — this is the marketing moment, make statuses delightful).
+- **Review gate:** run one real order through receive → assemble → QC → staged with photos at every step; `est_assembly_min` vs `actual_min` captured.
+
+### Phase 4 — Delivery logistics (≈2 weeks)
+- `vehicles`, `routes`, `route_stops`; admin route builder (drag orders onto a van/day; Distance Matrix for sequencing); van-capacity check against `assembled_dims_cm`.
+- `/crew` PWA from wireframe: driver's stop list, navigate, POD photos + signature, mark delivered → triggers Stripe capture + review request (T+1 cron).
+- SMS day-of updates (Twilio): "Your Tasker is on the way" equivalent.
+- **Review gate:** full dress rehearsal — book, receive, assemble, route, deliver, auto-capture, review email; DISPUTED path freezes capture.
+
+### Phase 5 — Growth (ongoing)
+- Reviews on site (replace the "Coming Soon" Credibility placeholder with real ones), referral codes, abandoned-quote email drip.
+- **The IKEA move, local edition:** partner embeds — furniture stores, property managers, stagers, moving companies get a co-branded quote link/API (`?partner=` on `/quote`) with rev-share. This is TaskRabbit's single biggest lesson: distribution at the point of purchase beats marketing.
+- Second market = new `markets` row + zones + hub (architecture is multi-market from Phase 1); Apple Sign-In; Spanish coverage for the new surfaces (i18n system already exists).
+
+### Standing risks to review each phase
+1. **Fulfillment-mode discipline** (§5.3) — never sell warehouse assembly for an item that can't survive transport assembled.
+2. **Custody liability** — cargo/GL insurance before the first real order; intake photos are the evidence chain.
+3. **Unit economics** — flat rates only work if tier pricing tracks actual minutes; review weekly.
+4. **Don't rebuild the marketplace** — resist adding tasker-style contractor onboarding until managed ops is saturated; TaskRabbit's hardest problems (liquidity, matching, trust) are the reward for exhausting this simpler model, not the starting point.
 
 ---
 
