@@ -58,7 +58,8 @@ export default function Hero({ onCta }: { onCta: () => void }) {
         background: "var(--white)",
         padding: mobile ? "32px 0 56px" : "72px 0 150px",
         position: "relative",
-        zIndex: 40,
+        /* Stay under HowItWorks so the mascot overhang does not bleed over section 2 */
+        zIndex: 1,
         overflow: "visible",
       }}
     >
@@ -96,7 +97,8 @@ export default function Hero({ onCta }: { onCta: () => void }) {
             display: "flex",
             alignItems: "flex-end",
             gap: 14,
-            zIndex: 1,
+            /* Bottom of hero stack — second section paints over the overhang */
+            zIndex: 0,
             pointerEvents: "none",
           }}
         >

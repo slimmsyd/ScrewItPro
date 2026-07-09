@@ -28,7 +28,9 @@ export default function HowItWorks({ onCta }: { onCta: () => void }) {
         background: "var(--gray-50)",
         padding: "var(--section-pad-y) 0",
         position: "relative",
-        zIndex: 1,
+        /* Above hero (z-index 1) so mascot marginBottom overhang is covered */
+        zIndex: 2,
+        isolation: "isolate",
       }}
     >
       <Container>
