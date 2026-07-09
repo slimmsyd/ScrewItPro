@@ -60,18 +60,20 @@ export default function LandingPage() {
  };
  }
 
+ // ~2.5–3s progress so the bar is readable, then brief hold + exit
+ // (was ~1.2–1.5s — too quick to notice). Still under ~4s total with exit.
  const id = setInterval(() => {
- p = Math.min(100, p + (Math.random() * 15 + 7));
+ p = Math.min(100, p + (Math.random() * 8 + 5));
  setProgress(p);
  if (p >= 100) {
  clearInterval(id);
- setTimeout(() => setExiting(true), 280);
+ setTimeout(() => setExiting(true), 420);
  setTimeout(() => {
  setLoading(false);
  document.body.style.overflow = "";
- }, 280 + 940);
+ }, 420 + 940);
  }
- }, 195);
+ }, 260);
 
  return () => {
  clearInterval(id);
