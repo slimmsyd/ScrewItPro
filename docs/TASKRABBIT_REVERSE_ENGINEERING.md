@@ -169,25 +169,150 @@ This single enum drives pricing, van capacity math, and crew scheduling. It's th
 
 ## 6. Target Architecture for ScrewItPro
 
-<!-- TARGET_ARCH -->
+**Principle (stolen from TaskRabbit's third era): one deployable app, hard module boundaries.** Keep everything in the existing Next.js app; organize server code as modules that only talk through typed service interfaces — the Next.js equivalent of their Rails-engines setup. Split nothing into services until a module demonstrably needs it.
+
+```
+Next.js (Vercel) ── one deployable
+│
+├── web (public)          /            marketing (exists)
+│                         /quote       SKU picker → instant price (Chip + page)
+│                         /book        schedule + address + Stripe checkout
+│                         /account     customer portal: orders, chat, tracking (wireframe exists)
+│
+├── ops (staff-only)      /admin       orders board, receiving, assembly queue, QC,
+│                                      routing, catalog & pricing editor (wireframe exists)
+│                         /crew        driver/assembler PWA: job cards, photos, POD (wireframe exists)
+│
+├── api modules (src/server/*)
+│   ├── identity/         users, roles (customer|admin|assembler|driver), sessions (extend existing OAuth)
+│   ├── catalog/          items, complexity tiers, fulfillment modes, retailer SKU maps
+│   ├── pricing/          quote calculation (pure functions + catalog lookups)
+│   ├── booking/          orders, order_items, scheduling windows, cancellation/reschedule
+│   ├── warehouse/        inbound shipments, receiving, assembly jobs, QC
+│   ├── logistics/        routes, stops, capacity, proof-of-delivery
+│   ├── billing/          Stripe: deposit auth → capture on delivery; invoices; refunds
+│   ├── messaging/        order-scoped threads; email (Resend) + SMS (Twilio) fan-out
+│   └── reviews/          post-delivery ratings
+│
+├── data      Supabase Postgres (schema below) + Supabase Storage (intake/QC/POD photos)
+│             RLS ON for customer-facing tables; service-role only inside server modules
+├── jobs      Vercel Cron / Supabase cron for: quote expiry, reminder emails/SMS,
+│             payment capture retries, review requests, route-day rollover
+├── payments  Stripe PaymentIntents (manual capture) + webhooks /api/webhooks/stripe
+├── ai        DeepSeek behind POST /api/chat — Chip becomes a thin NLU layer that maps
+│             free text → catalog items → SAME pricing engine (never lets the LLM invent prices)
+└── maps      existing Google Maps + Distance Matrix (server key) for zone/route math
+```
+
+**Why not clone TaskRabbit's Elasticsearch matching layer:** their hardest engineering problem — ranked geo/availability search over 200k independent Taskers — *does not exist* in our model. Scheduling ~a-dozen internal crew against delivery windows is a Postgres query. This deletes the most expensive third of their architecture.
 
 ---
 
 ## 7. Data Model (proposed schema)
 
-<!-- DATA_MODEL -->
+Supabase Postgres. This is the TaskRabbit domain model with the marketplace tables (tasker profiles, rate cards, work areas, ranking) removed and warehouse/logistics tables added.
+
+```sql
+-- IDENTITY ------------------------------------------------------------------
+users            (id, email, name, picture, provider, role: customer|admin|assembler|driver,
+                  phone, created_at)                      -- extend existing sip_session OAuth
+addresses        (id, user_id, label, line1, line2, city, state, zip, lat, lng, notes,
+                  access_notes /* stairs, elevator, gate code */)
+
+-- MARKET --------------------------------------------------------------------
+markets          (id, name /* Houston */, hub_lat, hub_lng, coverage_radius_m,
+                  status: live|expanding|unserved, launch_eta)   -- replaces LOCATION_TIER map
+zones            (id, market_id, name, delivery_fee_cents, zips text[])
+
+-- CATALOG (the IKEA move) ---------------------------------------------------
+catalog_items    (id, brand /* IKEA, Wayfair, generic */, sku, name, category,
+                  complexity_tier: 1..5,
+                  fulfillment_mode: warehouse|hybrid|onsite_only,   -- §5.3, load-bearing
+                  est_assembly_min, assembled_dims_cm /* fits-in-van + through-door math */,
+                  flat_price_cents, active)
+price_tiers      (tier, base_price_cents)                 -- fallback for unknown items
+
+-- QUOTES & ORDERS -----------------------------------------------------------
+quotes           (id, user_id nullable, market_id, items jsonb, subtotal_cents,
+                  delivery_fee_cents, pickup_fee_cents, total_cents,
+                  source: chip|web|phone, expires_at)
+orders           (id, quote_id, user_id, address_id, market_id, status /* §8 */,
+                  intake_mode: ship_to_warehouse|store_pickup|customer_dropoff,
+                  delivery_window_id, totals…, stripe_payment_intent_id, created_at)
+order_items      (id, order_id, catalog_item_id, qty, unit_price_cents,
+                  status: awaiting|received|assembling|qc_passed|staged|delivered|damaged)
+order_events     (id, order_id, actor_id, from_status, to_status, note, created_at)
+                                                          -- audit log = customer tracking feed
+delivery_windows (id, market_id, date, start_t, end_t, capacity, booked_count)
+
+-- WAREHOUSE -----------------------------------------------------------------
+inbound_shipments(id, order_id, carrier, tracking_no, expected_at, received_at)
+receiving_records(id, order_item_id, photos text[], condition: ok|damaged, notes, staff_id)
+assembly_jobs    (id, order_item_id, assigned_to, started_at, finished_at,
+                  actual_min, status: queued|in_progress|done|blocked)
+qc_checks        (id, assembly_job_id, staff_id, passed bool, photos text[], notes)
+
+-- LOGISTICS -----------------------------------------------------------------
+vehicles         (id, market_id, name, cargo_dims_cm, max_stops)
+routes           (id, market_id, date, vehicle_id, driver_id, status)
+route_stops      (id, route_id, order_id, seq, eta, arrived_at, completed_at,
+                  pod_photos text[], signature_url)       -- proof of delivery
+
+-- MONEY ---------------------------------------------------------------------
+invoices         (id, order_id, line_items jsonb, subtotal, fees, tip_cents, total, status)
+payments         (id, invoice_id, stripe_pi, kind: deposit_auth|capture|refund, amount, status)
+promo_codes      (id, code, kind: percent|fixed, value, max_uses, expires_at)
+
+-- COMMS & REPUTATION --------------------------------------------------------
+threads          (id, order_id) / messages (id, thread_id, sender_id, body, read_at)
+notifications    (id, user_id, channel: email|sms|push, template, payload jsonb, sent_at)
+reviews          (id, order_id, rating 1..5, body, photos text[], published)
+waitlist_signups (id, email, market_id, source, position serial, created_at)  -- Phase 0
+```
 
 ---
 
 ## 8. Order Lifecycle State Machine
 
-<!-- STATE_MACHINE -->
+TaskRabbit's `draft → posted → matched → confirmed → … → reviewed` lifecycle, re-cut for hub-and-spoke fulfillment. Enforce transitions in one place (`src/server/booking/transitions.ts`) and write every transition to `order_events` — that audit log doubles as the customer's tracking timeline (their "where's my order" page) and the ops dashboard feed.
+
+```
+QUOTED ──book+deposit auth──▶ BOOKED
+BOOKED ──items en route──────▶ AWAITING_INBOUND ──all items scanned──▶ RECEIVED
+                                   │ (damaged on arrival → ITEM_ISSUE, customer notified,
+                                   │  carrier claim; resumes or partial-refunds)
+RECEIVED ──job cards created─▶ IN_ASSEMBLY ──QC pass──▶ STAGED
+STAGED ──added to route──────▶ SCHEDULED ──van departs──▶ OUT_FOR_DELIVERY
+OUT_FOR_DELIVERY ──placed in home + POD photos──▶ DELIVERED
+DELIVERED ──Stripe capture───▶ PAID ──review request (T+1 day)──▶ REVIEWED / CLOSED
+
+side states: CANCELLED (fee if past cutoff — clone TaskRabbit's policy),
+             RESCHEDULED (window swap, capacity re-check),
+             DISPUTED (freeze capture, claims flow — our TaskProtect analog),
+             ONSITE_FINISH (hybrid SKUs: delivery includes final join/anchoring step)
+```
+
+Key money rule cloned from TaskRabbit: **authorize at booking, capture only after completion** (theirs: 1-hour deposit → invoice; ours: deposit or full-amount auth at booking → capture on POD). Never charge before delivery is proven.
 
 ---
 
 ## 9. Pricing Engine
 
-<!-- PRICING -->
+Clone the **IKEA task-based model**, not TaskRabbit's hourly marketplace. Everything is a flat per-item price known before booking:
+
+```
+quote_total = Σ item_price(sku)            -- catalog flat rate by complexity tier 1–5
+            + delivery_fee(zone)           -- by zone table, distance from hub
+            + pickup_fee (if store_pickup) -- optional procurement service
+            + hybrid_onsite_surcharge      -- for fulfillment_mode = hybrid
+            − promo
+subject to: job_minimum (≈ $52, IKEA-parity)
+```
+
+- **Complexity tiers, not per-SKU guessing**: tier 1 (nightstand, ~$45) → tier 5 (large sectional/bed with storage, ~$180). Map known IKEA/Wayfair best-sellers to tiers explicitly; unknown items fall back to tier by category + a photo-review step. Chip's current hardcoded `PRICES` map (Bed 129, Desk 69, Wardrobe 129, Office 99) becomes seed rows.
+- **All-in display pricing.** TaskRabbit stacks a visible 15% + 7.5% fee on top at checkout, and it's their most-hated UX. We take the same margin but *bake it into the item price*. One number, no fee-surprise — this is also how IKEA presents it.
+- **One engine, every surface**: `POST /api/quote` (pure function over catalog + zones) serves the Chip chat, the `/quote` page, and the booking checkout. The LLM never computes a price — it only maps free text to catalog items, then calls the same endpoint. Persist every quote (`quotes` table, 7-day expiry) — quotes are your demand-signal dataset and abandoned-quote remarketing list.
+- **Unit-economics guardrail**: store `est_assembly_min` vs `actual_min` on every job; weekly report re-prices tiers where realized $/hour falls below target. TaskRabbit gets this calibration for free from Tasker rate-setting; we must close the loop ourselves.
 
 ---
 

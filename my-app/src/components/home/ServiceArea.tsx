@@ -16,14 +16,22 @@ export default function ServiceArea() {
   return (
     <Reveal
       as="section"
-      style={{ background: "var(--gray-50)", padding: "var(--section-pad-y) 0" }}
+      style={{
+        background: "var(--gray-50)",
+        // Top only - map bleeds flush to bottom edge of section
+        padding: "var(--section-pad-y) 0 0",
+        overflow: "hidden",
+      }}
     >
+      {/* Copy stays in the content grid */}
       <Container>
         <div
           style={{
             textAlign: "center",
             maxWidth: 640,
-            margin: "0 auto 36px",
+            margin: "0 auto",
+            // Space between copy and full-bleed map (not side inset)
+            paddingBottom: mobile ? 28 : 36,
           }}
         >
           <Eyebrow center>{t("area.eyebrow")}</Eyebrow>
@@ -70,9 +78,10 @@ export default function ServiceArea() {
             ))}
           </div>
         </div>
-
-        <HoustonMap height={mobile ? 280 : 420} />
       </Container>
+
+      {/* Full-bleed map: outside Container so no side/bottom inset */}
+      <HoustonMap height={mobile ? 320 : 480} fullBleed />
     </Reveal>
   );
 }

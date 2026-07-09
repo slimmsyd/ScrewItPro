@@ -62,8 +62,11 @@ const MAP_STYLES: google.maps.MapTypeStyle[] = [
 
 export default function HoustonMap({
   height,
+  fullBleed = false,
 }: {
   height: number | string;
+  /** Edge-to-edge: no radius, border, or outer shadow */
+  fullBleed?: boolean;
 }) {
   const { t, locale } = useLocale();
   const hostRef = useRef<HTMLDivElement>(null);
@@ -154,7 +157,7 @@ export default function HoustonMap({
       <div
         style={{
           background: "var(--gray-100)",
-          borderRadius: "var(--radius-xl)",
+          borderRadius: fullBleed ? 0 : "var(--radius-xl)",
           height,
           display: "flex",
           alignItems: "center",
@@ -166,6 +169,7 @@ export default function HoustonMap({
           fontSize: 14,
           padding: 24,
           textAlign: "center",
+          margin: 0,
         }}
       >
         <MapPin size={32} color="var(--ink-300)" />
@@ -183,15 +187,23 @@ export default function HoustonMap({
     <div
       style={{
         position: "relative",
-        borderRadius: "var(--radius-xl)",
+        // Full-bleed: flush with section edges; no card chrome
+        borderRadius: fullBleed ? 0 : "var(--radius-xl)",
         overflow: "hidden",
         height,
+        width: "100%",
+        margin: 0,
+        padding: 0,
         background: "var(--gray-100)",
-        border: "1px solid var(--gray-200)",
-        boxShadow: "var(--shadow-md)",
+        border: fullBleed ? "none" : "1px solid var(--gray-200)",
+        borderTop: fullBleed ? "1px solid var(--gray-200)" : undefined,
+        boxShadow: fullBleed ? "none" : "var(--shadow-md)",
       }}
     >
-      <div ref={hostRef} style={{ width: "100%", height: "100%" }} />
+      <div
+        ref={hostRef}
+        style={{ width: "100%", height: "100%", margin: 0, padding: 0 }}
+      />
 
       {(status === "loading" || status === "error") && (
         <div
