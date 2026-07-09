@@ -53,9 +53,17 @@ export const metadata: Metadata = {
     "ScrewIt Pros",
   ],
   icons: {
-    icon: [{ url: "/assets/logo-icon-deep-blue.png", type: "image/png" }],
-    apple: [{ url: "/assets/logo-icon-deep-blue.png", type: "image/png" }],
-    shortcut: "/assets/logo-icon-deep-blue.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon", type: "image/png", sizes: "32x32" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [
+      { url: "/apple-icon", type: "image/png", sizes: "180x180" },
+      { url: "/apple-touch-icon.png", type: "image/png", sizes: "180x180" },
+    ],
+    shortcut: "/favicon.ico",
   },
   openGraph: {
     type: "website",
