@@ -423,6 +423,7 @@ header[id] {
   top: 0;
   bottom: 0;
   pointer-events: none;
+  will-change: transform, opacity;
 }
 .hero-art-l {
   left: 0;
@@ -434,6 +435,38 @@ header[id] {
   .hero-art {
     display: none;
   }
+}
+
+/* Mobile/tablet blueprint grid — gentle drift for depth */
+@keyframes heroBlueprintDrift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(-10px, -6px, 0);
+  }
+}
+.hero-blueprint-grid.is-animated {
+  animation: heroBlueprintDrift 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Hero doodads — opacity-only pop (no CSS scale/rotate on SVG groups) */
+@keyframes heroDoodadIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.hero-screw,
+.hero-dowel,
+.hero-lamp {
+  opacity: 0;
+  animation: heroDoodadIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--hero-delay, 0s);
 }
 
 /* Failsafe: reveal sections must never stay invisible */
@@ -458,6 +491,21 @@ header[id] {
 
  .footer-logo-spin {
  animation: none;
+ }
+
+ .hero-blueprint-grid.is-animated {
+ animation: none;
+ }
+
+ .hero-screw,
+ .hero-dowel,
+ .hero-lamp {
+ animation: none;
+ opacity: 1;
+ }
+
+ .hero-art {
+ will-change: auto;
  }
 
  .splash-exiting {

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { motion } from "framer-motion";
 import {
   BadgeCheck,
   BedDouble,
@@ -16,8 +17,10 @@ import Badge from "@/components/ui/Badge";
 import HeroSearch from "@/components/home/HeroSearch";
 import HeroBackdrop from "@/components/home/HeroBackdrop";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useMotionMode } from "@/hooks/useMotionMode";
 import { ASSETS } from "@/lib/site";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { easeReveal } from "@/lib/motion";
 
 /** Production default from design handoff: iso furniture wireframe. */
 const HERO_BG = "wireframe" as const;
@@ -26,6 +29,9 @@ export default function Hero({ onCta }: { onCta: () => void }) {
   const [activeCat, setActiveCat] = useState(0);
   const mobile = useIsMobile();
   const { t } = useLocale();
+  const mode = useMotionMode();
+  const full = mode === "full";
+  const soft = mode === "soft";
 
   const heroCategories = [
     { icon: Wrench, label: t("hero.catAssembly") },
@@ -58,7 +64,31 @@ export default function Hero({ onCta }: { onCta: () => void }) {
     >
       <HeroBackdrop variant={HERO_BG} mobile={mobile} />
       {!mobile && (
-        <div
+        <motion.div
+          key={mode}
+          initial={full ? { opacity: 0, y: 18 } : soft ? { opacity: 0 } : false}
+          animate={
+            full
+              ? { opacity: 1, y: [0, -5, 0] }
+              : soft
+                ? { opacity: 1 }
+                : undefined
+          }
+          transition={
+            full
+              ? {
+                  opacity: { duration: 0.6, delay: 0.55, ease: easeReveal },
+                  y: {
+                    duration: 4.8,
+                    delay: 1.1,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  },
+                }
+              : soft
+                ? { opacity: { duration: 0.6, delay: 0.55, ease: easeReveal } }
+                : undefined
+          }
           style={{
             position: "absolute",
             bottom: 0,
@@ -70,7 +100,14 @@ export default function Hero({ onCta }: { onCta: () => void }) {
             pointerEvents: "none",
           }}
         >
-          <div
+          <motion.div
+            initial={reduceMotion ? false : { opacity: 0, scale: 0.9, y: 8 }}
+            animate={reduceMotion ? undefined : { opacity: 1, scale: 1, y: 0 }}
+            transition={
+              reduceMotion
+                ? undefined
+                : { duration: 0.45, delay: 0.85, ease: easeReveal }
+            }
             style={{
               alignSelf: "flex-start",
               marginTop: -8,
@@ -87,7 +124,7 @@ export default function Hero({ onCta }: { onCta: () => void }) {
             }}
           >
             {t("hero.mascotBubble")}
-          </div>
+          </motion.div>
           <Image
             src={ASSETS.mascot}
             alt="ScrewIt Pros"
@@ -100,7 +137,7 @@ export default function Hero({ onCta }: { onCta: () => void }) {
               marginBottom: -78,
             }}
           />
-        </div>
+        </motion.div>
       )}
       <Container
         style={{
