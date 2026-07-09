@@ -1,0 +1,6 @@
+.DS_Store
+**/.DS_Store
+my-app/.env.local
+my-app/.env*.local
+my-app/node_modules
+my-app/.next

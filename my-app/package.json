@@ -1,5 +1,5 @@
 {
-  "name": "my-app",
+  "name": "screwitpro",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,16 +9,26 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@stripe/stripe-js": "^9.9.0",
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.110.2",
     "framer-motion": "^12.23.24",
+    "lucide-react": "^1.24.0",
     "next": "16.0.4",
+    "openai": "^6.45.0",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "resend": "^6.17.2",
+    "stripe": "^22.3.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/google.maps": "^3.65.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.0.4",
     "tailwindcss": "^4",

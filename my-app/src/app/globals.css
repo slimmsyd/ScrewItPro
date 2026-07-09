@@ -1,26 +1,455 @@
-@import "tailwindcss";
+/* ScrewIt Pros - design tokens (ported from design handoff)
+ Miguer Sans is loaded via next/font/local → --font-miguer (src/fonts/). */
 
 :root {
-  --background: #FAF9F6; /* Cream/Off-white */
-  --foreground: #111111; /* Near Black */
-  --card-blue: #9BB1D8;
-  --card-olive: #B5B085;
-  --card-rust: #6B2D18;
+ /* Brand blues */
+ --blue-deep: #04209b;
+ --blue-electric: #1d6efe;
+ --blue-navy: #29388d;
+ --blue-steel: #436db5;
+
+ --blue-50: #eef3ff;
+ --blue-100: #dce7ff;
+ --blue-200: #b3ccff;
+ --blue-300: #7fa9ff;
+ --blue-400: #4a87ff;
+ --blue-500: #1d6efe;
+ --blue-600: #0f52d9;
+ --blue-700: #0a3bc0;
+ --blue-800: #04209b;
+ --blue-900: #061a6b;
+
+ /* Neutrals */
+ --ink-900: #0b1030;
+ --ink-700: #2a3050;
+ --ink-500: #545b7a;
+ --ink-300: #9aa1bc;
+ --gray-200: #d8ddeb;
+ --gray-100: #e9edf6;
+ --gray-50: #f4f6fb;
+ --white: #ffffff;
+
+ /* Semantic */
+ --color-primary: var(--blue-deep);
+ --color-accent: var(--blue-electric);
+ --text-heading: var(--blue-deep);
+ --text-body: var(--ink-700);
+ --text-muted: var(--ink-500);
+ --text-inverse: var(--white);
+ --text-link: var(--blue-electric);
+ --surface-page: var(--white);
+ --surface-subtle: var(--gray-50);
+ --surface-card: var(--white);
+ --surface-brand: var(--blue-deep);
+ --border-default: var(--gray-200);
+ --border-strong: var(--ink-300);
+ --border-focus: var(--blue-electric);
+
+ --status-success: #0e8a5f;
+ --status-warning: #b96a00;
+ --status-error: #c6323c;
+ --status-error-text: #e5484d;
+ --status-success-bg: #e5f5ee;
+ --status-warning-bg: #fdf1e0;
+ --status-error-bg: #fbe9ea;
+
+ /* Spacing */
+ --space-1: 4px;
+ --space-2: 8px;
+ --space-3: 12px;
+ --space-4: 16px;
+ --space-5: 24px;
+ --space-6: 32px;
+ --space-7: 48px;
+ --space-8: 64px;
+ --space-9: 96px;
+ --space-10: 128px;
+
+ /* Radii */
+ --radius-sm: 6px;
+ --radius-md: 10px;
+ --radius-lg: 16px;
+ --radius-xl: 24px;
+ --radius-pill: 999px;
+
+ /* Shadows */
+ --shadow-sm: 0 1px 2px rgba(4, 32, 155, 0.06);
+ --shadow-md: 0 4px 14px rgba(4, 32, 155, 0.1);
+ --shadow-lg: 0 12px 32px rgba(4, 32, 155, 0.14);
+ --shadow-focus: 0 0 0 3px rgba(29, 110, 254, 0.3);
+
+ /* Motion */
+ --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+ --ease-reveal: cubic-bezier(0.16, 1, 0.3, 1);
+ --duration-fast: 120ms;
+ --duration-base: 200ms;
+
+ /* Layout */
+ --container-max: 1200px;
+ --section-pad-y: 72px;
+
+ /* Type - Miguer Sans (display) + Instrument Sans (body) */
+ --font-display: var(--font-miguer), "Miguer Sans", "Instrument Sans", system-ui,
+ sans-serif;
+ --font-body: var(--font-instrument), "Instrument Sans", system-ui,
+ -apple-system, sans-serif;
+
+ --text-hero: 64px;
+ --text-h1: 48px;
+ --text-h2: 36px;
+ --text-h3: 24px;
+ --text-h4: 19px;
+ --text-lg: 18px;
+ --text-md: 16px;
+ --text-sm: 14px;
+ --text-xs: 12.5px;
+
+ --weight-regular: 400;
+ --weight-medium: 500;
+ --weight-semibold: 600;
+ --weight-bold: 700;
+
+ --leading-display: 1.05;
+ --leading-heading: 1.15;
+ --leading-body: 1.55;
+
+ --tracking-display: -0.015em;
+ --tracking-caps: 0.14em;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card-blue: var(--card-blue);
-  --color-card-olive: var(--card-olive);
-  --color-card-rust: var(--card-rust);
-  --font-sans: var(--font-inter);
+@media (max-width: 768px) {
+ :root {
+ --section-pad-y: 52px;
+ --text-hero: 38px;
+ --text-h1: 32px;
+ --text-h2: 27px;
+ --text-h3: 21px;
+ --text-lg: 16px;
+ }
+}
+
+/* Base */
+*,
+*::before,
+*::after {
+ box-sizing: border-box;
+}
+
+html {
+ scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-inter), sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+ margin: 0;
+ font-family: var(--font-body);
+ color: var(--text-body);
+ background: var(--surface-page);
+ -webkit-font-smoothing: antialiased;
+}
+
+a {
+ color: var(--text-link);
+ text-decoration: none;
+ transition: color var(--duration-fast) var(--ease-out);
+}
+
+a:hover {
+ color: var(--blue-700);
+}
+
+::selection {
+ background: var(--blue-100);
+ color: var(--blue-deep);
+}
+
+section[id],
+header[id] {
+ scroll-margin-top: 120px;
+}
+
+/* Splash loader */
+.splash {
+ position: fixed;
+ inset: 0;
+ z-index: 3000;
+ background: var(--white);
+ display: flex;
+ align-items: center;
+ justify-content: center;
+}
+
+.splash-inner {
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ gap: 28px;
+}
+
+.splash-mark {
+ width: 92px;
+ height: 92px;
+ display: block;
+ animation: splashSpin 1s linear infinite;
+}
+
+@keyframes splashSpin {
+ to {
+ transform: rotate(360deg);
+ }
+}
+
+.splash-track {
+ width: 220px;
+ height: 6px;
+ border-radius: 999px;
+ background: var(--gray-100);
+ overflow: hidden;
+}
+
+.splash-fill {
+ height: 100%;
+ width: 0;
+ background: var(--blue-electric);
+ border-radius: 999px;
+ transition: width 200ms ease-out;
+}
+
+.splash-cap {
+ font-family: var(--font-body);
+ font-size: 12px;
+ font-weight: 600;
+ letter-spacing: var(--tracking-caps);
+ text-transform: uppercase;
+ color: var(--ink-300);
+}
+
+.splash-exiting {
+ animation: splashFade 620ms ease 300ms forwards;
+}
+
+@keyframes splashFade {
+ to {
+ opacity: 0;
+ visibility: hidden;
+ }
+}
+
+.splash-exiting .splash-mark {
+ animation: splashOut 700ms cubic-bezier(0.6, 0, 0.25, 1) forwards;
+}
+
+@keyframes splashOut {
+ 0% {
+ transform: rotate(0) scale(1);
+ opacity: 1;
+ }
+ 45% {
+ transform: rotate(230deg) scale(1.7);
+ opacity: 1;
+ }
+ 100% {
+ transform: rotate(360deg) scale(0.08);
+ opacity: 0;
+ }
+}
+
+.splash-exiting .splash-track,
+.splash-exiting .splash-cap {
+ animation: splashMinorOut 260ms ease forwards;
+}
+
+@keyframes splashMinorOut {
+ to {
+ opacity: 0;
+ transform: translateY(8px);
+ }
+}
+
+/* Mobile drawer peek */
+#app-shell {
+ transition: transform 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+ transform-origin: left center;
+}
+
+#app-shell.peek {
+ transform: scale(0.94) translateX(-16px);
+}
+
+/* Audience marquee styles live in Audiences.tsx (Framer Motion infinite x). */
+
+.hscroll {
+ scrollbar-width: none;
+ -ms-overflow-style: none;
+}
+
+/* ---- Screw-in chat launcher (launcher_handoff) ---- */
+.screwit-launcher {
+ position: relative;
+ width: 64px;
+ height: 64px;
+ border-radius: 50%;
+ border: none;
+ cursor: pointer;
+ background: var(--blue-electric);
+ box-shadow: var(--shadow-lg);
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ padding: 0;
+ transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+ background 0.3s ease;
+}
+
+.screwit-launcher:hover {
+ background: var(--blue-600);
+}
+
+.screwit-launcher:focus-visible {
+ outline: 3px solid var(--blue-200);
+ outline-offset: 3px;
+}
+
+.screwit-launcher::before {
+ content: "";
+ position: absolute;
+ inset: 0;
+ border-radius: 50%;
+ box-shadow: 0 0 0 0 rgba(29, 110, 254, 0.45);
+ animation: screwitPulse 2.6s ease-out infinite;
+}
+
+.screwit-launcher.spin {
+ transform: scale(1.08);
+}
+
+.screwit-launcher .screwit-mark {
+ width: 34px;
+ height: 34px;
+ display: block;
+ transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.screwit-launcher.spin .screwit-mark {
+ transform: rotate(360deg);
+}
+
+.screwit-launcher .screwit-ping {
+ position: absolute;
+ top: -2px;
+ right: -2px;
+ width: 20px;
+ height: 20px;
+ border-radius: 50%;
+ background: #ff5a3c;
+ border: 2px solid #fff;
+ z-index: 2;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-size: 11px;
+ font-weight: 700;
+ color: #fff;
+ font-family: var(--font-body);
+}
+
+.screwit-launcher .screwit-ping::after {
+ content: "";
+ position: absolute;
+ inset: -2px;
+ border-radius: 50%;
+ border: 2px solid #ff5a3c;
+ animation: screwitPing 1.8s ease-out infinite;
+}
+
+.screwit-launcher.seen .screwit-ping {
+ display: none;
+}
+
+@keyframes screwitPulse {
+ 0% {
+ box-shadow: 0 0 0 0 rgba(29, 110, 254, 0.45);
+ }
+ 70%,
+ 100% {
+ box-shadow: 0 0 0 16px rgba(29, 110, 254, 0);
+ }
+}
+
+@keyframes screwitPing {
+ 0% {
+ transform: scale(1);
+ opacity: 0.8;
+ }
+ 100% {
+ transform: scale(2.1);
+ opacity: 0;
+ }
+}
+
+@keyframes screwitSpin {
+ from {
+ transform: rotate(0);
+ }
+ to {
+ transform: rotate(360deg);
+ }
+}
+
+.screwit-greeting {
+ transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+ transform-origin: bottom right;
+}
+
+.screwit-greeting.dismissed {
+ opacity: 0;
+ transform: translateY(8px) scale(0.9);
+ pointer-events: none;
+}
+
+.hscroll::-webkit-scrollbar {
+ height: 0;
+ display: none;
+}
+
+/* Failsafe: reveal sections must never stay invisible */
+[data-reveal] {
+ /* content paints even if motion state glitches */
+ min-height: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+ html {
+ scroll-behavior: auto;
+ }
+
+ [data-reveal] {
+ opacity: 1 !important;
+ transform: none !important;
+ }
+
+ .splash-mark {
+ animation: none;
+ }
+
+ .splash-exiting {
+ animation: splashFade 300ms ease forwards;
+ }
+
+ #app-shell {
+ transition: none;
+ }
+
+ #app-shell.peek {
+ transform: none;
+ }
+
+ .screwit-launcher::before,
+ .screwit-launcher .screwit-ping::after {
+ animation: none;
+ }
+
+ .screwit-launcher .screwit-mark,
+ .screwit-launcher {
+ transition-duration: 0.2s;
+ }
 }
