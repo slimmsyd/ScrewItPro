@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CTA_LABEL } from "@/lib/site";
+import { useLocale } from "@/components/providers/LocaleProvider";
+import { locales, type Locale } from "@/i18n/config";
 
 export default function MobileMenu({
   open,
@@ -14,6 +15,7 @@ export default function MobileMenu({
   onCta: () => void;
   waitlist: boolean;
 }) {
+  const { t, locale, setLocale, labels } = useLocale();
   const navOffset = waitlist ? 106 : 68;
   const startX = useRef<number | null>(null);
   const [drag, setDrag] = useState(0);
@@ -34,10 +36,10 @@ export default function MobileMenu({
   }, [open, onClose]);
 
   const links = [
-    ["How It Works", "#how"],
-    ["Services", "#services"],
-    ["Why Us", "#why"],
-    ["FAQ", "#faq"],
+    [t("nav.howItWorks"), "#how"],
+    [t("nav.services"), "#services"],
+    [t("nav.whyUs"), "#why"],
+    [t("nav.faq"), "#faq"],
   ] as const;
 
   const dragging = startX.current !== null;
@@ -105,7 +107,7 @@ export default function MobileMenu({
       >
         {links.map(([l, h], i) => (
           <a
-            key={l}
+            key={h}
             href={h}
             onClick={onClose}
             style={{
@@ -147,7 +149,7 @@ export default function MobileMenu({
             transition: stag(0.28),
           }}
         >
-          {CTA_LABEL}
+          {t("common.joinNow")}
         </button>
         <div
           style={{
@@ -165,8 +167,30 @@ export default function MobileMenu({
             transition: stag(0.32),
           }}
         >
-          <span>Language</span>
-          <span style={{ color: "var(--ink-500)" }}>English</span>
+          <span>{t("common.language")}</span>
+          <div style={{ display: "flex", gap: 8 }}>
+            {locales.map((code: Locale) => (
+              <button
+                key={code}
+                type="button"
+                onClick={() => setLocale(code)}
+                style={{
+                  border: "none",
+                  background: code === locale ? "var(--blue-50)" : "transparent",
+                  color:
+                    code === locale ? "var(--blue-deep)" : "var(--ink-500)",
+                  fontWeight: code === locale ? 600 : 500,
+                  fontFamily: "var(--font-body)",
+                  fontSize: 14,
+                  padding: "6px 10px",
+                  borderRadius: 8,
+                  cursor: "pointer",
+                }}
+              >
+                {labels[code]}
+              </button>
+            ))}
+          </div>
         </div>
         <div
           style={{
@@ -180,7 +204,7 @@ export default function MobileMenu({
             transition: stag(0.36),
           }}
         >
-          If You Don’t Want to Do It, ScrewIt!
+          {t("nav.tagline")}
         </div>
       </aside>
     </>

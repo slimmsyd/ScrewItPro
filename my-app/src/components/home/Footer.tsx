@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { ASSETS } from "@/lib/site";
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 function FooterLink({ children }: { children: React.ReactNode }) {
   const [h, setH] = useState(false);
@@ -48,27 +49,37 @@ function SocialIcon({ path, label }: { path: string; label: string }) {
 }
 
 export default function Footer() {
+  const { t } = useLocale();
+
   const cols = [
     {
-      head: "Services",
+      head: t("footer.services"),
       items: [
-        "Furniture Assembly",
-        "Large Furniture Assembly",
-        "Office Furniture Assembly",
-        "Pickup & Delivery",
-        "White Glove Delivery",
-        "Membership Plans",
+        t("footer.furnitureAssembly"),
+        t("footer.largeAssembly"),
+        t("footer.officeAssembly"),
+        t("footer.pickup"),
+        t("footer.whiteGlove"),
+        t("footer.membership"),
       ],
     },
     {
-      head: "Company",
-      items: ["How It Works", "Why Us", "Service Area", "Contact Us"],
+      head: t("footer.company"),
+      items: [
+        t("footer.howItWorks"),
+        t("footer.whyUs"),
+        t("footer.serviceArea"),
+        t("footer.contact"),
+      ],
     },
     {
-      head: "Support",
-      items: ["FAQ", "Get a Free Quote", "Track My Order"],
+      head: t("footer.support"),
+      items: [t("footer.faq"), t("footer.freeQuote"), t("footer.track")],
     },
-    { head: "Legal", items: ["Terms of Service", "Privacy Policy"] },
+    {
+      head: t("footer.legal"),
+      items: [t("footer.terms"), t("footer.privacy")],
+    },
   ];
 
   const socials = [
@@ -99,7 +110,6 @@ export default function Footer() {
           padding: "80px 24px 48px",
         }}
       >
-        {/* Tagline left · large S mark fills empty right */}
         <div
           style={{
             display: "flex",
@@ -123,9 +133,9 @@ export default function Footer() {
               flex: "1 1 240px",
             }}
           >
-            If You Don’t Want to Do It,
+            {t("footer.tagline1")}
             <br />
-            ScrewIt!
+            {t("footer.tagline2")}
           </p>
           <div
             aria-hidden
@@ -148,11 +158,9 @@ export default function Footer() {
                 width: "100%",
                 height: "100%",
                 objectFit: "contain",
-                // Drop solid black plate so white S sits on navy footer
                 mixBlendMode: "screen",
                 opacity: 0.95,
               }}
-              priority={false}
             />
           </div>
         </div>
@@ -253,7 +261,7 @@ export default function Footer() {
               color: "var(--blue-300)",
             }}
           >
-            © {new Date().getFullYear()} ScrewIt Pros LLC. All rights reserved.
+            {t("footer.rights", { year: new Date().getFullYear() })}
           </span>
         </div>
       </div>

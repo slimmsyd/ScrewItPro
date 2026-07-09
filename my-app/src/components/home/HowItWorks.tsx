@@ -7,29 +7,19 @@ import Button from "@/components/ui/Button";
 import ImageSlot from "@/components/ui/ImageSlot";
 import Reveal from "@/components/ui/Reveal";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { CTA_LABEL } from "@/lib/site";
-
-const steps = [
-  {
-    title: "Order Your Furniture",
-    body: "Shop online or purchase furniture from your favorite retailer.",
-  },
-  {
-    title: "We Pick It Up",
-    body: "We collect it from your home, store, or receive it directly at our assembly hub.",
-  },
-  {
-    title: "We Assemble It",
-    body: "Our team professionally assembles your furniture in a dedicated workspace, not on your living room floor.",
-  },
-  {
-    title: "We Deliver It Ready",
-    body: "We deliver your furniture fully assembled, inspected, and ready to enjoy.",
-  },
-];
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 export default function HowItWorks({ onCta }: { onCta: () => void }) {
   const mobile = useIsMobile();
+  const { t } = useLocale();
+
+  const steps = [
+    { title: t("how.step1Title"), body: t("how.step1Body") },
+    { title: t("how.step2Title"), body: t("how.step2Body") },
+    { title: t("how.step3Title"), body: t("how.step3Body") },
+    { title: t("how.step4Title"), body: t("how.step4Body") },
+  ];
+
   return (
     <Reveal
       as="section"
@@ -37,15 +27,14 @@ export default function HowItWorks({ onCta }: { onCta: () => void }) {
       style={{
         background: "var(--gray-50)",
         padding: "var(--section-pad-y) 0",
-        // Stay under hero search dropdown (hero z-index: 40)
         position: "relative",
         zIndex: 1,
       }}
     >
       <Container>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <Eyebrow center>How It Works</Eyebrow>
-          <SectionTitle center>From Box to Built in Four Steps</SectionTitle>
+          <Eyebrow center>{t("how.eyebrow")}</Eyebrow>
+          <SectionTitle center>{t("how.title")}</SectionTitle>
           <p
             style={{
               fontFamily: "var(--font-body)",
@@ -56,8 +45,7 @@ export default function HowItWorks({ onCta }: { onCta: () => void }) {
               margin: "16px auto 0",
             }}
           >
-            You order it. We pick it up, build it in our workshop, and deliver it
-            ready to use.
+            {t("how.sub")}
           </p>
         </div>
         <div
@@ -121,7 +109,7 @@ export default function HowItWorks({ onCta }: { onCta: () => void }) {
             ))}
             <div style={{ marginTop: 8 }}>
               <Button variant="primary" size="lg" onClick={onCta}>
-                {CTA_LABEL}
+                {t("common.joinNow")}
               </Button>
             </div>
           </div>
@@ -134,7 +122,7 @@ export default function HowItWorks({ onCta }: { onCta: () => void }) {
               background: "var(--gray-100)",
             }}
           >
-            <ImageSlot label="Photo: workshop assembly" />
+            <ImageSlot label={t("how.photo")} />
           </div>
         </div>
       </Container>

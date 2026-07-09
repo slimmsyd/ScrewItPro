@@ -7,15 +7,9 @@ import { Check, ChevronDown, Globe } from "lucide-react";
 import Container from "@/components/ui/Container";
 import Button from "@/components/ui/Button";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { ASSETS, CTA_LABEL } from "@/lib/site";
-
-const navServices = [
-  ["Furniture Assembly", "#services"],
-  ["Large Furniture Assembly", "#services"],
-  ["Office Furniture Assembly", "#services"],
-  ["White Glove Delivery", "#services"],
-  ["Membership Plans", "#services"],
-] as const;
+import { ASSETS } from "@/lib/site";
+import { useLocale } from "@/components/providers/LocaleProvider";
+import { locales, type Locale } from "@/i18n/config";
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   const [h, setH] = useState(false);
@@ -41,7 +35,16 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
 }
 
 function NavDropdown() {
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
+  const items = [
+    [t("nav.furnitureAssembly"), "#services"],
+    [t("nav.largeFurniture"), "#services"],
+    [t("nav.officeFurniture"), "#services"],
+    [t("nav.whiteGlove"), "#services"],
+    [t("nav.membership"), "#services"],
+  ] as const;
+
   return (
     <div
       style={{ position: "relative" }}
@@ -64,7 +67,7 @@ function NavDropdown() {
           padding: "8px 0",
         }}
       >
-        Services
+        {t("nav.services")}
         <ChevronDown
           size={15}
           style={{
@@ -91,7 +94,7 @@ function NavDropdown() {
             zIndex: 50,
           }}
         >
-          {navServices.map(([lbl, href]) => (
+          {items.map(([lbl, href]) => (
             <a
               key={lbl}
               href={href}
@@ -123,15 +126,15 @@ function NavDropdown() {
 }
 
 function LangSwitcher() {
+  const { locale, setLocale, labels, t } = useLocale();
   const [open, setOpen] = useState(false);
-  const [lang, setLang] = useState("English");
-  const langs = ["English", "Español"];
+
   return (
     <div style={{ position: "relative" }} onMouseLeave={() => setOpen(false)}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        aria-label="Change language"
+        aria-label={t("nav.changeLanguage")}
         style={{
           display: "flex",
           alignItems: "center",
@@ -147,7 +150,7 @@ function LangSwitcher() {
         }}
       >
         <Globe size={16} />
-        <span style={{ fontWeight: 500 }}>{lang}</span>
+        <span style={{ fontWeight: 500 }}>{labels[locale]}</span>
       </button>
       {open && (
         <div
@@ -167,14 +170,14 @@ function LangSwitcher() {
             zIndex: 50,
           }}
         >
-          {langs.map((l) => {
-            const active = l === lang;
+          {locales.map((code: Locale) => {
+            const active = code === locale;
             return (
               <button
-                key={l}
+                key={code}
                 type="button"
                 onClick={() => {
-                  setLang(l);
+                  setLocale(code);
                   setOpen(false);
                 }}
                 style={{
@@ -193,7 +196,7 @@ function LangSwitcher() {
                   textAlign: "left",
                 }}
               >
-                {l}
+                {labels[code]}
                 {active && <Check size={15} color="var(--blue-electric)" />}
               </button>
             );
@@ -205,6 +208,7 @@ function LangSwitcher() {
 }
 
 function Burger({ open, onClick }: { open: boolean; onClick: () => void }) {
+  const { t } = useLocale();
   const line = (extra: React.CSSProperties): React.CSSProperties => ({
     position: "absolute",
     left: 11,
@@ -219,7 +223,7 @@ function Burger({ open, onClick }: { open: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
-      aria-label={open ? "Close menu" : "Open menu"}
+      aria-label={open ? t("nav.closeMenu") : t("nav.openMenu")}
       aria-expanded={open}
       onClick={onClick}
       style={{
@@ -262,6 +266,7 @@ export default function Nav({
   scrolled: boolean;
 }) {
   const mobile = useIsMobile();
+  const { t } = useLocale();
   const solid = scrolled || menuOpen;
   const [logoRotation, setLogoRotation] = useState(0);
 
@@ -326,10 +331,10 @@ export default function Nav({
 
         {!mobile && (
           <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
-            <NavLink href="#how">How It Works</NavLink>
+            <NavLink href="#how">{t("nav.howItWorks")}</NavLink>
             <NavDropdown />
-            <NavLink href="#why">Why Us</NavLink>
-            <NavLink href="#faq">FAQ</NavLink>
+            <NavLink href="#why">{t("nav.whyUs")}</NavLink>
+            <NavLink href="#faq">{t("nav.faq")}</NavLink>
           </div>
         )}
 
@@ -344,7 +349,7 @@ export default function Nav({
           >
             <LangSwitcher />
             <Button variant="primary" size="sm" onClick={onCta}>
-              {CTA_LABEL}
+              {t("common.joinNow")}
             </Button>
           </div>
         ) : (

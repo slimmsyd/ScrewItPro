@@ -6,16 +6,7 @@ import Container from "@/components/ui/Container";
 import Eyebrow from "@/components/ui/Eyebrow";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Reveal from "@/components/ui/Reveal";
-
-const services = [
-  { title: "Furniture Assembly", sub: "Starting at $49" },
-  { title: "Pickup & Delivery", sub: "We handle the transport" },
-  { title: "Large Furniture Assembly", sub: "Starting at $129" },
-  { title: "Office Furniture Assembly", sub: "Desks, tables & workstations" },
-  { title: "Senior Convenience Service", sub: "Zero physical effort required" },
-  { title: "White Glove Delivery", sub: "Placed, unpacked & inspected" },
-  { title: "Membership Plans", sub: "Starting at $29/month" },
-];
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 function ServiceRow({
   title,
@@ -72,6 +63,17 @@ function ServiceRow({
 }
 
 export default function Services() {
+  const { t } = useLocale();
+  const services = [
+    { title: t("services.assembly"), sub: t("services.assemblySub") },
+    { title: t("services.pickup"), sub: t("services.pickupSub") },
+    { title: t("services.large"), sub: t("services.largeSub") },
+    { title: t("services.office"), sub: t("services.officeSub") },
+    { title: t("services.senior"), sub: t("services.seniorSub") },
+    { title: t("services.whiteGlove"), sub: t("services.whiteGloveSub") },
+    { title: t("services.membership"), sub: t("services.membershipSub") },
+  ];
+
   return (
     <Reveal
       as="section"
@@ -79,10 +81,8 @@ export default function Services() {
       style={{ background: "var(--white)", padding: "var(--section-pad-y) 0" }}
     >
       <Container>
-        <Eyebrow>Services</Eyebrow>
-        <SectionTitle>
-          Everything Between the Store and Your Living Room
-        </SectionTitle>
+        <Eyebrow>{t("services.eyebrow")}</Eyebrow>
+        <SectionTitle>{t("services.title")}</SectionTitle>
         <div style={{ marginTop: 40 }}>
           {services.map((s, i) => (
             <ServiceRow

@@ -16,28 +16,30 @@ import Badge from "@/components/ui/Badge";
 import HeroSearch from "@/components/home/HeroSearch";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { ASSETS } from "@/lib/site";
-
-const heroCategories = [
-  { icon: Wrench, label: "Assembly" },
-  { icon: Truck, label: "Pickup & Delivery" },
-  { icon: BedDouble, label: "Large Furniture" },
-  { icon: Briefcase, label: "Office" },
-  { icon: HeartHandshake, label: "Senior Service" },
-  { icon: Sparkles, label: "White Glove" },
-  { icon: BadgeCheck, label: "Membership" },
-];
-
-const heroChips = [
-  "General Furniture Assembly",
-  "IKEA Assembly",
-  "Bed Assembly",
-  "Desk Assembly",
-  "Wardrobe Assembly",
-];
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 export default function Hero({ onCta }: { onCta: () => void }) {
   const [activeCat, setActiveCat] = useState(0);
   const mobile = useIsMobile();
+  const { t } = useLocale();
+
+  const heroCategories = [
+    { icon: Wrench, label: t("hero.catAssembly") },
+    { icon: Truck, label: t("hero.catPickup") },
+    { icon: BedDouble, label: t("hero.catLarge") },
+    { icon: Briefcase, label: t("hero.catOffice") },
+    { icon: HeartHandshake, label: t("hero.catSenior") },
+    { icon: Sparkles, label: t("hero.catWhiteGlove") },
+    { icon: BadgeCheck, label: t("hero.catMembership") },
+  ];
+
+  const heroChips = [
+    t("hero.chipGeneral"),
+    t("hero.chipIkea"),
+    t("hero.chipBed"),
+    t("hero.chipDesk"),
+    t("hero.chipWardrobe"),
+  ];
 
   return (
     <header
@@ -46,14 +48,10 @@ export default function Hero({ onCta }: { onCta: () => void }) {
         background: "var(--white)",
         padding: mobile ? "32px 0 56px" : "72px 0 150px",
         position: "relative",
-        // Keep hero (and search dropdown) above following sections.
-        // Motion transforms on sibling sections create stacking contexts.
         zIndex: 40,
-        // Do not clip the combobox dropdown into the next section
         overflow: "visible",
       }}
     >
-      {/* Decorative geometry clipped so it doesn't spill past the hero band */}
       <div
         aria-hidden
         style={{
@@ -116,11 +114,11 @@ export default function Hero({ onCta }: { onCta: () => void }) {
               whiteSpace: "nowrap",
             }}
           >
-            We’ve got it from here.
+            {t("hero.mascotBubble")}
           </div>
           <Image
             src={ASSETS.mascot}
-            alt="ScrewIt Pros technician waving"
+            alt="ScrewIt Pros"
             width={170}
             height={200}
             style={{
@@ -143,7 +141,7 @@ export default function Hero({ onCta }: { onCta: () => void }) {
         }}
       >
         <Badge variant="brand" style={{ marginBottom: 24 }}>
-          Serving the Houston Metro Area
+          {t("hero.badge")}
         </Badge>
         <h1
           style={{
@@ -157,7 +155,7 @@ export default function Hero({ onCta }: { onCta: () => void }) {
             maxWidth: "18ch",
           }}
         >
-          Furniture Assembly Without the Hassle.
+          {t("hero.title")}
         </h1>
         <p
           style={{
@@ -169,7 +167,7 @@ export default function Hero({ onCta }: { onCta: () => void }) {
             margin: "0 0 14px",
           }}
         >
-          If You Don’t Want to Do It, ScrewIt!
+          {t("hero.tagline")}
         </p>
         <p
           style={{
@@ -181,8 +179,7 @@ export default function Hero({ onCta }: { onCta: () => void }) {
             maxWidth: "52ch",
           }}
         >
-          We pick up your furniture, professionally assemble it at our workshop,
-          and deliver it fully built and ready to use.
+          {t("hero.sub")}
         </p>
         <HeroSearch onCta={onCta} />
         <div

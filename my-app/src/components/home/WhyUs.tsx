@@ -7,37 +7,19 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import ImageSlot from "@/components/ui/ImageSlot";
 import Reveal from "@/components/ui/Reveal";
 import { useIsMobile } from "@/hooks/useIsMobile";
-
-const whyPoints = [
-  {
-    kicker: "Built in Our Workshop",
-    title: "Professional Workshop Assembly",
-    body: "Your furniture is assembled in a dedicated workspace with the proper tools and equipment.",
-    ph: "Photo: workshop floor",
-  },
-  {
-    kicker: "Your Home Stays Yours",
-    title: "Less Stress, Less Mess",
-    body: "No cardboard piles, loose hardware, or assembly projects taking over your home.",
-    ph: "Photo: clean living room",
-  },
-  {
-    kicker: "Inspected & Photographed",
-    title: "Quality Checked Before Delivery",
-    body: "Every item is inspected and photographed before it leaves our facility.",
-    ph: "Photo: quality inspection",
-  },
-  {
-    kicker: "Just Point to the Spot",
-    title: "Delivered Ready to Use",
-    body: "When we arrive, your furniture is already assembled. We simply place it where you want it.",
-    ph: "Photo: white glove delivery",
-  },
-];
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 export default function WhyUs() {
   const [active, setActive] = useState(0);
   const mobile = useIsMobile();
+  const { t } = useLocale();
+
+  const whyPoints = [
+    { kicker: t("why.k1"), title: t("why.t1"), body: t("why.b1"), ph: t("why.p1") },
+    { kicker: t("why.k2"), title: t("why.t2"), body: t("why.b2"), ph: t("why.p2") },
+    { kicker: t("why.k3"), title: t("why.t3"), body: t("why.b3"), ph: t("why.p3") },
+    { kicker: t("why.k4"), title: t("why.t4"), body: t("why.b4"), ph: t("why.p4") },
+  ];
 
   return (
     <Reveal
@@ -51,10 +33,10 @@ export default function WhyUs() {
       <Container>
         <div style={{ textAlign: "center", marginBottom: 48 }}>
           <Eyebrow color="var(--blue-300)" center>
-            Why Choose ScrewIt Pros?
+            {t("why.eyebrow")}
           </Eyebrow>
           <SectionTitle inverse center>
-            We Don’t Build Furniture on Your Living Room Floor
+            {t("why.title")}
           </SectionTitle>
           <p
             style={{
@@ -66,8 +48,7 @@ export default function WhyUs() {
               margin: "12px auto 0",
             }}
           >
-            Most assembly services show up at your home surrounded by kids,
-            pets, distractions, and limited space. ScrewIt Pros is different.
+            {t("why.sub")}
           </p>
         </div>
         <div

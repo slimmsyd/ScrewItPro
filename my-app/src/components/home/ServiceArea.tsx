@@ -7,9 +7,11 @@ import Badge from "@/components/ui/Badge";
 import Reveal from "@/components/ui/Reveal";
 import HoustonMap from "@/components/home/HoustonMap";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 export default function ServiceArea() {
   const mobile = useIsMobile();
+  const { t } = useLocale();
 
   return (
     <Reveal
@@ -24,10 +26,8 @@ export default function ServiceArea() {
             margin: "0 auto 36px",
           }}
         >
-          <Eyebrow center>Service Area</Eyebrow>
-          <SectionTitle center>
-            Currently Serving the Houston Metro Area
-          </SectionTitle>
+          <Eyebrow center>{t("area.eyebrow")}</Eyebrow>
+          <SectionTitle center>{t("area.title")}</SectionTitle>
           <p
             style={{
               fontFamily: "var(--font-body)",
@@ -37,8 +37,7 @@ export default function ServiceArea() {
               margin: "0 auto 24px",
             }}
           >
-            Serving homeowners, renters, seniors, busy professionals, and
-            families throughout the greater Houston area.
+            {t("area.sub")}
           </p>
           <div
             style={{
@@ -49,7 +48,7 @@ export default function ServiceArea() {
               marginBottom: 12,
             }}
           >
-            Expanding Soon
+            {t("area.expanding")}
           </div>
           <div
             style={{
@@ -59,7 +58,12 @@ export default function ServiceArea() {
               justifyContent: "center",
             }}
           >
-            {["Atlanta", "Austin", "San Antonio", "Dallas"].map((c) => (
+            {[
+              t("area.atlanta"),
+              t("area.austin"),
+              t("area.sanAntonio"),
+              t("area.dallas"),
+            ].map((c) => (
               <Badge key={c} variant="neutral">
                 {c}
               </Badge>

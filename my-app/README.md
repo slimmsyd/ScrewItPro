@@ -155,6 +155,15 @@ Brand: deep blue `#04209B`, electric blue `#1D6EFE`, Miguer Sans (display) + Ins
 
 ---
 
+## Internationalization (EN / ES)
+
+- Nav **English / Español** switcher and mobile language buttons flip the whole UI.
+- Dictionaries: `src/i18n/dictionaries/en.ts` + `es.ts`
+- Provider: `src/components/providers/LocaleProvider.tsx` (`useLocale()` / `t("section.key")`)
+- Preference stored in `localStorage` (`screwitpro_locale`) and sets `html lang`.
+
+To add a string: put the key in **both** dictionaries, then call `t("section.key")` in the component.
+
 ## Notes
 
 - Site mode is **waitlist** (primary CTAs say Join Now and go to `/join`).

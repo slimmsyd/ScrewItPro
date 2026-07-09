@@ -5,9 +5,10 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Reveal from "@/components/ui/Reveal";
-import { CTA_LABEL } from "@/lib/site";
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 export default function Credibility({ onCta }: { onCta: () => void }) {
+  const { t } = useLocale();
   return (
     <Reveal
       as="section"
@@ -15,11 +16,9 @@ export default function Credibility({ onCta }: { onCta: () => void }) {
     >
       <Container style={{ textAlign: "center", maxWidth: 760 }}>
         <Badge variant="accent" style={{ marginBottom: 20 }}>
-          Coming Soon: Customer Success Stories
+          {t("credibility.badge")}
         </Badge>
-        <SectionTitle>
-          Be Among the First to Experience the ScrewIt Pros Difference
-        </SectionTitle>
+        <SectionTitle>{t("credibility.title")}</SectionTitle>
         <p
           style={{
             fontFamily: "var(--font-body)",
@@ -30,11 +29,10 @@ export default function Credibility({ onCta }: { onCta: () => void }) {
             maxWidth: "56ch",
           }}
         >
-          We’re helping busy families, seniors, professionals, and homeowners
-          save time and avoid the frustration of furniture assembly.
+          {t("credibility.body")}
         </p>
         <Button variant="primary" size="lg" onClick={onCta}>
-          {CTA_LABEL}
+          {t("common.joinNow")}
         </Button>
       </Container>
     </Reveal>

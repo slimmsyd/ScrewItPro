@@ -2,46 +2,49 @@ import type { Metadata } from "next";
 import { Instrument_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import MotionProvider from "@/components/providers/MotionProvider";
+import LocaleProvider from "@/components/providers/LocaleProvider";
 import "./globals.css";
 
 const instrument = Instrument_Sans({
- subsets: ["latin"],
- variable: "--font-instrument",
- display: "swap",
- weight: ["400", "500", "600", "700"],
- style: ["normal", "italic"],
+  subsets: ["latin"],
+  variable: "--font-instrument",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
 });
 
 /** Display face from ~/Desktop/miguer-sans (Jolicia Type) */
 const miguer = localFont({
- src: [
- {
- path: "../fonts/MiguerSans-Regular.otf",
- weight: "400",
- style: "normal",
- },
- ],
- variable: "--font-miguer",
- display: "swap",
- fallback: ["Instrument Sans", "system-ui", "sans-serif"],
+  src: [
+    {
+      path: "../fonts/MiguerSans-Regular.otf",
+      weight: "400",
+      style: "normal",
+    },
+  ],
+  variable: "--font-miguer",
+  display: "swap",
+  fallback: ["Instrument Sans", "system-ui", "sans-serif"],
 });
 
 export const metadata: Metadata = {
- title: "ScrewIt Pros - Furniture Assembly Without the Hassle",
- description:
- "We pick up your furniture, professionally assemble it at our workshop, and deliver it fully built and ready to use. If You Don’t Want to Do It, ScrewIt!",
+  title: "ScrewIt Pros - Furniture Assembly Without the Hassle",
+  description:
+    "We pick up your furniture, professionally assemble it at our workshop, and deliver it fully built and ready to use. If You Don't Want to Do It, ScrewIt!",
 };
 
 export default function RootLayout({
- children,
+  children,
 }: Readonly<{
- children: React.ReactNode;
+  children: React.ReactNode;
 }>) {
- return (
- <html lang="en" className={`${instrument.variable} ${miguer.variable}`}>
- <body className="antialiased">
- <MotionProvider>{children}</MotionProvider>
- </body>
- </html>
- );
+  return (
+    <html lang="en" className={`${instrument.variable} ${miguer.variable}`}>
+      <body className="antialiased">
+        <LocaleProvider>
+          <MotionProvider>{children}</MotionProvider>
+        </LocaleProvider>
+      </body>
+    </html>
+  );
 }
