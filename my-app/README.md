@@ -42,9 +42,14 @@ Open [http://localhost:3000](http://localhost:3000).
 - FAQ, credibility CTA, footer (white S mark)
 - **Chip** support chat (guided quote flow + thinking loader)
 
-### Waitlist (`/join`)
-- Email join form → **`POST /api/waitlist`** (persists to Supabase)
-- **Continue with Google** (OAuth + waitlist upsert on callback)
+### Waitlist + account scaffold (`/join`)
+- **Email + password** → `POST /api/auth/signup` (Auth user + waitlist; no confirmation email yet)
+  - Then client `signInWithPassword` for a browser session
+  - Login: `signInWithPassword` + waitlist upsert
+- **Continue with Google** (legacy OAuth + waitlist upsert on callback)
+- Apple Sign-In removed
+- Custom welcome / confirm email: not wired yet (add later via Resend or similar)
+- No `/account` portal yet — success stays on `/join`
 - Continue with Apple (UI; Apple not connected yet)
 - Success state with **real queue position** from the database
 
@@ -52,9 +57,10 @@ Open [http://localhost:3000](http://localhost:3000).
 | Route | Purpose |
 | --- | --- |
 | `GET /auth/google` | Start Google OAuth |
-| `GET /auth/callback` | Exchange code, save waitlist, set session cookie |
-| `GET /api/auth/session` | Read lightweight session for join UI |
-| `POST /api/waitlist` | Email waitlist signup (service role → Supabase) |
+| `GET /auth/callback` | Google OAuth: exchange code, save waitlist, set `sip_session` |
+| `POST /api/auth/signup` | Create Auth user (pre-confirmed) + waitlist enroll |
+| `GET /api/auth/session` | Read lightweight Google session for join UI |
+| `POST /api/waitlist` | Waitlist upsert (service role → Supabase; optional `convertedUserId`) |
 | `GET /api/waitlist` | Waitlist backend readiness |
 | `GET /api/health` | Integration status (no secrets) |
 

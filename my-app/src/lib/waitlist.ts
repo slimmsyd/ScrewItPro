@@ -26,6 +26,8 @@ export const waitlistSignupSchema = z.object({
     .transform((v) => (v && v.length > 0 ? v : null)),
   provider: z.enum(waitlistProviders).default("email"),
   source: z.string().trim().max(64).default("join"),
+  /** When set, links waitlist lead → profiles / auth.users after account create */
+  convertedUserId: z.string().uuid().optional().nullable(),
 });
 
 export type WaitlistSignupInput = z.infer<typeof waitlistSignupSchema>;
@@ -82,24 +84,41 @@ export async function upsertWaitlistEntry(
   let created: boolean;
   let provider: WaitlistProvider;
 
+  const conversion =
+    parsed.convertedUserId != null
+      ? { converted_user_id: parsed.convertedUserId }
+      : {};
+
   if (existing) {
     const nextProvider =
       existing.provider === "email" && parsed.provider !== "email"
         ? parsed.provider
         : (existing.provider as WaitlistProvider);
 
-    const { data: updated, error: updateError } = await supabase
+    const baseUpdate = {
+      email: parsed.email,
+      name: name ?? undefined,
+      picture: picture ?? undefined,
+      provider: nextProvider,
+      source: parsed.source,
+    };
+
+    let { data: updated, error: updateError } = await supabase
       .from("waitlist_entries")
-      .update({
-        email: parsed.email,
-        name: name ?? undefined,
-        picture: picture ?? undefined,
-        provider: nextProvider,
-        source: parsed.source,
-      })
+      .update({ ...baseUpdate, ...conversion })
       .eq("id", existing.id)
       .select("id, email, provider")
       .single();
+
+    // Older DBs may lack converted_user_id — retry without linking
+    if (updateError && parsed.convertedUserId) {
+      ({ data: updated, error: updateError } = await supabase
+        .from("waitlist_entries")
+        .update(baseUpdate)
+        .eq("id", existing.id)
+        .select("id, email, provider")
+        .single());
+    }
 
     if (updateError || !updated) {
       throw new WaitlistDbError(
@@ -112,18 +131,28 @@ export async function upsertWaitlistEntry(
     created = false;
     provider = updated.provider as WaitlistProvider;
   } else {
-    const { data: inserted, error: insertError } = await supabase
+    const baseInsert = {
+      email: parsed.email,
+      email_normalized: emailNormalized,
+      name,
+      picture,
+      provider: parsed.provider,
+      source: parsed.source,
+    };
+
+    let { data: inserted, error: insertError } = await supabase
       .from("waitlist_entries")
-      .insert({
-        email: parsed.email,
-        email_normalized: emailNormalized,
-        name,
-        picture,
-        provider: parsed.provider,
-        source: parsed.source,
-      })
+      .insert({ ...baseInsert, ...conversion })
       .select("id, email, provider, created_at")
       .single();
+
+    if (insertError && parsed.convertedUserId && insertError.code !== "23505") {
+      ({ data: inserted, error: insertError } = await supabase
+        .from("waitlist_entries")
+        .insert(baseInsert)
+        .select("id, email, provider, created_at")
+        .single());
+    }
 
     if (insertError || !inserted) {
       // Race: unique conflict - re-fetch and treat as existing

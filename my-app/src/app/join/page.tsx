@@ -6,9 +6,12 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { ASSETS, PRIVACY_PATH, TERMS_PATH } from "@/lib/site";
 import { signInWithProvider } from "@/lib/auth/oauth";
+import { createClient } from "@/lib/supabase/client";
+import { publicEnv } from "@/lib/env";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD = 8;
 
 function GoogleMark() {
   return (
@@ -33,20 +36,6 @@ function GoogleMark() {
   );
 }
 
-function AppleMark() {
-  return (
-    <svg
-      width={18}
-      height={18}
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden
-    >
-      <path d="M17.05 12.54c-.02-2.05 1.68-3.03 1.75-3.08-.95-1.4-2.44-1.59-2.97-1.61-1.26-.13-2.47.74-3.11.74-.64 0-1.63-.72-2.68-.7-1.38.02-2.65.8-3.36 2.03-1.43 2.49-.37 6.17 1.03 8.19.68.99 1.5 2.1 2.56 2.06 1.03-.04 1.42-.66 2.66-.66 1.24 0 1.59.66 2.68.64 1.11-.02 1.81-1 2.49-1.99.78-1.14 1.11-2.25 1.13-2.31-.02-.01-2.17-.83-2.19-3.3zM15.1 6.36c.56-.68.94-1.63.84-2.58-.81.03-1.79.54-2.37 1.22-.52.6-.98 1.56-.86 2.48.9.07 1.83-.46 2.39-1.12z" />
-    </svg>
-  );
-}
-
 const socialBtn: React.CSSProperties = {
   width: "100%",
   height: 50,
@@ -64,6 +53,136 @@ const socialBtn: React.CSSProperties = {
   gap: 10,
 };
 
+const fieldStyle = (hasError: boolean): React.CSSProperties => ({
+  width: "100%",
+  height: 50,
+  borderRadius: "var(--radius-md)",
+  border: `1px solid ${hasError ? "var(--status-error)" : "var(--gray-200)"}`,
+  padding: "0 14px",
+  fontFamily: "var(--font-body)",
+  fontSize: 15.5,
+  color: "var(--ink-900)",
+  outline: "none",
+  boxSizing: "border-box",
+});
+
+const passwordInputStyle = (hasError: boolean): React.CSSProperties => ({
+  ...fieldStyle(hasError),
+  paddingRight: 48,
+});
+
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  fontFamily: "var(--font-body)",
+  fontSize: 12.5,
+  fontWeight: 600,
+  color: "var(--ink-700)",
+  marginBottom: 8,
+  marginTop: 14,
+};
+
+function EyeOpenIcon() {
+  return (
+    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12s-3.75 6.75-9.75 6.75S2.25 12 2.25 12z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="2.75" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+function EyeOffIcon() {
+  return (
+    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M3 3l18 18M10.5 10.6a2.75 2.75 0 003.9 3.9M9.4 5.1A10.4 10.4 0 0112 4.75c6 0 9.75 7.25 9.75 7.25a17.7 17.7 0 01-3.2 4.1M6.4 6.5A17.5 17.5 0 002.25 12S6 18.75 12 18.75c1.2 0 2.33-.22 3.38-.6"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function PasswordField({
+  id,
+  label,
+  value,
+  onChange,
+  onEnter,
+  placeholder,
+  autoComplete,
+  hasError,
+  visible,
+  onToggleVisible,
+  showLabel,
+  hideLabel,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  onEnter?: () => void;
+  placeholder: string;
+  autoComplete: string;
+  hasError: boolean;
+  visible: boolean;
+  onToggleVisible: () => void;
+  showLabel: string;
+  hideLabel: string;
+}) {
+  return (
+    <>
+      <label htmlFor={id} style={labelStyle}>
+        {label}
+      </label>
+      <div style={{ position: "relative" }}>
+        <input
+          id={id}
+          type={visible ? "text" : "password"}
+          autoComplete={autoComplete}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onEnter?.();
+          }}
+          placeholder={placeholder}
+          style={passwordInputStyle(hasError)}
+        />
+        <button
+          type="button"
+          onClick={onToggleVisible}
+          aria-label={visible ? hideLabel : showLabel}
+          aria-pressed={visible}
+          style={{
+            position: "absolute",
+            right: 8,
+            top: "50%",
+            transform: "translateY(-50%)",
+            width: 36,
+            height: 36,
+            display: "grid",
+            placeItems: "center",
+            border: "none",
+            background: "transparent",
+            color: "var(--ink-500)",
+            cursor: "pointer",
+            borderRadius: "var(--radius-md)",
+            padding: 0,
+          }}
+        >
+          {visible ? <EyeOffIcon /> : <EyeOpenIcon />}
+        </button>
+      </div>
+    </>
+  );
+}
+
 type WaitlistApiResponse = {
   ok?: boolean;
   error?: string;
@@ -74,6 +193,9 @@ type WaitlistApiResponse = {
     created: boolean;
   };
 };
+
+type Phase = "form" | "loading" | "done";
+type Mode = "signup" | "login";
 
 function mapWaitlistError(
   code: string | undefined,
@@ -90,16 +212,91 @@ function mapWaitlistError(
   return (code && map[code]) || t("join.errWaitlistFailed");
 }
 
+function mapAuthError(
+  codeOrMessage: string,
+  t: (key: string) => string
+): string {
+  const m = codeOrMessage.toLowerCase();
+  if (
+    m === "email_taken" ||
+    m.includes("already registered") ||
+    m.includes("already been registered")
+  ) {
+    return t("join.errEmailTaken");
+  }
+  if (m.includes("invalid login") || m.includes("invalid credentials")) {
+    return t("join.errInvalidCredentials");
+  }
+  if (m.includes("password") && m.includes("least")) {
+    return t("join.passwordError");
+  }
+  if (
+    m === "auth_not_configured" ||
+    m.includes("supabase is not configured")
+  ) {
+    return t("join.errAuthNotConfigured");
+  }
+  if (m === "invalid_input" || m === "invalid_email") {
+    return t("join.emailError");
+  }
+  return t("join.errGeneric");
+}
+
+function isSupabasePublicReady() {
+  return Boolean(
+    publicEnv.supabaseUrl?.trim() && publicEnv.supabaseAnonKey?.trim()
+  );
+}
+
+async function enrollWaitlist(opts: {
+  email: string;
+  name?: string | null;
+  userId?: string | null;
+  source: string;
+  provider?: "email" | "google";
+}): Promise<{ position: number | null; error?: string }> {
+  try {
+    const res = await fetch("/api/waitlist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: opts.email,
+        name: opts.name ?? null,
+        provider: opts.provider ?? "email",
+        source: opts.source,
+        convertedUserId: opts.userId ?? null,
+      }),
+    });
+    const data = (await res.json()) as WaitlistApiResponse;
+    if (!res.ok || !data.ok || !data.entry) {
+      return { position: null, error: data.error };
+    }
+    return { position: data.entry.position };
+  } catch {
+    return { position: null, error: "waitlist_failed" };
+  }
+}
+
 function JoinForm() {
   const searchParams = useSearchParams();
   const { t } = useLocale();
-  const [phase, setPhase] = useState<"form" | "loading" | "done">("form");
+  const [phase, setPhase] = useState<Phase>("form");
+  const [mode, setMode] = useState<Mode>("signup");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [err, setErr] = useState("");
-  const [socialBusy, setSocialBusy] = useState<"google" | "apple" | null>(
-    null
-  );
+  const [socialBusy, setSocialBusy] = useState(false);
   const [pos, setPos] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("mode") === "login") {
+      setMode("login");
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const authErr = searchParams.get("error");
@@ -120,80 +317,176 @@ function JoinForm() {
 
     if (searchParams.get("joined") !== "1") return;
 
+    // Google OAuth callback success → waitlist success UI
     setPhase("loading");
-    fetch("/api/auth/session")
-      .then((r) => r.json())
-      .then(
-        (data: {
+    (async () => {
+      try {
+        const r = await fetch("/api/auth/session");
+        const data = (await r.json()) as {
           user?: { email?: string; position?: number | null } | null;
-        }) => {
-          setEmail(data.user?.email || "Google");
-          if (
-            typeof data.user?.position === "number" &&
-            data.user.position > 0
-          ) {
-            setPos(data.user.position);
-          }
-          setPhase("done");
+        };
+        setEmail(data.user?.email || "Google");
+        if (
+          typeof data.user?.position === "number" &&
+          data.user.position > 0
+        ) {
+          setPos(data.user.position);
         }
-      )
-      .catch(() => {
+        setPhase("done");
+      } catch {
         setEmail("Google");
         setPhase("done");
-      });
+      }
+    })();
   }, [searchParams, t]);
 
-  const submit = async () => {
+  const validate = (forLogin: boolean) => {
     const v = email.trim();
     if (!EMAIL_RE.test(v)) {
       setErr(t("join.emailError"));
+      return false;
+    }
+    if (password.length < MIN_PASSWORD) {
+      setErr(t("join.passwordError"));
+      return false;
+    }
+    if (!forLogin) {
+      if (password !== passwordConfirm) {
+        setErr(t("join.passwordMismatch"));
+        return false;
+      }
+      if (!isSupabasePublicReady()) {
+        setErr(t("join.errAuthNotConfigured"));
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const submitSignup = async () => {
+    if (!validate(false)) return;
+    setErr("");
+    setPhase("loading");
+
+    try {
+      // Server creates Auth user already confirmed (no Supabase confirm email)
+      // + waitlist row. Custom welcome email can be added later.
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+          name: name.trim() || null,
+        }),
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        error?: string;
+        userId?: string;
+        waitlist?: { email: string; position: number } | null;
+        warning?: string;
+      };
+
+      if (!res.ok || !data.ok) {
+        setPhase("form");
+        setErr(mapAuthError(data.error ?? "signup_failed", t));
+        return;
+      }
+
+      // Establish browser session (optional but keeps them signed in)
+      if (isSupabasePublicReady()) {
+        try {
+          const supabase = createClient();
+          await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password,
+          });
+        } catch {
+          /* account + waitlist already created */
+        }
+      }
+
+      if (data.waitlist?.position) {
+        setPos(data.waitlist.position);
+      } else if (data.warning) {
+        // Soft: account ok but waitlist had a config issue
+        console.warn("[join] waitlist warning", data.warning);
+      }
+
+      setPhase("done");
+    } catch (e) {
+      setPhase("form");
+      setErr(
+        e instanceof Error ? mapAuthError(e.message, t) : t("join.errGeneric")
+      );
+    }
+  };
+
+  const submitLogin = async () => {
+    if (!validate(true)) return;
+    if (!isSupabasePublicReady()) {
+      setErr(t("join.errAuthNotConfigured"));
       return;
     }
     setErr("");
     setPhase("loading");
 
     try {
-      const res = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: v,
-          provider: "email",
-          source: "join",
-        }),
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
       });
-      const data = (await res.json()) as WaitlistApiResponse;
 
-      if (!res.ok || !data.ok || !data.entry) {
+      if (error) {
         setPhase("form");
-        setErr(mapWaitlistError(data.error, t));
+        setErr(mapAuthError(error.message, t));
         return;
       }
 
-      setEmail(data.entry.email);
-      setPos(data.entry.position);
+      const user = data.user;
+      const wl = await enrollWaitlist({
+        email: user.email ?? email.trim(),
+        name:
+          (user.user_metadata?.full_name as string | undefined) ??
+          (name.trim() || null),
+        userId: user.id,
+        source: "join_login",
+        provider: "email",
+      });
+
+      if (user.email) setEmail(user.email);
+      if (typeof wl.position === "number" && wl.position > 0) {
+        setPos(wl.position);
+      }
       setPhase("done");
-    } catch {
+    } catch (e) {
       setPhase("form");
-      setErr(t("join.errWaitlistFailed"));
+      setErr(
+        e instanceof Error ? mapAuthError(e.message, t) : t("join.errGeneric")
+      );
     }
   };
 
-  const social = async (provider: "google" | "apple") => {
+  const socialGoogle = async () => {
     setErr("");
-    setSocialBusy(provider);
+    setSocialBusy(true);
     try {
-      await signInWithProvider(provider);
+      await signInWithProvider("google");
     } catch (e) {
-      setSocialBusy(null);
-      setErr(
-        e instanceof Error
-          ? e.message
-          : provider === "apple"
-            ? t("join.appleNotReady")
-            : t("join.errGeneric")
-      );
+      setSocialBusy(false);
+      setErr(e instanceof Error ? e.message : t("join.errGeneric"));
     }
+  };
+
+  const switchMode = (next: Mode) => {
+    setMode(next);
+    setErr("");
+    setPassword("");
+    setPasswordConfirm("");
+    setShowPassword(false);
+    setShowPasswordConfirm(false);
   };
 
   return (
@@ -221,21 +514,59 @@ function JoinForm() {
             style={{ height: 36, width: "auto" }}
           />
         </Link>
-        <span
-          style={{
-            fontFamily: "var(--font-body)",
-            fontSize: 14,
-            color: "var(--ink-500)",
-          }}
-        >
-          {t("common.alreadyMember")}{" "}
-          <Link
-            href="/join"
-            style={{ color: "var(--blue-deep)", fontWeight: 600 }}
+        {phase === "form" && (
+          <span
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: 14,
+              color: "var(--ink-500)",
+            }}
           >
-            {t("common.signIn")}
-          </Link>
-        </span>
+            {mode === "signup" ? (
+              <>
+                {t("common.alreadyMember")}{" "}
+                <button
+                  type="button"
+                  onClick={() => switchMode("login")}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    color: "var(--blue-deep)",
+                    fontWeight: 600,
+                    fontFamily: "inherit",
+                    fontSize: "inherit",
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                  }}
+                >
+                  {t("common.signIn")}
+                </button>
+              </>
+            ) : (
+              <>
+                {t("join.needAccount")}{" "}
+                <button
+                  type="button"
+                  onClick={() => switchMode("signup")}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    color: "var(--blue-deep)",
+                    fontWeight: 600,
+                    fontFamily: "inherit",
+                    fontSize: "inherit",
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                  }}
+                >
+                  {t("join.createAccount")}
+                </button>
+              </>
+            )}
+          </span>
+        )}
       </header>
 
       <main
@@ -282,53 +613,97 @@ function JoinForm() {
                 letterSpacing: "var(--tracking-display)",
               }}
             >
-              {t("join.title")}
+              {mode === "signup" ? t("join.title") : t("join.loginTitle")}
             </h1>
             <p
               style={{
                 fontFamily: "var(--font-body)",
                 fontSize: 14,
                 color: "var(--text-muted)",
-                margin: "0 0 28px",
+                margin: "0 0 20px",
                 lineHeight: 1.55,
               }}
             >
-              {t("join.sub")}
+              {mode === "signup" ? t("join.sub") : t("join.loginSub")}
             </p>
-            <label
-              style={{
-                display: "block",
-                fontFamily: "var(--font-body)",
-                fontSize: 12.5,
-                fontWeight: 600,
-                color: "var(--ink-700)",
-                marginBottom: 8,
-              }}
-            >
+
+            {mode === "signup" && (
+              <>
+                <label style={{ ...labelStyle, marginTop: 0 }}>
+                  {t("join.name")}
+                </label>
+                <input
+                  type="text"
+                  autoComplete="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={t("join.namePlaceholder")}
+                  style={fieldStyle(false)}
+                />
+              </>
+            )}
+
+            <label style={{ ...labelStyle, marginTop: mode === "signup" ? 14 : 0 }}>
               {t("join.email")}
             </label>
             <input
               type="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
                 setErr("");
               }}
-              onKeyDown={(e) => e.key === "Enter" && submit()}
               placeholder={t("join.emailPlaceholder")}
-              style={{
-                width: "100%",
-                height: 50,
-                borderRadius: "var(--radius-md)",
-                border: `1px solid ${err ? "var(--status-error)" : "var(--gray-200)"}`,
-                padding: "0 14px",
-                fontFamily: "var(--font-body)",
-                fontSize: 15.5,
-                color: "var(--ink-900)",
-                outline: "none",
-                boxSizing: "border-box",
-              }}
+              style={fieldStyle(Boolean(err))}
             />
+
+            <PasswordField
+              id="join-password"
+              label={t("join.password")}
+              value={password}
+              onChange={(v) => {
+                setPassword(v);
+                setErr("");
+              }}
+              onEnter={() => {
+                if (mode === "login") {
+                  void submitLogin();
+                } else if (passwordConfirm) {
+                  void submitSignup();
+                }
+              }}
+              placeholder={t("join.passwordPlaceholder")}
+              autoComplete={
+                mode === "signup" ? "new-password" : "current-password"
+              }
+              hasError={Boolean(err)}
+              visible={showPassword}
+              onToggleVisible={() => setShowPassword((v) => !v)}
+              showLabel={t("join.showPassword")}
+              hideLabel={t("join.hidePassword")}
+            />
+
+            {mode === "signup" && (
+              <PasswordField
+                id="join-password-confirm"
+                label={t("join.passwordConfirm")}
+                value={passwordConfirm}
+                onChange={(v) => {
+                  setPasswordConfirm(v);
+                  setErr("");
+                }}
+                onEnter={() => void submitSignup()}
+                placeholder={t("join.passwordConfirmPlaceholder")}
+                autoComplete="new-password"
+                hasError={Boolean(err)}
+                visible={showPasswordConfirm}
+                onToggleVisible={() => setShowPasswordConfirm((v) => !v)}
+                showLabel={t("join.showPassword")}
+                hideLabel={t("join.hidePassword")}
+              />
+            )}
+
             {err && (
               <p
                 style={{
@@ -341,9 +716,12 @@ function JoinForm() {
                 {err}
               </p>
             )}
+
             <button
               type="button"
-              onClick={submit}
+              onClick={() =>
+                void (mode === "signup" ? submitSignup() : submitLogin())
+              }
               style={{
                 width: "100%",
                 height: 50,
@@ -358,7 +736,7 @@ function JoinForm() {
                 cursor: "pointer",
               }}
             >
-              {t("join.joinNow")}
+              {mode === "signup" ? t("join.joinNow") : t("common.signIn")}
             </button>
 
             <div
@@ -381,30 +759,17 @@ function JoinForm() {
               />
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <button
-                type="button"
-                disabled={socialBusy !== null}
-                onClick={() => social("google")}
-                style={socialBtn}
-              >
-                <GoogleMark />
-                {socialBusy === "google"
-                  ? t("join.connectingGoogle")
-                  : t("join.continueGoogle")}
-              </button>
-              <button
-                type="button"
-                disabled={socialBusy !== null}
-                onClick={() => social("apple")}
-                style={socialBtn}
-              >
-                <AppleMark />
-                {socialBusy === "apple"
-                  ? t("join.connectingApple")
-                  : t("join.continueApple")}
-              </button>
-            </div>
+            <button
+              type="button"
+              disabled={socialBusy}
+              onClick={() => void socialGoogle()}
+              style={socialBtn}
+            >
+              <GoogleMark />
+              {socialBusy
+                ? t("join.connectingGoogle")
+                : t("join.continueGoogle")}
+            </button>
 
             <p
               style={{
@@ -418,14 +783,20 @@ function JoinForm() {
               {t("join.fineprint")}{" "}
               <Link
                 href={TERMS_PATH}
-                style={{ color: "var(--blue-electric)", textDecoration: "underline" }}
+                style={{
+                  color: "var(--blue-electric)",
+                  textDecoration: "underline",
+                }}
               >
                 {t("join.fineprintTerms")}
               </Link>
               {" · "}
               <Link
                 href={PRIVACY_PATH}
-                style={{ color: "var(--blue-electric)", textDecoration: "underline" }}
+                style={{
+                  color: "var(--blue-electric)",
+                  textDecoration: "underline",
+                }}
               >
                 {t("join.fineprintPrivacy")}
               </Link>
