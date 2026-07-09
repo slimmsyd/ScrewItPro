@@ -16,6 +16,7 @@ export default function ServiceArea() {
   return (
     <Reveal
       as="section"
+      id="area"
       style={{
         background: "var(--gray-50)",
         // Top only - map bleeds flush to bottom edge of section

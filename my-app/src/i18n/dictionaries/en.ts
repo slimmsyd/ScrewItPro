@@ -246,7 +246,9 @@ export const en = {
     connectingGoogle: "Redirecting to Google…",
     connectingApple: "Connecting to Apple…",
     fineprint:
-      "By joining you agree to receive product updates from ScrewIt Pros. Unsubscribe anytime.",
+      "By joining you agree to our Terms of Service and Privacy Policy, and to receive product updates from ScrewIt Pros. Unsubscribe anytime.",
+    fineprintTerms: "Terms of Service",
+    fineprintPrivacy: "Privacy Policy",
     saving: "Saving your spot…",
     youreIn: "● You're in",
     successTitle: "You're on the list.",

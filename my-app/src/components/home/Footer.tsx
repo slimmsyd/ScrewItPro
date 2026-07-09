@@ -1,28 +1,51 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
-import { ASSETS } from "@/lib/site";
+import { ASSETS, JOIN_PATH, PRIVACY_PATH, TERMS_PATH } from "@/lib/site";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
-function FooterLink({ children }: { children: React.ReactNode }) {
+function FooterLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
   const [h, setH] = useState(false);
+  const external = href.startsWith("http") || href.startsWith("mailto:");
+  const style = {
+    fontFamily: "var(--font-body)",
+    fontSize: 14,
+    color: h ? "var(--blue-100)" : "var(--blue-300)",
+    textDecoration: "none",
+    transition: "color 150ms",
+    cursor: "pointer" as const,
+  };
+
+  if (external) {
+    return (
+      <a
+        href={href}
+        onMouseEnter={() => setH(true)}
+        onMouseLeave={() => setH(false)}
+        style={style}
+      >
+        {children}
+      </a>
+    );
+  }
+
   return (
-    <a
-      href="#top"
+    <Link
+      href={href}
       onMouseEnter={() => setH(true)}
       onMouseLeave={() => setH(false)}
-      style={{
-        fontFamily: "var(--font-body)",
-        fontSize: 14,
-        color: h ? "var(--blue-100)" : "var(--blue-300)",
-        textDecoration: "none",
-        transition: "color 150ms",
-        cursor: "pointer",
-      }}
+      style={style}
     >
       {children}
-    </a>
+    </Link>
   );
 }
 
@@ -51,34 +74,44 @@ function SocialIcon({ path, label }: { path: string; label: string }) {
 export default function Footer() {
   const { t } = useLocale();
 
-  const cols = [
+  const cols: {
+    head: string;
+    items: { label: string; href: string }[];
+  }[] = [
     {
       head: t("footer.services"),
       items: [
-        t("footer.furnitureAssembly"),
-        t("footer.largeAssembly"),
-        t("footer.officeAssembly"),
-        t("footer.pickup"),
-        t("footer.whiteGlove"),
-        t("footer.membership"),
+        { label: t("footer.furnitureAssembly"), href: "/#services" },
+        { label: t("footer.largeAssembly"), href: "/#services" },
+        { label: t("footer.officeAssembly"), href: "/#services" },
+        { label: t("footer.pickup"), href: "/#services" },
+        { label: t("footer.whiteGlove"), href: "/#services" },
+        { label: t("footer.membership"), href: "/#services" },
       ],
     },
     {
       head: t("footer.company"),
       items: [
-        t("footer.howItWorks"),
-        t("footer.whyUs"),
-        t("footer.serviceArea"),
-        t("footer.contact"),
+        { label: t("footer.howItWorks"), href: "/#how" },
+        { label: t("footer.whyUs"), href: "/#why" },
+        { label: t("footer.serviceArea"), href: "/#area" },
+        { label: t("footer.contact"), href: "mailto:hello@screwitpros.com" },
       ],
     },
     {
       head: t("footer.support"),
-      items: [t("footer.faq"), t("footer.freeQuote"), t("footer.track")],
+      items: [
+        { label: t("footer.faq"), href: "/#faq" },
+        { label: t("footer.freeQuote"), href: JOIN_PATH },
+        { label: t("footer.track"), href: JOIN_PATH },
+      ],
     },
     {
       head: t("footer.legal"),
-      items: [t("footer.terms"), t("footer.privacy")],
+      items: [
+        { label: t("footer.terms"), href: TERMS_PATH },
+        { label: t("footer.privacy"), href: PRIVACY_PATH },
+      ],
     },
   ];
 
@@ -190,7 +223,9 @@ export default function Footer() {
                 style={{ display: "flex", flexDirection: "column", gap: 10 }}
               >
                 {c.items.map((it) => (
-                  <FooterLink key={it}>{it}</FooterLink>
+                  <FooterLink key={it.label} href={it.href}>
+                    {it.label}
+                  </FooterLink>
                 ))}
               </div>
             </div>

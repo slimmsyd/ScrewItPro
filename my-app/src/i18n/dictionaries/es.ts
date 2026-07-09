@@ -249,7 +249,9 @@ export const es: Dictionary = {
     connectingGoogle: "Redirigiendo a Google…",
     connectingApple: "Conectando con Apple…",
     fineprint:
-      "Al unirte aceptas recibir novedades de ScrewIt Pros. Puedes darte de baja cuando quieras.",
+      "Al unirte aceptas nuestros Términos del servicio y la Política de privacidad, y recibir novedades de ScrewIt Pros. Puedes darte de baja cuando quieras.",
+    fineprintTerms: "Términos del servicio",
+    fineprintPrivacy: "Política de privacidad",
     saving: "Guardando tu lugar…",
     youreIn: "● Ya estás dentro",
     successTitle: "Estás en la lista.",

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { ASSETS } from "@/lib/site";
+import { ASSETS, PRIVACY_PATH, TERMS_PATH } from "@/lib/site";
 import { signInWithProvider } from "@/lib/auth/oauth";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
@@ -415,7 +415,20 @@ function JoinForm() {
                 lineHeight: 1.5,
               }}
             >
-              {t("join.fineprint")}
+              {t("join.fineprint")}{" "}
+              <Link
+                href={TERMS_PATH}
+                style={{ color: "var(--blue-electric)", textDecoration: "underline" }}
+              >
+                {t("join.fineprintTerms")}
+              </Link>
+              {" · "}
+              <Link
+                href={PRIVACY_PATH}
+                style={{ color: "var(--blue-electric)", textDecoration: "underline" }}
+              >
+                {t("join.fineprintPrivacy")}
+              </Link>
             </p>
           </>
         )}

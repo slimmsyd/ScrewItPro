@@ -17,3 +17,5 @@ export const ASSETS = {
 
 export const CTA_LABEL = isWaitlist ? "Join Now" : "Get a Free Quote";
 export const JOIN_PATH = "/join";
+export const PRIVACY_PATH = "/privacy";
+export const TERMS_PATH = "/terms";
