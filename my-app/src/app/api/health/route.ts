@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getEnvStatus } from "@/lib/env";
+import { isWaitlistBackendReady } from "@/lib/waitlist";
 
 /**
  * GET /api/health
@@ -7,8 +8,9 @@ import { getEnvStatus } from "@/lib/env";
  */
 export async function GET() {
   const status = getEnvStatus();
+  const waitlistReady = isWaitlistBackendReady();
   const ready =
-    status.supabase.configured &&
+    waitlistReady &&
     status.stripe.configured &&
     status.resend.configured &&
     status.deepseek.configured &&
@@ -19,6 +21,7 @@ export async function GET() {
       ok: true,
       service: "ScrewItPro",
       ready,
+      waitlist: { ready: waitlistReady },
       integrations: status,
     },
     { status: 200 }

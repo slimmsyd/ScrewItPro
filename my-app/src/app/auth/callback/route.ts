@@ -6,14 +6,21 @@ import {
   getAppOrigin,
   isGoogleOAuthConfigured,
 } from "@/lib/auth/google";
+import {
+  isWaitlistBackendReady,
+  upsertWaitlistEntry,
+  WaitlistConfigError,
+  WaitlistDbError,
+} from "@/lib/waitlist";
 
 /**
  * GET /auth/callback
  * Google redirects here with ?code=…&state=…
- * Exchange code → tokens → userinfo → session cookie → /join success.
+ * Exchange code → tokens → userinfo → waitlist upsert → session cookie → /join success.
  *
  * Must match Google Cloud "Authorized redirect URIs" exactly:
  *   http://localhost:3000/auth/callback
+ *   https://your-domain.com/auth/callback
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -49,12 +56,54 @@ export async function GET(request: Request) {
     const tokens = await exchangeCodeForTokens(code, origin);
     const user = await fetchGoogleUser(tokens.access_token);
 
-    // Lightweight session for the waitlist success UI (no Supabase yet)
+    if (!user.email) {
+      return NextResponse.redirect(`${origin}/join?error=auth_failed`);
+    }
+
+    let position: number | null = null;
+
+    if (isWaitlistBackendReady()) {
+      try {
+        const entry = await upsertWaitlistEntry({
+          email: user.email,
+          name: user.name ?? user.given_name ?? null,
+          picture: user.picture ?? null,
+          provider: "google",
+          source: "join_google",
+        });
+        position = entry.position;
+      } catch (e) {
+        if (e instanceof WaitlistConfigError) {
+          return NextResponse.redirect(
+            `${origin}/join?error=waitlist_not_configured`
+          );
+        }
+        if (e instanceof WaitlistDbError) {
+          console.error("[auth/callback] waitlist", e.message, e.dbCode);
+          const missingTable =
+            e.dbCode === "42P01" ||
+            e.message.toLowerCase().includes("waitlist_entries");
+          return NextResponse.redirect(
+            `${origin}/join?error=${encodeURIComponent(
+              missingTable ? "waitlist_table_missing" : "waitlist_failed"
+            )}`
+          );
+        }
+        throw e;
+      }
+    } else {
+      // OAuth succeeded but storage not wired - still show success with soft warning
+      console.warn(
+        "[auth/callback] Supabase waitlist not configured; session only"
+      );
+    }
+
     const session = {
       email: user.email,
       name: user.name ?? user.given_name ?? "",
       picture: user.picture ?? "",
       provider: "google" as const,
+      position,
       at: Date.now(),
     };
 
@@ -66,12 +115,10 @@ export async function GET(request: Request) {
       path: "/",
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });
-    // Clear OAuth state
     res.cookies.set("sip_oauth_state", "", { path: "/", maxAge: 0 });
     return res;
   } catch (e) {
-    const msg =
-      e instanceof Error ? e.message : "auth_failed";
+    const msg = e instanceof Error ? e.message : "auth_failed";
     console.error("[auth/callback]", msg);
     return NextResponse.redirect(
       `${origin}/join?error=${encodeURIComponent("auth_failed")}`

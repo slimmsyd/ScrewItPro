@@ -265,6 +265,11 @@ export const es: Dictionary = {
     errAuthFailed: "Falló el inicio con Google. Intenta de nuevo o usa correo.",
     errAccessDenied: "Se canceló el inicio con Google.",
     errGeneric: "Falló el inicio de sesión. Intenta de nuevo o usa correo.",
+    errWaitlistNotConfigured:
+      "El almacenamiento de la lista aún no está configurado. Agrega las claves de Supabase e intenta de nuevo.",
+    errWaitlistTableMissing:
+      "Falta la tabla de la lista de espera. Aplica la migración de Supabase e intenta de nuevo.",
+    errWaitlistFailed: "No pudimos guardar tu lugar. Intenta de nuevo.",
   },
   chat: {
     open: "Abrir chat",

@@ -262,6 +262,11 @@ export const en = {
     errAuthFailed: "Google sign-in failed. Try again or use email.",
     errAccessDenied: "Google sign-in was cancelled.",
     errGeneric: "Sign-in failed. Try again or use email.",
+    errWaitlistNotConfigured:
+      "Waitlist storage is not set up yet. Add Supabase keys and try again.",
+    errWaitlistTableMissing:
+      "Waitlist database table is missing. Apply the Supabase migration and try again.",
+    errWaitlistFailed: "Could not save your spot. Please try again.",
   },
   chat: {
     open: "Open chat",

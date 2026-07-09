@@ -15,3 +15,12 @@ export {
   geocodeAddress,
 } from "./google";
 export * from "./motion";
+export {
+  upsertWaitlistEntry,
+  getWaitlistPosition,
+  isWaitlistBackendReady,
+  waitlistSignupSchema,
+  WaitlistConfigError,
+  WaitlistDbError,
+} from "./waitlist";
+export type { WaitlistProvider, WaitlistResult, WaitlistSignupInput } from "./waitlist";

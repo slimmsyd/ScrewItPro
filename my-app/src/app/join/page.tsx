@@ -64,6 +64,32 @@ const socialBtn: React.CSSProperties = {
   gap: 10,
 };
 
+type WaitlistApiResponse = {
+  ok?: boolean;
+  error?: string;
+  message?: string;
+  entry?: {
+    email: string;
+    position: number;
+    created: boolean;
+  };
+};
+
+function mapWaitlistError(
+  code: string | undefined,
+  t: (key: string) => string
+): string {
+  const map: Record<string, string> = {
+    waitlist_not_configured: t("join.errWaitlistNotConfigured"),
+    waitlist_table_missing: t("join.errWaitlistTableMissing"),
+    waitlist_failed: t("join.errWaitlistFailed"),
+    waitlist_db_error: t("join.errWaitlistFailed"),
+    invalid_email: t("join.emailError"),
+    invalid_json: t("join.errWaitlistFailed"),
+  };
+  return (code && map[code]) || t("join.errWaitlistFailed");
+}
+
 function JoinForm() {
   const searchParams = useSearchParams();
   const { t } = useLocale();
@@ -73,7 +99,7 @@ function JoinForm() {
   const [socialBusy, setSocialBusy] = useState<"google" | "apple" | null>(
     null
   );
-  const [pos] = useState(() => Math.floor(Math.random() * 400) + 240);
+  const [pos, setPos] = useState<number | null>(null);
 
   useEffect(() => {
     const authErr = searchParams.get("error");
@@ -84,6 +110,9 @@ function JoinForm() {
         invalid_state: t("join.errInvalidState"),
         auth_failed: t("join.errAuthFailed"),
         access_denied: t("join.errAccessDenied"),
+        waitlist_not_configured: t("join.errWaitlistNotConfigured"),
+        waitlist_table_missing: t("join.errWaitlistTableMissing"),
+        waitlist_failed: t("join.errWaitlistFailed"),
       };
       setErr(map[authErr] ?? t("join.errGeneric"));
       return;
@@ -94,17 +123,27 @@ function JoinForm() {
     setPhase("loading");
     fetch("/api/auth/session")
       .then((r) => r.json())
-      .then((data: { user?: { email?: string } | null }) => {
-        setEmail(data.user?.email || "Google");
-        setPhase("done");
-      })
+      .then(
+        (data: {
+          user?: { email?: string; position?: number | null } | null;
+        }) => {
+          setEmail(data.user?.email || "Google");
+          if (
+            typeof data.user?.position === "number" &&
+            data.user.position > 0
+          ) {
+            setPos(data.user.position);
+          }
+          setPhase("done");
+        }
+      )
       .catch(() => {
         setEmail("Google");
         setPhase("done");
       });
   }, [searchParams, t]);
 
-  const submit = () => {
+  const submit = async () => {
     const v = email.trim();
     if (!EMAIL_RE.test(v)) {
       setErr(t("join.emailError"));
@@ -112,7 +151,32 @@ function JoinForm() {
     }
     setErr("");
     setPhase("loading");
-    setTimeout(() => setPhase("done"), 2000);
+
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: v,
+          provider: "email",
+          source: "join",
+        }),
+      });
+      const data = (await res.json()) as WaitlistApiResponse;
+
+      if (!res.ok || !data.ok || !data.entry) {
+        setPhase("form");
+        setErr(mapWaitlistError(data.error, t));
+        return;
+      }
+
+      setEmail(data.entry.email);
+      setPos(data.entry.position);
+      setPhase("done");
+    } catch {
+      setPhase("form");
+      setErr(t("join.errWaitlistFailed"));
+    }
   };
 
   const social = async (provider: "google" | "apple") => {
@@ -457,37 +521,39 @@ function JoinForm() {
             >
               {t("join.successBody", { email })}
             </p>
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "baseline",
-                gap: 8,
-                padding: "12px 20px",
-                borderRadius: "var(--radius-pill)",
-                background: "var(--gray-50)",
-                border: "1px solid var(--gray-100)",
-                marginBottom: 28,
-              }}
-            >
-              <span
+            {pos != null && pos > 0 && (
+              <div
                 style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: 28,
-                  color: "var(--blue-deep)",
+                  display: "inline-flex",
+                  alignItems: "baseline",
+                  gap: 8,
+                  padding: "12px 20px",
+                  borderRadius: "var(--radius-pill)",
+                  background: "var(--gray-50)",
+                  border: "1px solid var(--gray-100)",
+                  marginBottom: 28,
                 }}
               >
-                #{pos}
-              </span>
-              <span
-                style={{
-                  fontFamily: "var(--font-body)",
-                  fontSize: 14,
-                  color: "var(--ink-500)",
-                }}
-              >
-                {t("join.inLine")}
-              </span>
-            </div>
+                <span
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: 28,
+                    color: "var(--blue-deep)",
+                  }}
+                >
+                  #{pos}
+                </span>
+                <span
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: 14,
+                    color: "var(--ink-500)",
+                  }}
+                >
+                  {t("join.inLine")}
+                </span>
+              </div>
+            )}
             <div>
               <Link
                 href="/"

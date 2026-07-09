@@ -43,17 +43,19 @@ Open [http://localhost:3000](http://localhost:3000).
 - **Chip** support chat (guided quote flow + thinking loader)
 
 ### Waitlist (`/join`)
-- Email join form
-- **Continue with Google** (full OAuth code flow, no Supabase required)
+- Email join form → **`POST /api/waitlist`** (persists to Supabase)
+- **Continue with Google** (OAuth + waitlist upsert on callback)
 - Continue with Apple (UI; Apple not connected yet)
-- Success state with queue position
+- Success state with **real queue position** from the database
 
-### Auth routes
+### Auth / API routes
 | Route | Purpose |
 | --- | --- |
 | `GET /auth/google` | Start Google OAuth |
-| `GET /auth/callback` | Exchange code, set session cookie |
+| `GET /auth/callback` | Exchange code, save waitlist, set session cookie |
 | `GET /api/auth/session` | Read lightweight session for join UI |
+| `POST /api/waitlist` | Email waitlist signup (service role → Supabase) |
+| `GET /api/waitlist` | Waitlist backend readiness |
 | `GET /api/health` | Integration status (no secrets) |
 
 ---
@@ -110,13 +112,29 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 ```
 Enable **Maps JavaScript API**. Restrict key by HTTP referrer (`http://localhost:3000/*`).
 
-### Optional (wired, not fully productized yet)
+### Required for waitlist persistence (Supabase)
 ```bash
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+```
 
+1. Create a Supabase project (or use an existing one).
+2. Copy **Project URL**, **anon** key, and **service_role** key into `.env.local`.
+3. Apply the migration (SQL Editor or CLI):
+
+```bash
+# From my-app/, paste contents of:
+# supabase/migrations/20260709120000_waitlist_entries.sql
+# into Supabase Dashboard → SQL → New query → Run
+```
+
+4. Restart `npm run dev`. Email join and Google OAuth will write to `waitlist_entries`.
+
+Without these keys, `/join` shows a clear configuration error instead of a fake success.
+
+### Optional (wired, not fully productized yet)
+```bash
 # Stripe
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 STRIPE_SECRET_KEY=

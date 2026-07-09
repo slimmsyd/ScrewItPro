@@ -17,6 +17,7 @@ export async function GET() {
       name?: string;
       picture?: string;
       provider?: string;
+      position?: number | null;
     };
     return NextResponse.json({
       user: {
@@ -24,6 +25,10 @@ export async function GET() {
         name: user.name ?? "",
         picture: user.picture ?? "",
         provider: user.provider ?? "google",
+        position:
+          typeof user.position === "number" && user.position > 0
+            ? user.position
+            : null,
       },
     });
   } catch {
