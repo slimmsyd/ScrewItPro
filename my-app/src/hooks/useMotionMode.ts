@@ -1,30 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { useReducedMotion } from "framer-motion";
 
 export type MotionMode = "full" | "soft" | "static";
+
+const noopSubscribe = () => () => {};
+
+/** True after hydration, false on the server and first client render. */
+function useHydrated(): boolean {
+  return useSyncExternalStore(
+    noopSubscribe,
+    () => true, // client snapshot
+    () => false, // server snapshot
+  );
+}
 
 /**
  * SSR-safe motion mode.
  *
  * `useReducedMotion()` returns null on the server and the real OS preference on
  * the client, so branching on it directly makes the server and first client
- * render disagree -> hydration mismatch. This gates on a mount flag instead:
+ * render disagree -> hydration mismatch. Gating on hydration avoids that:
  *
  *  - "static" — server + first client render (identical HTML, no mismatch)
- *  - "full"   — after mount, user allows motion (draw-on, float, spin)
- *  - "soft"   — after mount, user prefers reduced motion (opacity fade only)
+ *  - "full"   — after hydration, user allows motion (draw-on, float, spin)
+ *  - "soft"   — after hydration, user prefers reduced motion (opacity fade only)
  *
  * "soft" still gives reduced-motion users a gentle fade-in instead of nothing,
  * while keeping transforms/looping motion off for accessibility.
  */
 export function useMotionMode(): MotionMode {
   const prefersReduced = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
+  const hydrated = useHydrated();
 
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) return "static";
+  if (!hydrated) return "static";
   return prefersReduced ? "soft" : "full";
 }

@@ -101,12 +101,22 @@ export default function Hero({ onCta }: { onCta: () => void }) {
           }}
         >
           <motion.div
-            initial={reduceMotion ? false : { opacity: 0, scale: 0.9, y: 8 }}
-            animate={reduceMotion ? undefined : { opacity: 1, scale: 1, y: 0 }}
+            initial={
+              full ? { opacity: 0, scale: 0.9, y: 8 } : soft ? { opacity: 0 } : false
+            }
+            animate={
+              full
+                ? { opacity: 1, scale: 1, y: 0 }
+                : soft
+                  ? { opacity: 1 }
+                  : undefined
+            }
             transition={
-              reduceMotion
-                ? undefined
-                : { duration: 0.45, delay: 0.85, ease: easeReveal }
+              full
+                ? { duration: 0.45, delay: 0.85, ease: easeReveal }
+                : soft
+                  ? { duration: 0.45, delay: 0.85, ease: easeReveal }
+                  : undefined
             }
             style={{
               alignSelf: "flex-start",
