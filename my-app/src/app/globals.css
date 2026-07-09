@@ -395,6 +395,12 @@ header[id] {
  }
 }
 
+/* Footer S mark — continuous screw-it rotation */
+.footer-logo-spin {
+ animation: screwitSpin 8s linear infinite;
+ will-change: transform;
+}
+
 .screwit-greeting {
  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
  transform-origin: bottom right;
@@ -409,6 +415,25 @@ header[id] {
 .hscroll::-webkit-scrollbar {
  height: 0;
  display: none;
+}
+
+/* Hero backdrop — iso wireframe furniture (design handoff) */
+.hero-art {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+.hero-art-l {
+  left: 0;
+}
+.hero-art-r {
+  right: 0;
+}
+@media (max-width: 1180px) {
+  .hero-art {
+    display: none;
+  }
 }
 
 /* Failsafe: reveal sections must never stay invisible */
@@ -428,6 +453,10 @@ header[id] {
  }
 
  .splash-mark {
+ animation: none;
+ }
+
+ .footer-logo-spin {
  animation: none;
  }
 

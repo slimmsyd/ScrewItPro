@@ -139,6 +139,7 @@ export default function Footer() {
           </p>
           <div
             aria-hidden
+            className="footer-logo-spin"
             style={{
               flex: "0 0 auto",
               marginLeft: "auto",

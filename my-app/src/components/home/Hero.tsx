@@ -14,9 +14,13 @@ import {
 import Container from "@/components/ui/Container";
 import Badge from "@/components/ui/Badge";
 import HeroSearch from "@/components/home/HeroSearch";
+import HeroBackdrop from "@/components/home/HeroBackdrop";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { ASSETS } from "@/lib/site";
 import { useLocale } from "@/components/providers/LocaleProvider";
+
+/** Production default from design handoff: iso furniture wireframe. */
+const HERO_BG = "wireframe" as const;
 
 export default function Hero({ onCta }: { onCta: () => void }) {
   const [activeCat, setActiveCat] = useState(0);
@@ -52,39 +56,7 @@ export default function Hero({ onCta }: { onCta: () => void }) {
         overflow: "visible",
       }}
     >
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          inset: 0,
-          overflow: "hidden",
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            width: 220,
-            height: 220,
-            background: "var(--blue-50)",
-            borderBottomLeftRadius: "100%",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: -60,
-            left: -60,
-            width: 200,
-            height: 200,
-            background: "var(--blue-50)",
-            borderTopRightRadius: "100%",
-          }}
-        />
-      </div>
+      <HeroBackdrop variant={HERO_BG} mobile={mobile} />
       {!mobile && (
         <div
           style={{
