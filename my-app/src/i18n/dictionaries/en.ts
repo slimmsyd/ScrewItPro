@@ -235,16 +235,28 @@ export const en = {
   },
   join: {
     beta: "Private Beta",
-    title: "Join the waitlist",
-    sub: "Enter your email to reserve your spot and get first dibs at launch - or continue with Google.",
+    title: "Create your account",
+    sub: "Set up an account to reserve your waitlist spot — or continue with Google.",
+    loginTitle: "Welcome back",
+    loginSub: "Sign in with the email and password you used to join.",
+    name: "Name",
+    namePlaceholder: "Your name (optional)",
     email: "Email",
     emailPlaceholder: "you@email.com",
     emailError: "Enter a valid email address.",
-    joinNow: "Join Now",
+    password: "Password",
+    passwordPlaceholder: "At least 8 characters",
+    passwordConfirm: "Confirm password",
+    passwordConfirmPlaceholder: "Retype your password",
+    passwordError: "Password must be at least 8 characters.",
+    passwordMismatch: "Passwords do not match.",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
+    joinNow: "Create account & join waitlist",
+    createAccount: "Create account",
+    needAccount: "New here?",
     continueGoogle: "Continue with Google",
-    continueApple: "Continue with Apple",
     connectingGoogle: "Redirecting to Google…",
-    connectingApple: "Connecting to Apple…",
     fineprint:
       "By joining you agree to our Terms of Service and Privacy Policy, and to receive product updates from ScrewIt Pros. Unsubscribe anytime.",
     fineprintTerms: "Terms of Service",
@@ -255,15 +267,18 @@ export const en = {
     successBody:
       "We'll email {email} the moment ScrewIt Pros opens in your area.",
     inLine: "in line",
-    appleNotReady:
-      "Apple Sign-In is not connected yet. Use Google or email for now.",
     errGoogleNotConfigured:
       "Google sign-in is not configured. Check GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.",
     errMissingCode: "Google did not return an auth code. Try again.",
     errInvalidState: "Sign-in expired or was invalid. Please try again.",
-    errAuthFailed: "Google sign-in failed. Try again or use email.",
+    errAuthFailed: "Sign-in failed. Try again or use email.",
     errAccessDenied: "Google sign-in was cancelled.",
-    errGeneric: "Sign-in failed. Try again or use email.",
+    errGeneric: "Something went wrong. Try again or use email.",
+    errEmailTaken:
+      "That email already has an account. Sign in instead.",
+    errInvalidCredentials: "Wrong email or password. Try again.",
+    errAuthNotConfigured:
+      "Account signup is not configured yet. Add Supabase URL and anon key.",
     errWaitlistNotConfigured:
       "Waitlist storage is not set up yet. Add Supabase keys and try again.",
     errWaitlistTableMissing:

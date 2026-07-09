@@ -238,16 +238,28 @@ export const es: Dictionary = {
   },
   join: {
     beta: "Beta privada",
-    title: "Únete a la lista de espera",
-    sub: "Ingresa tu correo para reservar tu lugar y ser de los primeros en el lanzamiento - o continúa con Google.",
+    title: "Crea tu cuenta",
+    sub: "Crea una cuenta para reservar tu lugar en la lista — o continúa con Google.",
+    loginTitle: "Bienvenido de nuevo",
+    loginSub: "Entra con el correo y contraseña que usaste para unirte.",
+    name: "Nombre",
+    namePlaceholder: "Tu nombre (opcional)",
     email: "Correo",
     emailPlaceholder: "tu@email.com",
     emailError: "Ingresa un correo válido.",
-    joinNow: "Únete ahora",
+    password: "Contraseña",
+    passwordPlaceholder: "Mínimo 8 caracteres",
+    passwordConfirm: "Confirmar contraseña",
+    passwordConfirmPlaceholder: "Vuelve a escribir la contraseña",
+    passwordError: "La contraseña debe tener al menos 8 caracteres.",
+    passwordMismatch: "Las contraseñas no coinciden.",
+    showPassword: "Mostrar contraseña",
+    hidePassword: "Ocultar contraseña",
+    joinNow: "Crear cuenta y unirme a la lista",
+    createAccount: "Crear cuenta",
+    needAccount: "¿Eres nuevo?",
     continueGoogle: "Continuar con Google",
-    continueApple: "Continuar con Apple",
     connectingGoogle: "Redirigiendo a Google…",
-    connectingApple: "Conectando con Apple…",
     fineprint:
       "Al unirte aceptas nuestros Términos del servicio y la Política de privacidad, y recibir novedades de ScrewIt Pros. Puedes darte de baja cuando quieras.",
     fineprintTerms: "Términos del servicio",
@@ -258,15 +270,18 @@ export const es: Dictionary = {
     successBody:
       "Te escribiremos a {email} en cuanto ScrewIt Pros abra en tu zona.",
     inLine: "en la fila",
-    appleNotReady:
-      "Apple Sign-In aún no está conectado. Usa Google o correo por ahora.",
     errGoogleNotConfigured:
       "Google no está configurado. Revisa GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET.",
     errMissingCode: "Google no devolvió un código. Intenta de nuevo.",
     errInvalidState: "El inicio de sesión expiró o no es válido. Intenta de nuevo.",
-    errAuthFailed: "Falló el inicio con Google. Intenta de nuevo o usa correo.",
+    errAuthFailed: "Falló el inicio de sesión. Intenta de nuevo o usa correo.",
     errAccessDenied: "Se canceló el inicio con Google.",
-    errGeneric: "Falló el inicio de sesión. Intenta de nuevo o usa correo.",
+    errGeneric: "Algo salió mal. Intenta de nuevo o usa correo.",
+    errEmailTaken:
+      "Ese correo ya tiene una cuenta. Inicia sesión en su lugar.",
+    errInvalidCredentials: "Correo o contraseña incorrectos. Intenta de nuevo.",
+    errAuthNotConfigured:
+      "El registro aún no está configurado. Agrega la URL y la clave anon de Supabase.",
     errWaitlistNotConfigured:
       "El almacenamiento de la lista aún no está configurado. Agrega las claves de Supabase e intenta de nuevo.",
     errWaitlistTableMissing:

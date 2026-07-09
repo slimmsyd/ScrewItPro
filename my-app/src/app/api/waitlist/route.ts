@@ -11,7 +11,7 @@ import {
 /**
  * POST /api/waitlist
  * Persist an email (or OAuth-backed) waitlist signup.
- * Body: { email, name?, picture?, provider?, source? }
+ * Body: { email, name?, picture?, provider?, source?, convertedUserId? }
  */
 export async function POST(request: Request) {
   if (!isWaitlistBackendReady()) {
@@ -37,22 +37,12 @@ export async function POST(request: Request) {
   }
 
   try {
+    const raw = body as Record<string, unknown>;
     const input = waitlistSignupSchema.parse({
-      ...(body as object),
-      provider:
-        typeof body === "object" &&
-        body &&
-        "provider" in body &&
-        (body as { provider?: string }).provider
-          ? (body as { provider: string }).provider
-          : "email",
-      source:
-        typeof body === "object" &&
-        body &&
-        "source" in body &&
-        (body as { source?: string }).source
-          ? (body as { source: string }).source
-          : "join",
+      ...raw,
+      provider: raw.provider ?? "email",
+      source: raw.source ?? "join",
+      convertedUserId: raw.convertedUserId ?? raw.converted_user_id ?? null,
     });
 
     const result = await upsertWaitlistEntry(input);
