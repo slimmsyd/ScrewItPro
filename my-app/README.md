@@ -155,6 +155,19 @@ Brand: deep blue `#04209B`, electric blue `#1D6EFE`, Miguer Sans (display) + Ins
 
 ---
 
+## Social / Open Graph images
+
+Brand share cards use the **white S mark on deep blue** (`#04209B` + electric accent):
+
+| Route | Generated image |
+| --- | --- |
+| Site-wide | `/opengraph-image`, `/twitter-image` |
+| Join | `/join/opengraph-image`, `/join/twitter-image` |
+
+Source: `src/app/opengraph-image.tsx` (shared). Favicons use `public/assets/logo-icon-deep-blue.png`.
+
+Set `NEXT_PUBLIC_APP_URL` to your production origin so OG URLs resolve correctly.
+
 ## Internationalization (EN / ES)
 
 - Nav **English / Español** switcher and mobile language buttons flip the whole UI.

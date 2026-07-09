@@ -27,10 +27,56 @@ const miguer = localFont({
   fallback: ["Instrument Sans", "system-ui", "sans-serif"],
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+  "http://localhost:3000";
+
+const title = "ScrewIt Pros - Furniture Assembly Without the Hassle";
+const description =
+  "We pick up your furniture, professionally assemble it at our workshop, and deliver it fully built and ready to use. If You Don't Want to Do It, ScrewIt!";
+
 export const metadata: Metadata = {
-  title: "ScrewIt Pros - Furniture Assembly Without the Hassle",
-  description:
-    "We pick up your furniture, professionally assemble it at our workshop, and deliver it fully built and ready to use. If You Don't Want to Do It, ScrewIt!",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: title,
+    template: "%s | ScrewIt Pros",
+  },
+  description,
+  applicationName: "ScrewIt Pros",
+  authors: [{ name: "ScrewIt Pros LLC" }],
+  creator: "ScrewIt Pros",
+  keywords: [
+    "furniture assembly",
+    "Houston",
+    "white glove delivery",
+    "IKEA assembly",
+    "ScrewIt Pros",
+  ],
+  icons: {
+    icon: [{ url: "/assets/logo-icon-deep-blue.png", type: "image/png" }],
+    apple: [{ url: "/assets/logo-icon-deep-blue.png", type: "image/png" }],
+    shortcut: "/assets/logo-icon-deep-blue.png",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    alternateLocale: ["es_US"],
+    url: siteUrl,
+    siteName: "ScrewIt Pros",
+    title,
+    description,
+    // opengraph-image.tsx generates the share image automatically
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+    // twitter-image.tsx generates the share image automatically
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

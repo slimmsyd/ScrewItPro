@@ -11,6 +11,8 @@ export const ASSETS = {
   logoElectric: "/assets/logo-icon-electric-blue.jpg",
   mascot: "/assets/mascot-wave.jpg",
   audiencesCrew: "/assets/audiences-crew.jpg",
+  /** Shared brand mark for favicons / fallbacks (deep blue S) */
+  brandIcon: "/assets/logo-icon-deep-blue.png",
 } as const;
 
 export const CTA_LABEL = isWaitlist ? "Join Now" : "Get a Free Quote";
