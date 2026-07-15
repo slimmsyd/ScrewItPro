@@ -187,7 +187,7 @@ export default function Hero({
             alignItems: "stretch",
             width: "100%",
             // Room for absolute mobile video band (top 24 + ~180) under the nav
-            paddingTop: mobile ? 200 : "6%",
+            paddingTop: mobile ? 200 : "20%",
             paddingBottom: mobile ? 0 : "2%",
           }}
         >
