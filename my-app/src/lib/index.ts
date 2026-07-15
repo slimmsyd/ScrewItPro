@@ -14,6 +14,14 @@ export {
   loadGoogleMaps,
   geocodeAddress,
 } from "./google";
+export {
+  HOUSTON_CENTER,
+  HOUSTON_METRO_RADIUS_M,
+  isInHoustonMetro,
+  fetchPlacePredictions,
+  resolvePlace,
+} from "./places";
+export type { PlaceSuggestion, ResolvedPlace } from "./places";
 export * from "./motion";
 export {
   upsertWaitlistEntry,
