@@ -1,24 +1,34 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Container from "@/components/ui/Container";
 import Eyebrow from "@/components/ui/Eyebrow";
 import SectionTitle from "@/components/ui/SectionTitle";
-import ImageSlot from "@/components/ui/ImageSlot";
 import Reveal from "@/components/ui/Reveal";
+import WhyUsVignette from "@/components/home/WhyUsVignettes";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { easeReveal } from "@/lib/motion";
 
 export default function WhyUs() {
   const [active, setActive] = useState(0);
   const mobile = useIsMobile();
   const { t } = useLocale();
+  const reduce = useReducedMotion() ?? false;
 
   const whyPoints = [
-    { kicker: t("why.k1"), title: t("why.t1"), body: t("why.b1"), ph: t("why.p1") },
-    { kicker: t("why.k2"), title: t("why.t2"), body: t("why.b2"), ph: t("why.p2") },
-    { kicker: t("why.k3"), title: t("why.t3"), body: t("why.b3"), ph: t("why.p3") },
-    { kicker: t("why.k4"), title: t("why.t4"), body: t("why.b4"), ph: t("why.p4") },
+    { kicker: t("why.k1"), title: t("why.t1"), body: t("why.b1") },
+    { kicker: t("why.k2"), title: t("why.t2"), body: t("why.b2") },
+    { kicker: t("why.k3"), title: t("why.t3"), body: t("why.b3") },
+    { kicker: t("why.k4"), title: t("why.t4"), body: t("why.b4") },
+  ];
+
+  const chipLabels = [
+    t("why.v1Chip"),
+    t("why.v2Chip"),
+    t("why.v3Chip"),
+    t("why.v4Chip"),
   ];
 
   return (
@@ -72,12 +82,19 @@ export default function WhyUs() {
             {whyPoints.map((p, i) => {
               const isActive = i === active;
               return (
-                <div
+                <button
                   key={p.title}
+                  type="button"
                   onClick={() => setActive(i)}
+                  aria-pressed={isActive}
                   style={{
+                    display: "block",
+                    width: "100%",
+                    textAlign: "left",
+                    background: "none",
                     cursor: "pointer",
                     padding: isActive ? "22px 0 22px 24px" : "18px 0 18px 24px",
+                    border: "none",
                     borderLeft: `2px solid ${isActive ? "var(--blue-electric)" : "transparent"}`,
                     borderTop: i > 0 ? "1px solid var(--gray-200)" : "none",
                     transition:
@@ -128,29 +145,34 @@ export default function WhyUs() {
                       {p.body}
                     </p>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
           <div
             style={{
               position: "relative",
-              background: "var(--gray-100)",
-              minHeight: mobile ? 240 : "auto",
+              background:
+                "linear-gradient(135deg, var(--blue-50), var(--gray-50))",
+              minHeight: mobile ? 280 : "auto",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
             }}
           >
-            {whyPoints.map((p, i) => (
-              <div
-                key={p.title}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  display: i === active ? "block" : "none",
-                }}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={active}
+                initial={reduce ? false : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
+                transition={{ duration: reduce ? 0 : 0.26, ease: easeReveal }}
+                style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
               >
-                <ImageSlot label={p.ph} style={{ minHeight: "100%" }} />
-              </div>
-            ))}
+                <WhyUsVignette index={active} label={chipLabels[active]} reduce={reduce} />
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </Container>

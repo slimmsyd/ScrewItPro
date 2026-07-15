@@ -1,16 +1,23 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import {
   Check,
   Clock,
+  Hammer,
   HeartHandshake,
+  Home,
+  MapPin,
+  Ruler,
   ShieldCheck,
   Sparkles,
   Star,
+  Truck,
+  Wrench,
   Zap,
+  type LucideIcon,
 } from "lucide-react";
-import { motion, MotionConfig } from "framer-motion";
+import { motion, MotionConfig, useReducedMotion } from "framer-motion";
 import Container from "@/components/ui/Container";
 import ImageSlot from "@/components/ui/ImageSlot";
 import Reveal from "@/components/ui/Reveal";
@@ -117,36 +124,248 @@ type FeatureCard = {
   map?: boolean;
   /** Full-bleed image that covers the whole visual band (e.g. a map) */
   cover?: boolean;
+  /** Asset-free composed icon scene in place of a photo */
+  vignette?: "workshop" | "delivery";
 };
+
+/** Gentle idle bob for chips; skipped under reduced motion. */
+function VFloat({
+  children,
+  delay = 0,
+  reduce,
+  style,
+}: {
+  children: ReactNode;
+  delay?: number;
+  reduce: boolean;
+  style?: CSSProperties;
+}) {
+  if (reduce) return <div style={style}>{children}</div>;
+  return (
+    <motion.div
+      style={style}
+      animate={{ y: [0, -6, 0] }}
+      transition={{ duration: 4.5, delay, repeat: Infinity, ease: "easeInOut" }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function VChip({
+  icon: Icon,
+  label,
+  color = "var(--blue-electric)",
+  size = 36,
+  style,
+}: {
+  icon: LucideIcon;
+  label?: string;
+  color?: string;
+  size?: number;
+  style?: CSSProperties;
+}) {
+  return (
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: label ? 8 : 0,
+        background: "var(--white)",
+        border: "1px solid var(--gray-100)",
+        borderRadius: 12,
+        padding: label ? "8px 12px" : 0,
+        width: label ? undefined : size,
+        height: label ? undefined : size,
+        justifyContent: "center",
+        boxShadow: "0 8px 18px rgba(11,16,48,0.16)",
+        ...style,
+      }}
+    >
+      <Icon size={label ? 15 : 18} color={color} aria-hidden />
+      {label && (
+        <span
+          style={{
+            fontFamily: "var(--font-body)",
+            fontSize: 12,
+            fontWeight: 600,
+            color: "var(--ink-700)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {label}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** Workshop scene for the blue "why" card — frosted finished piece + tools. */
+function WorkshopVignette({
+  reduce,
+  label,
+}: {
+  reduce: boolean;
+  label: string;
+}) {
+  return (
+    <div aria-hidden style={{ position: "relative", width: 300, height: 200 }}>
+      {/* finished piece (frosted, reads on blue) */}
+      <div
+        style={{
+          position: "absolute",
+          left: 96,
+          top: 44,
+          width: 110,
+          height: 120,
+          borderRadius: 12,
+          background: "rgba(255,255,255,0.16)",
+          border: "1.5px solid rgba(255,255,255,0.6)",
+          boxShadow: "0 20px 34px rgba(0,0,0,0.2)",
+        }}
+      >
+        <div style={{ position: "absolute", left: 16, right: 16, top: 40, height: 1.5, background: "rgba(255,255,255,0.55)" }} />
+        <div style={{ position: "absolute", left: 16, right: 16, top: 80, height: 1.5, background: "rgba(255,255,255,0.55)" }} />
+        <div style={{ position: "absolute", left: "50%", top: 22, width: 8, height: 8, borderRadius: "50%", background: "rgba(255,255,255,0.75)", transform: "translateX(-50%)" }} />
+        <div style={{ position: "absolute", left: "50%", top: 62, width: 8, height: 8, borderRadius: "50%", background: "rgba(255,255,255,0.75)", transform: "translateX(-50%)" }} />
+      </div>
+      {/* workbench */}
+      <div style={{ position: "absolute", left: 62, top: 172, width: 178, height: 12, borderRadius: 6, background: "rgba(255,255,255,0.28)" }} />
+      <VFloat reduce={reduce} delay={0} style={{ position: "absolute", left: 18, top: 22 }}>
+        <VChip icon={Wrench} />
+      </VFloat>
+      <VFloat reduce={reduce} delay={0.7} style={{ position: "absolute", left: 244, top: 14 }}>
+        <VChip icon={Hammer} />
+      </VFloat>
+      <VFloat reduce={reduce} delay={1.1} style={{ position: "absolute", left: 250, top: 100 }}>
+        <VChip icon={Ruler} />
+      </VFloat>
+      <VFloat reduce={reduce} delay={0.35} style={{ position: "absolute", left: 2, top: 118 }}>
+        <VChip icon={ShieldCheck} label={label} color="#16a34a" />
+      </VFloat>
+    </div>
+  );
+}
+
+/** Delivery scene for the grey "pickup" card — route from truck to home. */
+function DeliveryVignette({
+  reduce,
+  label,
+}: {
+  reduce: boolean;
+  label: string;
+}) {
+  return (
+    <div aria-hidden style={{ position: "relative", width: 300, height: 200 }}>
+      <svg
+        width="300"
+        height="200"
+        viewBox="0 0 300 200"
+        fill="none"
+        style={{ position: "absolute", inset: 0 }}
+      >
+        <path
+          d="M54 150 C 110 150, 118 96, 176 96 S 246 62, 256 58"
+          stroke="var(--blue-300)"
+          strokeWidth="3"
+          strokeDasharray="2 8"
+          strokeLinecap="round"
+        />
+      </svg>
+      {/* package in transit */}
+      <div
+        style={{
+          position: "absolute",
+          left: 126,
+          top: 100,
+          width: 72,
+          height: 52,
+          borderRadius: 12,
+          background:
+            "linear-gradient(160deg, var(--blue-electric), var(--blue-deep))",
+          boxShadow: "0 14px 24px rgba(4,32,155,0.22)",
+        }}
+      />
+      <VFloat reduce={reduce} delay={0} style={{ position: "absolute", left: 22, top: 126 }}>
+        <VChip icon={Truck} />
+      </VFloat>
+      <VFloat reduce={reduce} delay={0.6} style={{ position: "absolute", left: 240, top: 30 }}>
+        <VChip icon={Home} />
+      </VFloat>
+      <VFloat reduce={reduce} delay={0.3} style={{ position: "absolute", left: 118, top: 34 }}>
+        <VChip icon={MapPin} label={label} />
+      </VFloat>
+      <div
+        style={{
+          position: "absolute",
+          left: 210,
+          top: 118,
+          width: 34,
+          height: 34,
+          borderRadius: 9,
+          background: "#16a34a",
+          display: "grid",
+          placeItems: "center",
+          boxShadow: "0 8px 16px rgba(22,163,74,0.28)",
+        }}
+      >
+        <Check size={17} color="#fff" strokeWidth={3} />
+      </div>
+    </div>
+  );
+}
 
 function CardVisual({ card }: { card: FeatureCard }) {
   const mobile = useIsMobile();
   const { t } = useLocale();
+  const reduce = useReducedMotion() ?? false;
   const [imgOk, setImgOk] = useState(true);
 
   const useMap = card.map === true;
-  const showImg = !useMap && imgOk && !!card.img;
-  const showTexas = useMap || (!imgOk && card.texasFallback);
+  const showVignette = !!card.vignette && !useMap;
+  const showImg = !useMap && !showVignette && imgOk && !!card.img;
+  const showTexas = useMap || (!imgOk && !showVignette && card.texasFallback);
 
   return (
     <div
       style={{
         marginTop: "auto",
-        height: mobile ? (card.scene ? 200 : 180) : card.vis,
+        height: mobile ? (card.scene || card.vignette ? 200 : 180) : card.vis,
         overflow: "hidden",
         background:
-          showImg || showTexas
+          showImg || showTexas || showVignette
             ? "transparent"
             : card.grad
               ? "rgba(255,255,255,0.1)"
               : "var(--white)",
         display: "flex",
-        alignItems: showTexas ? "center" : card.scene ? "center" : "flex-end",
+        alignItems:
+          showTexas || showVignette
+            ? "center"
+            : card.scene
+              ? "center"
+              : "flex-end",
         justifyContent: card.alignRight ? "flex-end" : "center",
         padding: card.cover ? (mobile ? "0 14px" : "0 18px") : undefined,
       }}
     >
-      {showImg ? (
+      {showVignette ? (
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {card.vignette === "workshop" ? (
+            <WorkshopVignette reduce={reduce} label={t("diff.chipWorkshop")} />
+          ) : (
+            <DeliveryVignette reduce={reduce} label={t("diff.chipDelivery")} />
+          )}
+        </div>
+      ) : showImg ? (
         // Decorative; plain img so onError can trigger the fallback.
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -645,8 +864,8 @@ export default function Differentiators() {
       eyebrow: t("diff.whyEyebrow"),
       title: t("diff.whyTitle"),
       body: t("diff.whyBody"),
-      // Living-room mascot scene (transparent PNG) under Why ScrewIt Pros
-      img: "/assets/mascot-livingroom.png?v=1",
+      // Living-room mascot scene under Why ScrewIt Pros
+      img: "/assets/mascot-livingroom.png?v=2",
       ph: t("diff.whyPh"),
       vis: 260,
       scene: true,
@@ -672,8 +891,8 @@ export default function Differentiators() {
     grad: false,
     title: t("diff.pickupTitle"),
     body: t("diff.pickupBody"),
-    // Door-handoff scene sits in the grey card visual band
-    img: "/assets/delivery-handoff.png?v=1",
+    // Door-to-door handoff scene in the grey card visual band
+    img: "/assets/delivery-handoff.png?v=2",
     ph: t("diff.pickupPh"),
     vis: 260,
     scene: true,

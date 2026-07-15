@@ -133,6 +133,8 @@ export const en = {
     pickupBody:
       "We collect from your home, store, or receive it at our hub, and bring it back ready to use.",
     pickupPh: "Photo: pickup van",
+    chipWorkshop: "Quality built",
+    chipDelivery: "Door to door",
     guaranteeTitle: "Your furniture is fully backed by our Build Protection Guarantee",
     guaranteeBody:
       "Our workshop-first process and multi-point inspection mean your pieces arrive safe, solid, and ready.",
@@ -203,6 +205,10 @@ export const en = {
     t4: "Delivered Ready to Use",
     b4: "When we arrive, your furniture is already assembled. We simply place it where you want it.",
     p4: "Photo: white glove delivery",
+    v1Chip: "Pro tools",
+    v2Chip: "No boxes",
+    v3Chip: "6 photos",
+    v4Chip: "Right there",
   },
   audiences: {
     eyebrow: "Who We Serve",
