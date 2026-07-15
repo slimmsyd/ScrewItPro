@@ -22,7 +22,7 @@ import {
 
 type FieldKey = "pickup" | "deliver";
 
-/** Houston-metro mock places — used when Maps is not configured or request fails. */
+/** Houston-metro mock places - used when Maps is not configured or request fails. */
 const MOCK_PLACES: PlaceSuggestion[] = [
   { placeId: "mock-1", primary: "IKEA Houston", secondary: "7810 Katy Freeway, Houston, TX" },
   { placeId: "mock-2", primary: "The Galleria", secondary: "5085 Westheimer Rd, Houston, TX" },

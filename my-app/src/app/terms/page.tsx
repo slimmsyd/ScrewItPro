@@ -39,8 +39,8 @@ export default function TermsPage() {
           &quot;Services&quot;).
         </LegalP>
         <LegalP>
-          By accessing or using the Services — including joining the waitlist,
-          creating an account, requesting a quote, or booking a job — you agree
+          By accessing or using the Services - including joining the waitlist,
+          creating an account, requesting a quote, or booking a job - you agree
           to these Terms and our{" "}
           <Link href="/privacy" style={{ color: "var(--blue-electric)" }}>
             Privacy Policy

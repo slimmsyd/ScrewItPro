@@ -16,11 +16,11 @@ const HERO_POSTER_SRC = "/assets/hero-loop-poster.jpg?v=4";
  *
  * Autoplay notes:
  * - Browsers only allow muted + playsInline autoplay.
- * - We set the muted *property* (not only the attribute) — React's muted prop
+ * - We set the muted *property* (not only the attribute) - React's muted prop
  *   alone is unreliable for the autoplay policy check.
  * - src is on <video> (not nested <source>) so load/play is deterministic.
  * - Marketing product loop always plays; a still poster is the fallback if
- *   play() is blocked. (OS "Reduce motion" no longer freezes this asset —
+ *   play() is blocked. (OS "Reduce motion" no longer freezes this asset -
  *   that was why the truck looked stuck.)
  */
 export default function Hero({
@@ -149,7 +149,7 @@ export default function Hero({
                 height: 180,
               }
             : {
-                // Use vh — % height against an auto-sized parent can collapse
+                // Use vh - % height against an auto-sized parent can collapse
                 right: "-4%",
                 top: "50%",
                 transform: "translateY(-50%)",

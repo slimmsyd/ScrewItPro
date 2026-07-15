@@ -116,7 +116,7 @@ export default function PrivacyPage() {
         </LegalP>
         <LegalUl>
           <li>
-            Identity providers (e.g., Google) when you choose to sign in —
+            Identity providers (e.g., Google) when you choose to sign in -
             typically name, email, and profile image as permitted by that
             provider
           </li>

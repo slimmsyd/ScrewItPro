@@ -135,7 +135,7 @@
  box-sizing: border-box;
 }
 
-/* Visually hidden — keep available to assistive tech */
+/* Visually hidden - keep available to assistive tech */
 .sr-only {
  position: absolute;
  width: 1px;
@@ -408,13 +408,13 @@ header[id] {
  }
 }
 
-/* Footer S mark — continuous screw-it rotation */
+/* Footer S mark - continuous screw-it rotation */
 .footer-logo-spin {
  animation: screwitSpin 8s linear infinite;
  will-change: transform;
 }
 
-/* How It Works — van traveling along the step connector (StepFlow) */
+/* How It Works - van traveling along the step connector (StepFlow) */
 @keyframes flowVan {
   0% {
     left: 0%;
@@ -437,7 +437,7 @@ header[id] {
   animation: flowVan 7.5s ease-in-out infinite;
 }
 
-/* Retailer band — Lugg-style logo + rating-row layout, infinite marquee */
+/* Retailer band - Lugg-style logo + rating-row layout, infinite marquee */
 .retailer-marquee {
   overflow: hidden;
   width: 100%;
@@ -562,7 +562,7 @@ header[id] {
   }
 }
 
-/* Differentiators — Houston map pin ping */
+/* Differentiators - Houston map pin ping */
 @keyframes mapPing {
   0% {
     transform: scale(1);
@@ -599,7 +599,7 @@ header[id] {
  display: none;
 }
 
-/* Hero backdrop — iso wireframe furniture (design handoff) */
+/* Hero backdrop - iso wireframe furniture (design handoff) */
 .hero-art {
   position: absolute;
   top: 0;
@@ -619,7 +619,7 @@ header[id] {
   }
 }
 
-/* Mobile/tablet blueprint grid — gentle drift for depth */
+/* Mobile/tablet blueprint grid - gentle drift for depth */
 @keyframes heroBlueprintDrift {
   0%,
   100% {
@@ -634,7 +634,7 @@ header[id] {
   will-change: transform;
 }
 
-/* Hero doodads — opacity-only pop (no CSS scale/rotate on SVG groups) */
+/* Hero doodads - opacity-only pop (no CSS scale/rotate on SVG groups) */
 @keyframes heroDoodadIn {
   from {
     opacity: 0;

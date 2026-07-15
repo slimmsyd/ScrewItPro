@@ -33,7 +33,7 @@ function TexasMap({ label }: { label: string }) {
       preserveAspectRatio="xMidYMid meet"
       fill="none"
       style={{ display: "block" }}
-      aria-label={`Texas — ${label} service area`}
+      aria-label={`Texas - ${label} service area`}
     >
       <defs>
         <radialGradient id="houston-glow" cx="50%" cy="50%" r="50%">

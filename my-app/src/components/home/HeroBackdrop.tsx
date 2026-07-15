@@ -6,7 +6,7 @@ import { easeReveal } from "@/lib/motion";
 import { useMotionMode, type MotionMode } from "@/hooks/useMotionMode";
 
 /**
- * Hero backdrop — wireframe furniture line art (design handoff default).
+ * Hero backdrop - wireframe furniture line art (design handoff default).
  * Animated for character: blueprint draw-on + ambient float + slow screws.
  * Side SVGs hide below 1180px; mobile/tablet get the blueprint grid + veil.
  * Respects prefers-reduced-motion (static art).
@@ -153,7 +153,7 @@ function Crosses({
 }
 
 /**
- * Screws / dowels: pure SVG placement + SMIL/CSS — NOT Framer CSS transforms.
+ * Screws / dowels: pure SVG placement + SMIL/CSS - NOT Framer CSS transforms.
  * Framer's style.transformOrigin on <g> (incl. template strings like `${x}px`)
  * pivots against the wrong box and makes scale/rotate look broken.
  */
@@ -178,7 +178,7 @@ function Screw({
             : ({ ["--hero-delay"]: `${delay}s` } as CSSProperties)
         }
       >
-        {/* Spin around local 0,0 via SMIL — reliable on SVG */}
+        {/* Spin around local 0,0 via SMIL - reliable on SVG */}
         {!reduce && (
           <animateTransform
             attributeName="transform"
@@ -210,7 +210,7 @@ function Dowel({
   delay: number;
   reduce: boolean;
 }) {
-  // Place at rect center, then rotate — no CSS transform-origin math
+  // Place at rect center, then rotate - no CSS transform-origin math
   const cx = x + 11;
   const cy = y + 3.5;
 
@@ -338,7 +338,7 @@ function WireframeArt({ mode }: { mode: MotionMode }) {
   return (
     <>
       <ArtSide side="l" mode={mode}>
-        {/* bookcase (iso) — draw sequence top → shelves */}
+        {/* bookcase (iso) - draw sequence top → shelves */}
         <DrawPath d="M40,120 H210 V440 H40 Z" delay={0.15} reduce={reduce} />
         <DrawPath d="M40,120 L84,94 H254 L210,120" delay={0.28} reduce={reduce} />
         <DrawPath d="M210,120 L254,94 V414 L210,440" delay={0.38} reduce={reduce} />
@@ -408,7 +408,7 @@ function WireframeArt({ mode }: { mode: MotionMode }) {
             34 in
           </text>
         </FadeIn>
-        {/* pendant lamp — slight sway via group */}
+        {/* pendant lamp - slight sway via group */}
         {/* Outer translate fixed; inner g holds SMIL rotate so they don't clobber each other */}
         <g transform="translate(320 0)">
           <g

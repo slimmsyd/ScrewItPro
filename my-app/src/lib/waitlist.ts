@@ -110,7 +110,7 @@ export async function upsertWaitlistEntry(
       .select("id, email, provider")
       .single();
 
-    // Older DBs may lack converted_user_id — retry without linking
+    // Older DBs may lack converted_user_id - retry without linking
     if (updateError && parsed.convertedUserId) {
       ({ data: updated, error: updateError } = await supabase
         .from("waitlist_entries")

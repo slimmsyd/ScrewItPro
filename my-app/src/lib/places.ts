@@ -1,6 +1,6 @@
 /**
  * Houston Metro Places autocomplete helpers.
- * Client-only — uses Maps JS Places library via loadGoogleMaps.
+ * Client-only - uses Maps JS Places library via loadGoogleMaps.
  *
  * Prediction strategy: no `types` filter so results include street addresses
  * and establishments (IKEA, Target, apartments, etc.) for furniture pickup.
@@ -8,10 +8,10 @@
 
 import { isGoogleMapsConfigured, loadGoogleMaps } from "@/lib/google";
 
-/** Downtown Houston — bias + service-area center */
+/** Downtown Houston - bias + service-area center */
 export const HOUSTON_CENTER = { lat: 29.7604, lng: -95.3698 } as const;
 
-/** ~50 miles — covers Katy, Sugar Land, The Woodlands, Pearland, etc. */
+/** ~50 miles - covers Katy, Sugar Land, The Woodlands, Pearland, etc. */
 export const HOUSTON_METRO_RADIUS_M = 80_000;
 
 export type PlaceSuggestion = {
@@ -187,7 +187,7 @@ export async function resolvePlace(placeId: string): Promise<ResolvedPlace> {
           sessionToken: token,
         },
         (result, status) => {
-          // Session ends after details — mint a new token for the next typeahead
+          // Session ends after details - mint a new token for the next typeahead
           sessionToken = null;
           if (
             status === google.maps.places.PlacesServiceStatus.OK &&

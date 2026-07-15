@@ -6,7 +6,7 @@ import { useLocale } from "@/components/providers/LocaleProvider";
 import MvpBadge from "@/components/home/MvpBadge";
 
 /**
- * Mobile announcement strip — mirrors the desktop TopUtilityBar look:
+ * Mobile announcement strip - mirrors the desktop TopUtilityBar look:
  * gray surface, MVP pill, waitlist/serving copy + CTA link.
  */
 export default function AnnouncementBar({ waitlist }: { waitlist: boolean }) {
