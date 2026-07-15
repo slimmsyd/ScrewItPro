@@ -16,8 +16,8 @@ export default function MobileMenu({
   waitlist: boolean;
 }) {
   const { t, locale, setLocale, labels } = useLocale();
-  // Announce strip (~36) + nav (60) — matches LandingPage headerHeight
-  const navOffset = 96;
+  // Announce strip + nav + buffer — matches LandingPage headerHeight
+  const navOffset = 104;
   const startX = useRef<number | null>(null);
   const [drag, setDrag] = useState(0);
 
