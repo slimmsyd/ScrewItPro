@@ -124,7 +124,8 @@ export default function Hero({
       id="top"
       style={{
         background: "var(--white)",
-        padding: mobile ? "20px 0 40px" : "48px 0 72px",
+        // Extra top pad on mobile so the video clears the fixed announce+nav
+        padding: mobile ? "28px 0 40px" : "48px 0 72px",
         position: "relative",
         overflow: "visible",
         minHeight: mobile ? "auto" : "min(72vh, 760px)",
@@ -143,7 +144,8 @@ export default function Hero({
             ? {
                 right: 0,
                 left: 0,
-                top: 8,
+                // Sit below the nav fold, not flush under the bar
+                top: 24,
                 height: 180,
               }
             : {
@@ -184,7 +186,8 @@ export default function Hero({
             flexDirection: "column",
             alignItems: "stretch",
             width: "100%",
-            paddingTop: mobile ? 168 : "6%",
+            // Room for absolute mobile video band (top 24 + ~180) under the nav
+            paddingTop: mobile ? 200 : "6%",
             paddingBottom: mobile ? 0 : "2%",
           }}
         >
