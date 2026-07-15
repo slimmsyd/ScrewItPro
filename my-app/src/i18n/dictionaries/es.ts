@@ -138,6 +138,8 @@ export const es: Dictionary = {
     pickupBody:
       "Recogemos en tu casa, tienda o lo recibimos en nuestro hub, y lo regresamos listo para usar.",
     pickupPh: "Foto: camioneta de recogida",
+    chipWorkshop: "Calidad garantizada",
+    chipDelivery: "Puerta a puerta",
     guaranteeTitle:
       "Tus muebles están respaldados por nuestra Garantía de Ensamblaje",
     guaranteeBody:
@@ -209,6 +211,10 @@ export const es: Dictionary = {
     t4: "Entregado listo para usar",
     b4: "Cuando llegamos, ya está armado. Solo lo colocamos donde quieras.",
     p4: "Foto: entrega white glove",
+    v1Chip: "Herramientas pro",
+    v2Chip: "Sin cajas",
+    v3Chip: "6 fotos",
+    v4Chip: "Justo ahí",
   },
   audiences: {
     eyebrow: "A quién servimos",
