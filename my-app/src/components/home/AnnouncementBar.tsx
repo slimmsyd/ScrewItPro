@@ -1,38 +1,48 @@
 "use client";
 
+import Link from "next/link";
+import { JOIN_PATH } from "@/lib/site";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import MvpBadge from "@/components/home/MvpBadge";
 
-export default function AnnouncementBar() {
+/**
+ * Mobile announcement strip — mirrors the desktop TopUtilityBar look:
+ * gray surface, MVP pill, waitlist/serving copy + CTA link.
+ */
+export default function AnnouncementBar({ waitlist }: { waitlist: boolean }) {
   const { t } = useLocale();
   return (
     <div
       style={{
-        background: "var(--blue-electric)",
-        color: "var(--white)",
+        background: "var(--gray-50)",
+        borderBottom: "1px solid var(--gray-100)",
+        color: "var(--ink-700)",
         textAlign: "center",
-        padding: "9px 16px",
+        padding: "8px 16px",
         fontFamily: "var(--font-body)",
-        fontSize: 13.5,
-        fontWeight: 600,
+        fontSize: 12.5,
+        fontWeight: 500,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         gap: 8,
+        flexWrap: "wrap",
       }}
     >
-      <span
-        style={{
-          padding: "2px 8px",
-          borderRadius: "var(--radius-pill)",
-          background: "rgba(255,255,255,0.2)",
-          fontSize: 11,
-          letterSpacing: "var(--tracking-caps)",
-          textTransform: "uppercase",
-        }}
-      >
-        {t("announce.mvp")}
+      <MvpBadge />
+      <span>
+        {waitlist ? t("util.announceWaitlist") : t("util.announceServing")}
+        <Link
+          href={JOIN_PATH}
+          style={{
+            color: "var(--blue-deep)",
+            fontWeight: 700,
+            textDecoration: "none",
+          }}
+        >
+          {waitlist ? t("util.joinEarly") : t("util.bookToday")}
+        </Link>
       </span>
-      {t("announce.text")}
     </div>
   );
 }

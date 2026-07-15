@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Container from "@/components/ui/Container";
+import MvpBadge from "@/components/home/MvpBadge";
 import { JOIN_PATH } from "@/lib/site";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
@@ -57,23 +58,29 @@ export default function TopUtilityBar({ waitlist }: { waitlist: boolean }) {
             position: "absolute",
             left: 32,
             right: 32,
-            textAlign: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
             fontFamily: "var(--font-body)",
             fontSize: 13,
             color: "var(--ink-700)",
           }}
         >
-          {waitlist ? t("util.announceWaitlist") : t("util.announceServing")}
-          <Link
-            href={JOIN_PATH}
-            style={{
-              color: "var(--blue-deep)",
-              fontWeight: 700,
-              textDecoration: "none",
-            }}
-          >
-            {waitlist ? t("util.joinEarly") : t("util.bookToday")}
-          </Link>
+          <MvpBadge />
+          <span>
+            {waitlist ? t("util.announceWaitlist") : t("util.announceServing")}
+            <Link
+              href={JOIN_PATH}
+              style={{
+                color: "var(--blue-deep)",
+                fontWeight: 700,
+                textDecoration: "none",
+              }}
+            >
+              {waitlist ? t("util.joinEarly") : t("util.bookToday")}
+            </Link>
+          </span>
         </div>
         <nav
           aria-label="Utility"

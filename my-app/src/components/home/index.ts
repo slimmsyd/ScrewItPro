@@ -9,6 +9,7 @@ export { default as Hero } from "./Hero";
 export { default as HeroBackdrop } from "./HeroBackdrop";
 export { default as HeroSearch } from "./HeroSearch";
 export { default as HeroAddressBar } from "./HeroAddressBar";
+export { default as MvpBadge } from "./MvpBadge";
 export { default as DividerBand } from "./DividerBand";
 export { default as Differentiators } from "./Differentiators";
 export { default as HowItWorks } from "./HowItWorks";

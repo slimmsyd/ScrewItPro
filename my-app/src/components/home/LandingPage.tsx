@@ -99,8 +99,8 @@ export default function LandingPage() {
     setQuoteOpen(true);
   };
 
-  // Fixed header height: desktop = utility bar + nav; mobile = nav (+ announce).
-  const headerHeight = mobile ? (isWaitlist ? 96 : 60) : 114;
+  // Fixed header height: desktop = utility + nav; mobile = announce strip + nav.
+  const headerHeight = mobile ? 96 : 114;
 
   return (
     <div>
@@ -115,7 +115,8 @@ export default function LandingPage() {
           zIndex: 1000,
         }}
       >
-        {mobile && isWaitlist && <AnnouncementBar />}
+        {/* Mobile strip matches desktop TopUtilityBar (MVP pill + announce) */}
+        {mobile && <AnnouncementBar waitlist={isWaitlist} />}
         <Nav
           onQuote={onQuote}
           onToggleMenu={() => setMenuOpen((o) => !o)}
