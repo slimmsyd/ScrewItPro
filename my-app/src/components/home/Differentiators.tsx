@@ -10,6 +10,7 @@ import {
   Star,
   Zap,
 } from "lucide-react";
+import { motion, MotionConfig } from "framer-motion";
 import Container from "@/components/ui/Container";
 import ImageSlot from "@/components/ui/ImageSlot";
 import Reveal from "@/components/ui/Reveal";
@@ -339,96 +340,155 @@ function TrustCard({
   );
 }
 
+/** Polar → cartesian (0° = right, clockwise-friendly for layout). */
+function polar(angleDeg: number, radius: number) {
+  const rad = (angleDeg * Math.PI) / 180;
+  return { x: Math.cos(rad) * radius, y: Math.sin(rad) * radius };
+}
+
 function GuaranteeVisual() {
+  /**
+   * Framer Motion float-orbit (more reliable than CSS keyframes).
+   * Nested MotionConfig reducedMotion="never" so OS "Reduce motion"
+   * does not freeze this decorative cluster (it was stuck before).
+   */
+  const shields = [
+    { angle: -50, radius: 58, duration: 7.2, delay: 0, size: 28 },
+    { angle: -10, radius: 54, duration: 8.0, delay: 0.4, size: 26 },
+    { angle: 35, radius: 60, duration: 6.8, delay: 0.9, size: 28 },
+    { angle: 85, radius: 56, duration: 7.6, delay: 0.2, size: 26 },
+    { angle: 145, radius: 58, duration: 8.4, delay: 1.1, size: 28 },
+    { angle: 200, radius: 54, duration: 7.0, delay: 0.6, size: 26 },
+    { angle: 255, radius: 60, duration: 7.8, delay: 1.4, size: 28 },
+  ] as const;
+
+  const solid = { angle: 50, radius: 52, duration: 8.5, delay: 0.3 };
+
   return (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        maxWidth: 220,
-        height: 150,
-      }}
-    >
-      {/* Soft furniture blobs */}
+    // Force motion for this decorative bit - CSS was frozen by reduced-motion
+    <MotionConfig reducedMotion="never">
       <div
+        className="guarantee-visual"
         style={{
-          position: "absolute",
-          left: 18,
-          bottom: 18,
-          width: 72,
-          height: 44,
-          borderRadius: 10,
-          background: "linear-gradient(145deg, var(--blue-200), var(--blue-400))",
-          boxShadow: "0 10px 20px rgba(4,32,155,0.12)",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 8,
-          bottom: 48,
-          width: 52,
-          height: 36,
-          borderRadius: 8,
-          background: "linear-gradient(145deg, #c4d4f5, var(--blue-300))",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          right: 28,
-          bottom: 22,
-          width: 48,
-          height: 58,
-          borderRadius: 12,
-          background: "linear-gradient(160deg, var(--blue-electric), var(--blue-deep))",
-          boxShadow: "0 12px 22px rgba(4,32,155,0.18)",
-        }}
-      />
-      {/* Floating shields */}
-      {[
-        { t: 8, l: 70 },
-        { t: 0, l: 118 },
-        { t: 36, l: 160 },
-        { t: 70, l: 40 },
-        { t: 18, l: 24 },
-        { t: 88, l: 130 },
-      ].map((p, i) => (
-        <div
-          key={i}
-          style={{
-            position: "absolute",
-            top: p.t,
-            left: p.l,
-            width: 28,
-            height: 28,
-            borderRadius: 8,
-            background: "var(--white)",
-            boxShadow: "0 6px 14px rgba(11,16,48,0.1)",
-            display: "grid",
-            placeItems: "center",
-          }}
-        >
-          <ShieldCheck size={15} color="#16a34a" strokeWidth={2.4} />
-        </div>
-      ))}
-      <div
-        style={{
-          position: "absolute",
-          right: 8,
-          top: 42,
-          width: 36,
-          height: 36,
-          borderRadius: 10,
-          background: "#16a34a",
-          display: "grid",
-          placeItems: "center",
-          boxShadow: "0 8px 16px rgba(22,163,74,0.28)",
+          position: "relative",
+          width: "100%",
+          maxWidth: 200,
+          height: 168,
+          margin: "0 auto",
         }}
       >
-        <Check size={18} color="white" strokeWidth={3} />
+        <div aria-hidden className="guarantee-glow" />
+
+        {/* Layer order: glow → mascot (back) → floating checks (front) */}
+        <motion.img
+          src="/assets/mascot-thumbs-up.png"
+          alt=""
+          draggable={false}
+          className="guarantee-mascot"
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "52%",
+            width: 118,
+            height: 118,
+            marginLeft: -59,
+            marginTop: -59,
+            objectFit: "contain",
+            zIndex: 1,
+            pointerEvents: "none",
+            userSelect: "none",
+            filter: "drop-shadow(0 10px 16px rgba(4, 32, 155, 0.16))",
+          }}
+          animate={{ y: [0, -5, 0] }}
+          transition={{
+            duration: 4.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+
+        {shields.map((p, i) => {
+          const home = polar(p.angle, p.radius);
+          const far = polar(p.angle + 16, p.radius * 1.12);
+          const near = polar(p.angle - 14, p.radius * 0.86);
+          const mid = polar(p.angle + 4, p.radius * 1.02);
+
+          return (
+            <motion.div
+              key={i}
+              aria-hidden
+              className="guarantee-shield"
+              style={{
+                width: p.size,
+                height: p.size,
+                position: "absolute",
+                left: "50%",
+                top: "52%",
+                marginLeft: -p.size / 2,
+                marginTop: -p.size / 2,
+                zIndex: 3,
+              }}
+              initial={{ x: home.x, y: home.y, scale: 1, opacity: 0.9 }}
+              animate={{
+                x: [home.x, far.x, mid.x, near.x, home.x],
+                y: [home.y, far.y - 6, mid.y + 4, near.y - 3, home.y],
+                scale: [1, 1.12, 1.02, 0.88, 1],
+                opacity: [0.88, 1, 0.95, 0.68, 0.88],
+              }}
+              transition={{
+                duration: p.duration,
+                delay: p.delay,
+                repeat: Infinity,
+                ease: "easeInOut",
+                times: [0, 0.28, 0.5, 0.78, 1],
+              }}
+            >
+              <ShieldCheck
+                size={Math.round(p.size * 0.5)}
+                color="#16a34a"
+                strokeWidth={2.4}
+              />
+            </motion.div>
+          );
+        })}
+
+        {/* Solid green check - same language, slightly closer */}
+        {(() => {
+          const home = polar(solid.angle, solid.radius);
+          const far = polar(solid.angle + 14, solid.radius * 1.1);
+          const near = polar(solid.angle - 12, solid.radius * 0.88);
+          return (
+            <motion.div
+              aria-hidden
+              className="guarantee-check-solid"
+              style={{
+                position: "absolute",
+                left: "50%",
+                top: "52%",
+                marginLeft: -17,
+                marginTop: -17,
+                zIndex: 4,
+              }}
+              initial={{ x: home.x, y: home.y, scale: 1, opacity: 1 }}
+              animate={{
+                x: [home.x, far.x, near.x, home.x],
+                y: [home.y, far.y - 5, near.y + 3, home.y],
+                scale: [1, 1.1, 0.9, 1],
+                opacity: [0.95, 1, 0.8, 0.95],
+              }}
+              transition={{
+                duration: solid.duration,
+                delay: solid.delay,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              <Check size={15} color="white" strokeWidth={3} />
+            </motion.div>
+          );
+        })()}
       </div>
-    </div>
+    </MotionConfig>
   );
 }
 
