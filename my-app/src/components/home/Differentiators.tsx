@@ -328,10 +328,12 @@ function TrustCard({
         aria-hidden
         style={{
           position: "relative",
-          minHeight: mobile ? 140 : 160,
+          // Room for the larger mobile mascot plate (hat was clipping at 132)
+          minHeight: mobile ? 220 : 160,
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
+          // Mobile: sit the visual under the copy on the left
+          justifyContent: mobile ? "flex-start" : "center",
         }}
       >
         {visual}
@@ -346,7 +348,7 @@ function polar(angleDeg: number, radius: number) {
   return { x: Math.cos(rad) * radius, y: Math.sin(rad) * radius };
 }
 
-function GuaranteeVisual() {
+function GuaranteeVisual({ mobile = false }: { mobile?: boolean }) {
   /**
    * Framer Motion float-orbit (more reliable than CSS keyframes).
    * Nested MotionConfig reducedMotion="never" so OS "Reduce motion"
@@ -364,6 +366,16 @@ function GuaranteeVisual() {
 
   const solid = { angle: 50, radius: 52, duration: 8.5, delay: 0.3 };
 
+  // Mobile: larger square plate so the full character (incl. hat) shows;
+  // video is 1:1 so a short landscape box was cropping the top.
+  const shellMax = mobile ? 300 : 200;
+  const shellH = mobile ? 220 : 168;
+  const mascotW = mobile ? 196 : 118;
+  const mascotH = mobile ? 196 : 118;
+  // Orbit origin: center of the mascot plate (left-anchored on mobile)
+  const originLeft = mobile ? mascotW / 2 : "50%";
+  const originTop = mobile ? "50%" : "52%";
+
   return (
     // Force motion for this decorative bit - CSS was frozen by reduced-motion
     <MotionConfig reducedMotion="never">
@@ -372,32 +384,29 @@ function GuaranteeVisual() {
         style={{
           position: "relative",
           width: "100%",
-          maxWidth: 200,
-          height: 168,
-          margin: "0 auto",
+          maxWidth: shellMax,
+          height: shellH,
+          margin: mobile ? "0" : "0 auto",
         }}
       >
         <div aria-hidden className="guarantee-glow" />
 
-        {/* Layer order: glow → mascot (back) → floating checks (front) */}
-        <motion.img
-          src="/assets/mascot-thumbs-up.png"
-          alt=""
-          draggable={false}
+        {/* Layer order: glow → mascot loop (back) → floating checks (front) */}
+        <motion.div
           className="guarantee-mascot"
           style={{
             position: "absolute",
-            left: "50%",
-            top: "52%",
-            width: 118,
-            height: 118,
-            marginLeft: -59,
-            marginTop: -59,
-            objectFit: "contain",
+            left: mobile ? 0 : "50%",
+            top: originTop,
+            width: mascotW,
+            height: mascotH,
+            marginLeft: mobile ? 0 : -mascotW / 2,
+            marginTop: -mascotH / 2,
             zIndex: 1,
             pointerEvents: "none",
-            userSelect: "none",
-            filter: "drop-shadow(0 10px 16px rgba(4, 32, 155, 0.16))",
+            borderRadius: mobile ? 22 : 20,
+            overflow: "hidden",
+            boxShadow: "0 10px 16px rgba(4, 32, 155, 0.16)",
           }}
           animate={{ y: [0, -5, 0] }}
           transition={{
@@ -405,7 +414,26 @@ function GuaranteeVisual() {
             repeat: Infinity,
             ease: "easeInOut",
           }}
-        />
+        >
+          <video
+            src="/assets/mascot-build-protection.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            aria-hidden
+            tabIndex={-1}
+            style={{
+              width: "100%",
+              height: "100%",
+              // contain = never crop hat/hands; square source matches the plate
+              objectFit: mobile ? "contain" : "cover",
+              objectPosition: "center center",
+              display: "block",
+              background: mobile ? "#3876d7" : undefined,
+            }}
+          />
+        </motion.div>
 
         {shields.map((p, i) => {
           const home = polar(p.angle, p.radius);
@@ -422,8 +450,8 @@ function GuaranteeVisual() {
                 width: p.size,
                 height: p.size,
                 position: "absolute",
-                left: "50%",
-                top: "52%",
+                left: originLeft,
+                top: originTop,
                 marginLeft: -p.size / 2,
                 marginTop: -p.size / 2,
                 zIndex: 3,
@@ -463,8 +491,8 @@ function GuaranteeVisual() {
               className="guarantee-check-solid"
               style={{
                 position: "absolute",
-                left: "50%",
-                top: "52%",
+                left: originLeft,
+                top: originTop,
                 marginLeft: -17,
                 marginTop: -17,
                 zIndex: 4,
@@ -751,7 +779,7 @@ export default function Differentiators() {
                   .
                 </>
               }
-              visual={<GuaranteeVisual />}
+              visual={<GuaranteeVisual mobile={mobile} />}
             />
             <TrustCard
               mobile={mobile}
