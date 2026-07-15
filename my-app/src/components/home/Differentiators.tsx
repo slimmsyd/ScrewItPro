@@ -892,7 +892,7 @@ export default function Differentiators() {
     title: t("diff.pickupTitle"),
     body: t("diff.pickupBody"),
     // Door-to-door handoff scene in the grey card visual band
-    img: "/assets/delivery-handoff.png?v=2",
+    img: "/assets/delivery-handoff.png",
     ph: t("diff.pickupPh"),
     vis: 260,
     scene: true,
