@@ -23,20 +23,22 @@ export default function AudiencesPhoto() {
         <Image
           src={ASSETS.audiencesCrew}
           alt={t("audiences.photoAlt")}
-          width={1080}
-          height={600}
+          width={2664}
+          height={1500}
+          priority
           style={{ display: "block", width: "100%", height: "auto" }}
         />
       </div>
+      {/* Soft fade into Service Area (gray-50) below */}
       <div
         style={{
           position: "absolute",
           left: 0,
           right: 0,
           bottom: 0,
-          height: 240,
+          height: 120,
           background:
-            "linear-gradient(to bottom, rgba(244,246,251,0) 0%, var(--gray-50) 90%)",
+            "linear-gradient(to bottom, rgba(255,255,255,0) 0%, var(--gray-50) 92%)",
           pointerEvents: "none",
         }}
       />

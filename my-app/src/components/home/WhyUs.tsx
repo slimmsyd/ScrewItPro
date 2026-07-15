@@ -1,21 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Container from "@/components/ui/Container";
 import Eyebrow from "@/components/ui/Eyebrow";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Reveal from "@/components/ui/Reveal";
-import WhyUsVignette from "@/components/home/WhyUsVignettes";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useLocale } from "@/components/providers/LocaleProvider";
-import { easeReveal } from "@/lib/motion";
 
+/**
+ * Why Choose ScrewIt Pros — white section with a driving loop whose
+ * near-white plate was keyed out (WebM/MOV alpha) so the subject sits
+ * on the real page white, not a washed-out video frame.
+ */
 export default function WhyUs() {
   const [active, setActive] = useState(0);
   const mobile = useIsMobile();
   const { t } = useLocale();
-  const reduce = useReducedMotion() ?? false;
 
   const whyPoints = [
     { kicker: t("why.k1"), title: t("why.t1"), body: t("why.b1") },
@@ -24,36 +25,61 @@ export default function WhyUs() {
     { kicker: t("why.k4"), title: t("why.t4"), body: t("why.b4") },
   ];
 
-  const chipLabels = [
-    t("why.v1Chip"),
-    t("why.v2Chip"),
-    t("why.v3Chip"),
-    t("why.v4Chip"),
-  ];
-
   return (
     <Reveal
       as="section"
       id="why"
       style={{
-        background: "var(--blue-deep)",
+        position: "relative",
+        background: "var(--white)",
         padding: "var(--section-pad-y) 0",
+        overflow: "hidden",
       }}
     >
-      <Container>
+      {/* Transparent driving loop (BG keyed out of the source file) */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 0,
+          pointerEvents: "none",
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          tabIndex={-1}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            objectPosition: "center center",
+          }}
+        >
+          {/* Safari: HEVC + alpha */}
+          <source src="/assets/why-driving-loop.mov" type='video/mp4; codecs="hvc1"' />
+          {/* Chrome / Firefox / Edge: VP9 + alpha */}
+          <source src="/assets/why-driving-loop.webm" type="video/webm" />
+        </video>
+      </div>
+
+      <Container style={{ position: "relative", zIndex: 1 }}>
         <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <Eyebrow color="var(--blue-300)" center>
-            {t("why.eyebrow")}
-          </Eyebrow>
-          <SectionTitle inverse center>
-            {t("why.title")}
-          </SectionTitle>
+          <Eyebrow center>{t("why.eyebrow")}</Eyebrow>
+          <SectionTitle center>{t("why.title")}</SectionTitle>
           <p
             style={{
               fontFamily: "var(--font-body)",
               fontSize: 17,
               lineHeight: "var(--leading-body)",
-              color: "var(--blue-200)",
+              color: "var(--text-muted)",
               maxWidth: "58ch",
               margin: "12px auto 0",
             }}
@@ -63,16 +89,17 @@ export default function WhyUs() {
         </div>
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: mobile ? "1fr" : "1fr 1.2fr",
             borderRadius: "var(--radius-xl)",
             overflow: "hidden",
-            minHeight: mobile ? "auto" : 520,
+            background: "rgba(255,255,255,0.94)",
+            border: "1px solid var(--gray-100)",
+            boxShadow: "0 18px 40px rgba(11,16,48,0.08)",
+            maxWidth: mobile ? "100%" : 720,
+            margin: "0 auto",
           }}
         >
           <div
             style={{
-              background: "var(--gray-50)",
               padding: mobile ? "28px 20px" : "48px 44px",
               display: "flex",
               flexDirection: "column",
@@ -148,31 +175,6 @@ export default function WhyUs() {
                 </button>
               );
             })}
-          </div>
-          <div
-            style={{
-              position: "relative",
-              background:
-                "linear-gradient(135deg, var(--blue-50), var(--gray-50))",
-              minHeight: mobile ? 280 : "auto",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "hidden",
-            }}
-          >
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={active}
-                initial={reduce ? false : { opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
-                transition={{ duration: reduce ? 0 : 0.26, ease: easeReveal }}
-                style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
-              >
-                <WhyUsVignette index={active} label={chipLabels[active]} reduce={reduce} />
-              </motion.div>
-            </AnimatePresence>
           </div>
         </div>
       </Container>

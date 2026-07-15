@@ -16,7 +16,6 @@ export { default as HowItWorks } from "./HowItWorks";
 export { default as StepFlow } from "./StepFlow";
 export { default as Services } from "./Services";
 export { default as WhyUs } from "./WhyUs";
-export { default as WhyUsVignette } from "./WhyUsVignettes";
 export { default as Audiences } from "./Audiences";
 export { default as AudiencesPhoto } from "./AudiencesPhoto";
 export { default as ServiceArea } from "./ServiceArea";

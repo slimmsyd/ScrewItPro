@@ -10,7 +10,7 @@ export const ASSETS = {
   logoDeep: "/assets/logo-icon-deep-blue.png",
   logoElectric: "/assets/logo-icon-electric-blue.jpg",
   mascot: "/assets/mascot-wave.jpg",
-  audiencesCrew: "/assets/audiences-crew.jpg",
+  audiencesCrew: "/assets/team-community.png",
   /** Shared brand mark for favicons / fallbacks (deep blue S) */
   brandIcon: "/assets/logo-icon-deep-blue.png",
 } as const;
