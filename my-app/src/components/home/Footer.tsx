@@ -18,7 +18,7 @@ function FooterLink({
   const style = {
     fontFamily: "var(--font-body)",
     fontSize: 14,
-    color: h ? "var(--blue-100)" : "var(--blue-300)",
+    color: h ? "var(--blue-electric)" : "var(--ink-700)",
     textDecoration: "none",
     transition: "color 150ms",
     cursor: "pointer" as const,
@@ -58,7 +58,7 @@ function SocialIcon({ path, label }: { path: string; label: string }) {
       onMouseEnter={() => setH(true)}
       onMouseLeave={() => setH(false)}
       style={{
-        color: h ? "var(--blue-100)" : "var(--blue-300)",
+        color: h ? "var(--blue-electric)" : "var(--ink-500)",
         transition: "color 150ms",
         display: "flex",
         cursor: "pointer",
@@ -135,7 +135,13 @@ export default function Footer() {
   ];
 
   return (
-    <footer style={{ background: "var(--blue-900)", color: "var(--blue-100)" }}>
+    <footer
+      style={{
+        background: "var(--gray-50)",
+        color: "var(--ink-700)",
+        borderTop: "1px solid var(--gray-100)",
+      }}
+    >
       <div
         style={{
           maxWidth: 1080,
@@ -143,60 +149,23 @@ export default function Footer() {
           padding: "80px 24px 48px",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 32,
-            marginBottom: 64,
-            flexWrap: "wrap",
-          }}
-        >
+        <div style={{ marginBottom: 64 }}>
           <p
             style={{
               fontFamily: "var(--font-display)",
               fontSize: 36,
               fontStyle: "italic",
-              color: "var(--white)",
+              color: "var(--text-heading)",
               lineHeight: 1.3,
               maxWidth: 480,
               margin: 0,
               letterSpacing: "var(--tracking-display)",
-              flex: "1 1 240px",
             }}
           >
             {t("footer.tagline1")}
             <br />
             {t("footer.tagline2")}
           </p>
-          <div
-            aria-hidden
-            className="footer-logo-spin"
-            style={{
-              flex: "0 0 auto",
-              marginLeft: "auto",
-              width: "min(220px, 42vw)",
-              height: "min(220px, 42vw)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Image
-              src={ASSETS.logoSWhite}
-              alt=""
-              width={220}
-              height={220}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "contain",
-                mixBlendMode: "screen",
-                opacity: 0.95,
-              }}
-            />
-          </div>
         </div>
         <div
           style={{
@@ -213,7 +182,7 @@ export default function Footer() {
                   fontFamily: "var(--font-body)",
                   fontSize: 14,
                   fontWeight: 600,
-                  color: "var(--blue-200)",
+                  color: "var(--ink-500)",
                   marginBottom: 16,
                 }}
               >
@@ -233,7 +202,7 @@ export default function Footer() {
         </div>
         <div
           style={{
-            borderTop: "1px solid rgba(255,255,255,0.1)",
+            borderTop: "1px solid var(--gray-200)",
             paddingTop: 32,
             display: "flex",
             justifyContent: "space-between",
@@ -250,6 +219,7 @@ export default function Footer() {
                   height: 30,
                   borderRadius: 7,
                   background: "var(--white)",
+                  border: "1px solid var(--gray-200)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -268,14 +238,14 @@ export default function Footer() {
                 style={{
                   fontFamily: "var(--font-display)",
                   fontSize: 20,
-                  color: "var(--white)",
+                  color: "var(--text-heading)",
                   letterSpacing: "var(--tracking-display)",
                 }}
               >
                 Screwit{" "}
                 <span
                   style={{
-                    color: "var(--blue-300)",
+                    color: "var(--blue-electric)",
                     fontSize: 14,
                     letterSpacing: "var(--tracking-caps)",
                   }}
@@ -294,7 +264,7 @@ export default function Footer() {
             style={{
               fontFamily: "var(--font-body)",
               fontSize: 12,
-              color: "var(--blue-300)",
+              color: "var(--ink-500)",
             }}
           >
             {t("footer.rights", { year: new Date().getFullYear() })}

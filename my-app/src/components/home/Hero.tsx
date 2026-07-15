@@ -1,300 +1,233 @@
 "use client";
 
-import Image from "next/image";
-import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  BadgeCheck,
-  BedDouble,
-  Briefcase,
-  HeartHandshake,
-  Sparkles,
-  Truck,
-  Wrench,
-} from "lucide-react";
+import { useEffect, useRef } from "react";
+import HeroAddressBar from "@/components/home/HeroAddressBar";
 import Container from "@/components/ui/Container";
-import Badge from "@/components/ui/Badge";
-import HeroSearch from "@/components/home/HeroSearch";
-import HeroBackdrop from "@/components/home/HeroBackdrop";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { useMotionMode } from "@/hooks/useMotionMode";
-import { ASSETS } from "@/lib/site";
 import { useLocale } from "@/components/providers/LocaleProvider";
-import { easeReveal } from "@/lib/motion";
 
-/** Production default from design handoff: iso furniture wireframe. */
-const HERO_BG = "wireframe" as const;
+// Cache-bust after white-bg re-encode
+const HERO_VIDEO_SRC = "/assets/hero-loop.mp4?v=4";
+const HERO_POSTER_SRC = "/assets/hero-loop-poster.jpg?v=4";
 
-export default function Hero({ onCta }: { onCta: () => void }) {
-  const [activeCat, setActiveCat] = useState(0);
+/**
+ * V2 hero: full-width copy + address bar. Looping truck video is decorative
+ * (absolute, out of flow) so it never shifts text/UI.
+ *
+ * Autoplay notes:
+ * - Browsers only allow muted + playsInline autoplay.
+ * - We set the muted *property* (not only the attribute) — React's muted prop
+ *   alone is unreliable for the autoplay policy check.
+ * - src is on <video> (not nested <source>) so load/play is deterministic.
+ * - Marketing product loop always plays; a still poster is the fallback if
+ *   play() is blocked. (OS "Reduce motion" no longer freezes this asset —
+ *   that was why the truck looked stuck.)
+ */
+export default function Hero({
+  onQuote,
+  waitlist,
+}: {
+  onQuote: () => void;
+  waitlist: boolean;
+}) {
   const mobile = useIsMobile();
   const { t } = useLocale();
-  const mode = useMotionMode();
-  const full = mode === "full";
-  const soft = mode === "soft";
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const cta = waitlist ? t("hero.ctaWaitlist") : t("hero.ctaQuote");
 
-  const heroCategories = [
-    { icon: Wrench, label: t("hero.catAssembly") },
-    { icon: Truck, label: t("hero.catPickup") },
-    { icon: BedDouble, label: t("hero.catLarge") },
-    { icon: Briefcase, label: t("hero.catOffice") },
-    { icon: HeartHandshake, label: t("hero.catSenior") },
-    { icon: Sparkles, label: t("hero.catWhiteGlove") },
-    { icon: BadgeCheck, label: t("hero.catMembership") },
-  ];
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
 
-  const heroChips = [
-    t("hero.chipGeneral"),
-    t("hero.chipIkea"),
-    t("hero.chipBed"),
-    t("hero.chipDesk"),
-    t("hero.chipWardrobe"),
-  ];
+    let cancelled = false;
+
+    const ensureMuted = () => {
+      el.defaultMuted = true;
+      el.muted = true;
+      el.volume = 0;
+      // Attribute form for WebKit's autoplay policy check
+      el.setAttribute("muted", "");
+      el.setAttribute("playsinline", "");
+      el.setAttribute("webkit-playsinline", "");
+    };
+
+    const tryPlay = async () => {
+      if (cancelled) return;
+      ensureMuted();
+      el.loop = true;
+      el.playsInline = true;
+      try {
+        await el.play();
+      } catch {
+        // Retry once after the element finishes loading data
+        if (cancelled) return;
+        ensureMuted();
+        try {
+          await el.play();
+        } catch {
+          /* leave poster/first frame if autoplay is hard-blocked */
+        }
+      }
+    };
+
+    ensureMuted();
+
+    // Kick load if the browser hasn't started yet
+    if (el.networkState === HTMLMediaElement.NETWORK_EMPTY) {
+      el.load();
+    }
+
+    void tryPlay();
+
+    const onReady = () => {
+      void tryPlay();
+    };
+    el.addEventListener("loadeddata", onReady);
+    el.addEventListener("canplay", onReady);
+    el.addEventListener("canplaythrough", onReady);
+
+    // After splash / tab return, nudge play again
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void tryPlay();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    // If something pauses it (Strict Mode remount races, splash, etc.), resume
+    const onPause = () => {
+      if (cancelled) return;
+      // Don't fight an intentional end; loop should restart via `loop`
+      if (el.ended) return;
+      window.setTimeout(() => {
+        if (!cancelled && el.paused) void tryPlay();
+      }, 200);
+    };
+    el.addEventListener("pause", onPause);
+
+    const watchdog = window.setInterval(() => {
+      if (cancelled) return;
+      if (el.paused && !el.ended) void tryPlay();
+    }, 2000);
+
+    return () => {
+      cancelled = true;
+      el.removeEventListener("loadeddata", onReady);
+      el.removeEventListener("canplay", onReady);
+      el.removeEventListener("canplaythrough", onReady);
+      el.removeEventListener("pause", onPause);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.clearInterval(watchdog);
+    };
+  }, []);
 
   return (
     <header
       id="top"
       style={{
         background: "var(--white)",
-        padding: mobile ? "32px 0 56px" : "72px 0 150px",
+        padding: mobile ? "20px 0 40px" : "48px 0 72px",
         position: "relative",
-        /* Stay under HowItWorks so the mascot overhang does not bleed over section 2 */
-        zIndex: 1,
         overflow: "visible",
+        minHeight: mobile ? "auto" : "min(72vh, 760px)",
+        display: "flex",
+        alignItems: "center",
       }}
     >
-      <HeroBackdrop variant={HERO_BG} mobile={mobile} />
-      {!mobile && (
-        <motion.div
-          key={mode}
-          initial={full ? { opacity: 0, y: 18 } : soft ? { opacity: 0 } : false}
-          animate={
-            full
-              ? { opacity: 1, y: [0, -5, 0] }
-              : soft
-                ? { opacity: 1 }
-                : undefined
-          }
-          transition={
-            full
-              ? {
-                  opacity: { duration: 0.6, delay: 0.55, ease: easeReveal },
-                  y: {
-                    duration: 4.8,
-                    delay: 1.1,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  },
-                }
-              : soft
-                ? { opacity: { duration: 0.6, delay: 0.55, ease: easeReveal } }
-                : undefined
-          }
-          style={{
-            position: "absolute",
-            bottom: 0,
-            right: 48,
-            display: "flex",
-            alignItems: "flex-end",
-            gap: 14,
-            /* Bottom of hero stack — second section paints over the overhang */
-            zIndex: 0,
-            pointerEvents: "none",
-          }}
-        >
-          <motion.div
-            initial={
-              full ? { opacity: 0, scale: 0.9, y: 8 } : soft ? { opacity: 0 } : false
-            }
-            animate={
-              full
-                ? { opacity: 1, scale: 1, y: 0 }
-                : soft
-                  ? { opacity: 1 }
-                  : undefined
-            }
-            transition={
-              full
-                ? { duration: 0.45, delay: 0.85, ease: easeReveal }
-                : soft
-                  ? { duration: 0.45, delay: 0.85, ease: easeReveal }
-                  : undefined
-            }
-            style={{
-              alignSelf: "flex-start",
-              marginTop: -8,
-              padding: "10px 18px",
-              borderRadius: "var(--radius-pill)",
-              borderBottomRightRadius: 4,
-              background: "var(--blue-50)",
-              border: "1px solid var(--blue-100)",
-              fontFamily: "var(--font-body)",
-              fontSize: 14,
-              fontWeight: 600,
-              color: "var(--blue-deep)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {t("hero.mascotBubble")}
-          </motion.div>
-          <Image
-            src={ASSETS.mascot}
-            alt="ScrewIt Pros"
-            width={170}
-            height={200}
-            style={{
-              width: 170,
-              height: "auto",
-              display: "block",
-              marginBottom: -78,
-            }}
-          />
-        </motion.div>
-      )}
-      <Container
+      <div
+        aria-hidden
         style={{
-          position: "relative",
-          zIndex: 2,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          textAlign: "center",
+          position: "absolute",
+          zIndex: 0,
+          pointerEvents: "none",
+          overflow: "hidden",
+          ...(mobile
+            ? {
+                right: 0,
+                left: 0,
+                top: 8,
+                height: 180,
+              }
+            : {
+                // Use vh — % height against an auto-sized parent can collapse
+                right: "-4%",
+                top: "50%",
+                transform: "translateY(-50%)",
+                width: "min(52vw, 720px)",
+                height: "min(62vh, 540px)",
+              }),
         }}
       >
-        <Badge variant="brand" style={{ marginBottom: 24 }}>
-          {t("hero.badge")}
-        </Badge>
-        <h1
+        <video
+          ref={videoRef}
+          src={HERO_VIDEO_SRC}
+          poster={HERO_POSTER_SRC}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          disableRemotePlayback
           style={{
-            fontFamily: "var(--font-display)",
-            fontWeight: 400,
-            fontSize: "var(--text-hero)",
-            lineHeight: "var(--leading-display)",
-            letterSpacing: "var(--tracking-display)",
-            color: "var(--text-heading)",
-            margin: "0 0 16px",
-            maxWidth: "18ch",
-          }}
-        >
-          {t("hero.title")}
-        </h1>
-        <p
-          style={{
-            fontFamily: "var(--font-display)",
-            fontSize: mobile ? 19 : 24,
-            lineHeight: 1.25,
-            letterSpacing: "var(--tracking-display)",
-            color: "var(--blue-electric)",
-            margin: "0 0 14px",
-          }}
-        >
-          {t("hero.tagline")}
-        </p>
-        <p
-          style={{
-            fontFamily: "var(--font-body)",
-            fontSize: "var(--text-lg)",
-            lineHeight: "var(--leading-body)",
-            color: "var(--text-muted)",
-            margin: "0 0 36px",
-            maxWidth: "52ch",
-          }}
-        >
-          {t("hero.sub")}
-        </p>
-        <HeroSearch onCta={onCta} />
-        <div
-          className="hscroll"
-          style={{
-            display: "flex",
-            gap: 8,
-            justifyContent: mobile ? "flex-start" : "center",
-            flexWrap: "nowrap",
             width: "100%",
-            overflowX: mobile ? "auto" : "visible",
-            borderBottom: "1px solid var(--gray-100)",
-            paddingBottom: 0,
-            marginBottom: 28,
+            height: "100%",
+            objectFit: "contain",
+            objectPosition: mobile ? "center" : "center right",
+            display: "block",
+            background: "transparent",
           }}
-        >
-          {heroCategories.map((c, i) => {
-            const active = i === activeCat;
-            const Icon = c.icon;
-            return (
-              <button
-                key={c.label}
-                type="button"
-                onClick={() => setActiveCat(i)}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 10,
-                  flex: "none",
-                  whiteSpace: "nowrap",
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: mobile ? "6px 12px 14px" : "6px 18px 16px",
-                  borderBottom: `2px solid ${active ? "var(--blue-electric)" : "transparent"}`,
-                  fontFamily: "var(--font-body)",
-                  fontSize: 14,
-                  fontWeight: active ? 600 : 500,
-                  color: active ? "var(--blue-electric)" : "var(--ink-500)",
-                }}
-              >
-                <span
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: active ? "var(--blue-50)" : "transparent",
-                  }}
-                >
-                  <Icon
-                    size={24}
-                    color={
-                      active ? "var(--blue-electric)" : "var(--ink-500)"
-                    }
-                  />
-                </span>
-                {c.label}
-              </button>
-            );
-          })}
-        </div>
+        />
+      </div>
+
+      <Container style={{ position: "relative", zIndex: 2, width: "100%" }}>
         <div
           style={{
             display: "flex",
-            gap: 10,
-            justifyContent: "center",
-            flexWrap: "wrap",
+            flexDirection: "column",
+            alignItems: "stretch",
+            width: "100%",
+            paddingTop: mobile ? 168 : "6%",
+            paddingBottom: mobile ? 0 : "2%",
           }}
         >
-          {heroChips.map((chip) => (
-            <button
-              key={chip}
-              type="button"
-              onClick={onCta}
-              style={{
-                padding: "10px 22px",
-                borderRadius: "var(--radius-pill)",
-                border: "1px solid var(--ink-700)",
-                background: "var(--white)",
-                cursor: "pointer",
-                fontFamily: "var(--font-body)",
-                fontSize: 14.5,
-                fontWeight: 600,
-                color: "var(--ink-900)",
-                transition: "background var(--duration-fast) var(--ease-out)",
-              }}
-            >
-              {chip}
-            </button>
-          ))}
+          <h1
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 400,
+              fontSize: mobile
+                ? "clamp(40px, 12vw, 58px)"
+                : "var(--text-hero)",
+              lineHeight: 1.08,
+              letterSpacing: "var(--tracking-display)",
+              color: "var(--text-heading)",
+              margin: "0 0 20px",
+              maxWidth: mobile ? "100%" : "18ch",
+            }}
+          >
+            {t("hero.v2TitleA")}{" "}
+            <span style={{ color: "var(--blue-electric)" }}>
+              {t("hero.v2TitleAccent")}
+            </span>
+            <br />
+            <span style={{ color: "var(--ink-300)" }}>
+              {t("hero.v2TitleB")}
+            </span>
+          </h1>
+
+          <p
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: mobile ? 17 : "var(--text-lg)",
+              lineHeight: "var(--leading-body)",
+              color: "var(--text-muted)",
+              margin: "0 0 32px",
+              maxWidth: "52ch",
+            }}
+          >
+            {t("hero.v2Sub")}
+          </p>
+
+          <div style={{ width: "100%", maxWidth: 900 }}>
+            <HeroAddressBar onQuote={onQuote} cta={cta} />
+          </div>
         </div>
       </Container>
     </header>

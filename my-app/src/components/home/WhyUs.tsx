@@ -80,6 +80,8 @@ export default function WhyUs() {
                     padding: isActive ? "22px 0 22px 24px" : "18px 0 18px 24px",
                     borderLeft: `2px solid ${isActive ? "var(--blue-electric)" : "transparent"}`,
                     borderTop: i > 0 ? "1px solid var(--gray-200)" : "none",
+                    transition:
+                      "border-color var(--duration-fast) var(--ease-out)",
                   }}
                 >
                   <div
