@@ -562,6 +562,42 @@ header[id] {
   }
 }
 
+/* Build Protection Guarantee - static shell; motion is Framer Motion */
+.guarantee-glow {
+  position: absolute;
+  inset: 18% 16%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(22, 163, 74, 0.12) 0%,
+    transparent 70%
+  );
+  z-index: 0;
+  pointer-events: none;
+}
+
+.guarantee-shield {
+  border-radius: 9px;
+  background: var(--white);
+  box-shadow:
+    0 4px 12px rgba(11, 16, 48, 0.08),
+    0 0 0 1px rgba(22, 163, 74, 0.06);
+  display: grid;
+  place-items: center;
+}
+
+.guarantee-check-solid {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: #16a34a;
+  display: grid;
+  place-items: center;
+  box-shadow:
+    0 8px 18px rgba(22, 163, 74, 0.32),
+    0 0 20px rgba(22, 163, 74, 0.18);
+}
+
 /* Differentiators - Houston map pin ping */
 @keyframes mapPing {
   0% {
@@ -698,6 +734,8 @@ header[id] {
  .hero-art {
  will-change: auto;
  }
+
+
 
  .splash-exiting {
  animation: splashFade 300ms ease forwards;
