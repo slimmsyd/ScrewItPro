@@ -27,6 +27,17 @@ export const es: Dictionary = {
     whiteGlove: "Entrega white glove",
     membership: "Planes de membresía",
     tagline: "Si no quieres hacerlo, ¡ScrewIt!",
+    search: "Buscar",
+    login: "Entrar",
+    contactUs: "Contáctanos",
+  },
+  util: {
+    announceWaitlist:
+      "Ya aceptamos registros en la lista para el área metropolitana de Houston. ",
+    announceServing:
+      "Sirviendo el área metropolitana de Houston, siete días a la semana. ",
+    joinEarly: "Únete pronto.",
+    bookToday: "Reserva hoy.",
   },
   announce: {
     mvp: "MVP",
@@ -54,6 +65,16 @@ export const es: Dictionary = {
     chipBed: "Ensamblaje de cama",
     chipDesk: "Ensamblaje de escritorio",
     chipWardrobe: "Ensamblaje de armario",
+    v2TitleA: "Muebles",
+    v2TitleAccent: "ensamblados",
+    v2TitleB: "y entregados listos.",
+    v2Sub: "Recogemos tus muebles, los armamos profesionalmente en nuestro taller y te los entregamos totalmente ensamblados. Obtén una cotización al instante en 60 segundos.",
+    addrPickupLabel: "Recoger en",
+    addrPickupPh: "Dirección de recogida",
+    addrDeliverLabel: "Entregar en",
+    addrDeliverPh: "Dirección de entrega",
+    ctaWaitlist: "Unirme a la lista",
+    ctaQuote: "Obtener cotización",
   },
   search: {
     popular: "Servicios populares",
@@ -82,9 +103,44 @@ export const es: Dictionary = {
     whiteGlove: "Entrega white glove",
     membership: "Planes de membresía",
   },
+  divider: {
+    label: "Ensamblamos muebles de cualquier tienda",
+    itemSub: "Listo para armar",
+  },
+  diff: {
+    heading: "Mejor armado, entregado listo.",
+    whyEyebrow: "Por qué ScrewIt Pros",
+    whyTitle: "No armamos muebles en el piso de tu sala.",
+    whyBody:
+      "Tus muebles se ensamblan en nuestro taller por profesionales capacitados y se entregan totalmente armados. Sin desorden, sin tornillos faltantes, sin fines de semana perdidos.",
+    whyPh: "Foto: ensamblaje en taller",
+    houstonTitle: "Sirviendo el área metropolitana de Houston",
+    houstonBody:
+      "Servicio local y rápido en todo el gran Houston, con más vecindarios en camino.",
+    houstonPh: "Mapa de cobertura de Houston",
+    houstonLabel: "Houston",
+    pickupTitle: "Recogida y entrega, de puerta a puerta",
+    pickupBody:
+      "Recogemos en tu casa, tienda o lo recibimos en nuestro hub, y lo regresamos listo para usar.",
+    pickupPh: "Foto: camioneta de recogida",
+    guaranteeTitle:
+      "Tus muebles están respaldados por nuestra Garantía de Ensamblaje",
+    guaranteeBody:
+      "Nuestro proceso en taller y la inspección multipunto aseguran que lleguen firmes, seguros y listos.",
+    guaranteeLink: "protegido con nosotros",
+    ratedTitle: "Profesionales de ensamblaje top en Houston",
+    ratedBody:
+      "Nuestros ensambladores están verificados, capacitados en taller y listos para ayudar.",
+    ratedNames: "Maya y Jordan",
+    traitFast: "Rápidos",
+    traitFriendly: "Amables",
+    traitReliable: "Confiables",
+    traitEfficient: "Eficientes",
+    traitHelpful: "Útiles",
+  },
   how: {
     eyebrow: "Cómo funciona",
-    title: "De la caja al listo en cuatro pasos",
+    title: "Ensamblaje de muebles en cuatro pasos fáciles",
     sub: "Tú lo pides. Nosotros lo recogemos, lo armamos en el taller y te lo entregamos listo.",
     step1Title: "Pide tus muebles",
     step1Body:
@@ -157,6 +213,9 @@ export const es: Dictionary = {
     managers: "Administradores de propiedades",
     managersBody:
       "Montaje rápido para unidades modelo, rentas y amueblados.",
+    renters: "Inquilinos y departamentos",
+    smallBiz: "Pequeños negocios",
+    newHomeowners: "Nuevos propietarios",
     photoAlt:
       "La comunidad ScrewIt Pros: profesionales, séniors, familias, estudiantes y administradores",
     marqueeLabel: "Tipos de audiencia, desplazamiento continuo",
@@ -206,6 +265,36 @@ export const es: Dictionary = {
     a9: "Sí. Te enviamos estados durante recogida, ensamblaje y entrega.",
     q10: "¿Ofrecen membresía o servicios recurrentes?",
     a10: "Sí. Nuestros planes dan descuentos, prioridad de agenda y más conveniencia.",
+    ctaWaitlist: "Unirme a la lista",
+    ctaQuote: "Cotización gratis",
+  },
+  quote: {
+    titleForm: "Cotización gratis",
+    titleSentWaitlist: "Estás en la lista",
+    titleSentQuote: "Solicitud recibida",
+    bannerStrong: "Estamos en acceso anticipado.",
+    bannerText:
+      " Las cotizaciones gratis llegan pronto. Ingresa tus datos para unirte a la lista, tener prioridad y empezar a ganar puntos.",
+    name: "Nombre",
+    namePh: "Tu nombre",
+    email: "Correo",
+    emailPh: "tu@email.com",
+    service: "Servicio",
+    servicePh: "Elige un servicio",
+    optAssembly: "Ensamblaje de muebles",
+    optLarge: "Ensamblaje de muebles grandes",
+    optOffice: "Ensamblaje de muebles de oficina",
+    optPickup: "Recogida y entrega",
+    optWhiteGlove: "Entrega white glove",
+    optMembership: "Planes de membresía",
+    cancel: "Cancelar",
+    submitWaitlist: "Unirme a la lista",
+    submitQuote: "Solicitar cotización",
+    done: "Listo",
+    sentWaitlist:
+      "Estás en la fila. Te contactaremos en cuanto ScrewIt Pros abra en tu zona. Los miembros tempranos ganan puntos desde su primer ensamblaje.",
+    sentQuote:
+      "Gracias, te responderemos en un día hábil con tu cotización gratis.",
   },
   credibility: {
     badge: "Próximamente: historias de clientes",

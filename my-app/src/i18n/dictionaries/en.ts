@@ -25,6 +25,16 @@ export const en = {
     whiteGlove: "White Glove Delivery",
     membership: "Membership Plans",
     tagline: "If You Don't Want to Do It, ScrewIt!",
+    search: "Search",
+    login: "Login",
+    contactUs: "Contact Us",
+  },
+  util: {
+    announceWaitlist:
+      "Now accepting waitlist signups for the Houston Metro Area. ",
+    announceServing: "Serving the Houston Metro Area, seven days a week. ",
+    joinEarly: "Join early.",
+    bookToday: "Book today.",
   },
   announce: {
     mvp: "MVP",
@@ -52,6 +62,16 @@ export const en = {
     chipBed: "Bed Assembly",
     chipDesk: "Desk Assembly",
     chipWardrobe: "Wardrobe Assembly",
+    v2TitleA: "Furniture",
+    v2TitleAccent: "assembled",
+    v2TitleB: "and delivered ready.",
+    v2Sub: "We pick up your furniture, professionally build it at our workshop, and deliver it fully assembled. Get an instant quote in 60 seconds.",
+    addrPickupLabel: "Pick up from",
+    addrPickupPh: "Pickup address",
+    addrDeliverLabel: "Deliver to",
+    addrDeliverPh: "Delivery address",
+    ctaWaitlist: "Join waitlist",
+    ctaQuote: "Get a quote",
   },
   search: {
     popular: "Popular services",
@@ -80,9 +100,43 @@ export const en = {
     whiteGlove: "White Glove Delivery",
     membership: "Membership Plans",
   },
+  divider: {
+    label: "We assemble furniture from any retailer",
+    itemSub: "Assembly ready",
+  },
+  diff: {
+    heading: "Built better, delivered ready.",
+    whyEyebrow: "Why ScrewIt Pros",
+    whyTitle: "We don't build furniture on your living room floor.",
+    whyBody:
+      "Your furniture is assembled in our dedicated workshop by trained pros, then delivered fully built. No mess, no missing screws, no wasted weekend.",
+    whyPh: "Photo: workshop assembly",
+    houstonTitle: "Serving the Houston Metro Area",
+    houstonBody:
+      "Fast, local service across greater Houston, with more neighborhoods on the way.",
+    houstonPh: "Houston coverage map",
+    houstonLabel: "Houston",
+    pickupTitle: "Pickup & delivery, handled door to door",
+    pickupBody:
+      "We collect from your home, store, or receive it at our hub, and bring it back ready to use.",
+    pickupPh: "Photo: pickup van",
+    guaranteeTitle: "Your furniture is fully backed by our Build Protection Guarantee",
+    guaranteeBody:
+      "Our workshop-first process and multi-point inspection mean your pieces arrive safe, solid, and ready.",
+    guaranteeLink: "protected with us",
+    ratedTitle: "Top-rated assembly pros in Houston",
+    ratedBody:
+      "Our professional assemblers are background checked, workshop trained, and ready to help.",
+    ratedNames: "Maya & Jordan",
+    traitFast: "Fast",
+    traitFriendly: "Friendly",
+    traitReliable: "Reliable",
+    traitEfficient: "Efficient",
+    traitHelpful: "Helpful",
+  },
   how: {
     eyebrow: "How It Works",
-    title: "From Box to Built in Four Steps",
+    title: "Furniture assembly in four easy steps",
     sub: "You order it. We pick it up, build it in our workshop, and deliver it ready to use.",
     step1Title: "Order Your Furniture",
     step1Body:
@@ -154,6 +208,9 @@ export const en = {
     managers: "Property Managers",
     managersBody:
       "Fast furniture setup for model units, rentals, and furnished properties.",
+    renters: "Renters & Apartments",
+    smallBiz: "Small Businesses",
+    newHomeowners: "New Homeowners",
     photoAlt:
       "The ScrewIt Pros community - busy professionals, seniors, families, students, and property managers",
     marqueeLabel: "Audience types, scrolling continuously",
@@ -203,6 +260,36 @@ export const en = {
     a9: "Yes. You'll receive status updates throughout the pickup, assembly, and delivery process.",
     q10: "Do you offer recurring or membership services?",
     a10: "Yes. Our membership plans provide discounted assembly services, priority scheduling, and added convenience.",
+    ctaWaitlist: "Join Waitlist",
+    ctaQuote: "Get a Free Quote",
+  },
+  quote: {
+    titleForm: "Get a Free Quote",
+    titleSentWaitlist: "You're on the list",
+    titleSentQuote: "Request Received",
+    bannerStrong: "We're in early access.",
+    bannerText:
+      " Free quotes are coming soon. Enter your details to join the waitlist, get first dibs, and start earning points.",
+    name: "Name",
+    namePh: "Your name",
+    email: "Email",
+    emailPh: "you@email.com",
+    service: "Service",
+    servicePh: "Choose a service",
+    optAssembly: "Furniture Assembly",
+    optLarge: "Large Furniture Assembly",
+    optOffice: "Office Furniture Assembly",
+    optPickup: "Pickup & Delivery",
+    optWhiteGlove: "White Glove Delivery",
+    optMembership: "Membership Plans",
+    cancel: "Cancel",
+    submitWaitlist: "Join the Waitlist",
+    submitQuote: "Request Quote",
+    done: "Done",
+    sentWaitlist:
+      "You're in line. We'll reach out the moment ScrewIt Pros opens in your area. Early members start earning points from their very first build.",
+    sentQuote:
+      "Thanks, we'll get back to you within one business day with your free quote.",
   },
   credibility: {
     badge: "Coming Soon: Customer Success Stories",

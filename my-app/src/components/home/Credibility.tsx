@@ -7,18 +7,32 @@ import Button from "@/components/ui/Button";
 import Reveal from "@/components/ui/Reveal";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
-export default function Credibility({ onCta }: { onCta: () => void }) {
+export default function Credibility({
+  onQuote,
+  waitlist,
+}: {
+  onQuote: () => void;
+  waitlist: boolean;
+}) {
   const { t } = useLocale();
   return (
     <Reveal
       as="section"
       style={{ background: "var(--gray-50)", padding: "var(--section-pad-y) 0" }}
     >
-      <Container style={{ textAlign: "center", maxWidth: 760 }}>
+      <Container
+        style={{
+          textAlign: "center",
+          maxWidth: 760,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
         <Badge variant="accent" style={{ marginBottom: 20 }}>
           {t("credibility.badge")}
         </Badge>
-        <SectionTitle>{t("credibility.title")}</SectionTitle>
+        <SectionTitle center>{t("credibility.title")}</SectionTitle>
         <p
           style={{
             fontFamily: "var(--font-body)",
@@ -27,12 +41,13 @@ export default function Credibility({ onCta }: { onCta: () => void }) {
             color: "var(--text-muted)",
             margin: "0 auto 28px",
             maxWidth: "56ch",
+            textAlign: "center",
           }}
         >
           {t("credibility.body")}
         </p>
-        <Button variant="primary" size="lg" onClick={onCta}>
-          {t("common.joinNow")}
+        <Button variant="primary" size="lg" onClick={onQuote}>
+          {waitlist ? t("common.joinNow") : t("common.getQuote")}
         </Button>
       </Container>
     </Reveal>

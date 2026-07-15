@@ -7,16 +7,17 @@ import { locales, type Locale } from "@/i18n/config";
 export default function MobileMenu({
   open,
   onClose,
-  onCta,
+  onQuote,
   waitlist,
 }: {
   open: boolean;
   onClose: () => void;
-  onCta: () => void;
+  onQuote: () => void;
   waitlist: boolean;
 }) {
   const { t, locale, setLocale, labels } = useLocale();
-  const navOffset = waitlist ? 106 : 68;
+  // Announce strip (~36) + nav (60) — matches LandingPage headerHeight
+  const navOffset = 96;
   const startX = useRef<number | null>(null);
   const [drag, setDrag] = useState(0);
 
@@ -131,7 +132,7 @@ export default function MobileMenu({
           type="button"
           onClick={() => {
             onClose();
-            onCta();
+            onQuote();
           }}
           style={{
             marginTop: 22,
@@ -149,7 +150,7 @@ export default function MobileMenu({
             transition: stag(0.28),
           }}
         >
-          {t("common.joinNow")}
+          {waitlist ? t("common.joinNow") : t("common.getQuote")}
         </button>
         <div
           style={{

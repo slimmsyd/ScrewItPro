@@ -3,9 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Check, ChevronDown, Globe } from "lucide-react";
+import { Check, ChevronDown, Globe, Search } from "lucide-react";
 import Container from "@/components/ui/Container";
-import Button from "@/components/ui/Button";
+import TopUtilityBar from "@/components/home/TopUtilityBar";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { ASSETS } from "@/lib/site";
 import { useLocale } from "@/components/providers/LocaleProvider";
@@ -19,9 +19,10 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
       onMouseEnter={() => setH(true)}
       onMouseLeave={() => setH(false)}
       style={{
+        position: "relative",
         fontFamily: "var(--font-body)",
         fontSize: 15,
-        fontWeight: 500,
+        fontWeight: 600,
         color: h ? "var(--blue-deep)" : "var(--ink-700)",
         textDecoration: "none",
         transition: "color 150ms",
@@ -30,6 +31,21 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
       }}
     >
       {children}
+      <span
+        aria-hidden
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 2,
+          height: 2,
+          borderRadius: 2,
+          background: "var(--blue-electric)",
+          transform: h ? "scaleX(1)" : "scaleX(0)",
+          transformOrigin: "left",
+          transition: "transform 280ms var(--ease-out)",
+        }}
+      />
     </a>
   );
 }
@@ -59,7 +75,7 @@ function NavDropdown() {
           gap: 5,
           fontFamily: "var(--font-body)",
           fontSize: 15,
-          fontWeight: 500,
+          fontWeight: 600,
           color: open ? "var(--blue-deep)" : "var(--ink-700)",
           background: "none",
           border: "none",
@@ -81,9 +97,10 @@ function NavDropdown() {
           style={{
             position: "absolute",
             top: "100%",
-            left: 0,
+            left: "50%",
+            transform: "translateX(-50%)",
             marginTop: 4,
-            minWidth: 230,
+            minWidth: 236,
             background: "var(--white)",
             border: "1px solid var(--gray-100)",
             borderRadius: "var(--radius-lg)",
@@ -207,6 +224,71 @@ function LangSwitcher() {
   );
 }
 
+function IconButton({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
+  const [h, setH] = useState(false);
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      onMouseEnter={() => setH(true)}
+      onMouseLeave={() => setH(false)}
+      style={{
+        width: 42,
+        height: 42,
+        borderRadius: "50%",
+        border: "none",
+        cursor: "pointer",
+        background: h ? "var(--gray-50)" : "transparent",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transition: "background 160ms",
+      }}
+    >
+      <Search size={21} color="var(--ink-700)" />
+    </button>
+  );
+}
+
+function NavCTA({ label, onClick }: { label: string; onClick: () => void }) {
+  const [h, setH] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={() => setH(true)}
+      onMouseLeave={() => setH(false)}
+      style={{
+        border: "none",
+        cursor: "pointer",
+        background: h ? "var(--blue-electric)" : "var(--blue-deep)",
+        color: "var(--white)",
+        borderRadius: "var(--radius-pill)",
+        padding: "12px 24px",
+        fontFamily: "var(--font-body)",
+        fontSize: 15,
+        fontWeight: 600,
+        whiteSpace: "nowrap",
+        transform: h ? "translateY(-1px)" : "none",
+        boxShadow: h
+          ? "0 10px 22px -10px rgba(4,32,155,0.7)"
+          : "0 6px 16px -10px rgba(4,32,155,0.5)",
+        transition:
+          "background 200ms ease, transform 200ms ease, box-shadow 200ms ease",
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
 function Burger({ open, onClick }: { open: boolean; onClick: () => void }) {
   const { t } = useLocale();
   const line = (extra: React.CSSProperties): React.CSSProperties => ({
@@ -235,6 +317,7 @@ function Burger({ open, onClick }: { open: boolean; onClick: () => void }) {
         cursor: "pointer",
         padding: 0,
         marginRight: -8,
+        marginLeft: "auto",
         flexShrink: 0,
       }}
     >
@@ -255,20 +338,23 @@ function Burger({ open, onClick }: { open: boolean; onClick: () => void }) {
 }
 
 export default function Nav({
-  onCta,
+  onQuote,
   onToggleMenu,
   menuOpen,
   scrolled,
+  waitlist,
 }: {
-  onCta: () => void;
+  onQuote: () => void;
   onToggleMenu: () => void;
   menuOpen: boolean;
   scrolled: boolean;
+  waitlist: boolean;
 }) {
   const mobile = useIsMobile();
   const { t } = useLocale();
   const solid = scrolled || menuOpen;
   const [logoRotation, setLogoRotation] = useState(0);
+  const [entered, setEntered] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setLogoRotation(window.scrollY * 0.3);
@@ -277,85 +363,111 @@ export default function Nav({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    const id = setTimeout(() => setEntered(true), 30);
+    return () => clearTimeout(id);
+  }, []);
+
   return (
-    <nav
+    <div
       style={{
-        background: solid ? "rgba(255,255,255,0.92)" : "transparent",
-        backdropFilter: solid ? "saturate(180%) blur(10px)" : "none",
-        WebkitBackdropFilter: solid ? "saturate(180%) blur(10px)" : "none",
-        borderBottom: `1px solid ${solid ? "var(--gray-100)" : "transparent"}`,
-        boxShadow: solid ? "var(--shadow-sm)" : "none",
+        transform: entered ? "translateY(0)" : "translateY(-100%)",
+        opacity: entered ? 1 : 0,
         transition:
-          "background 260ms ease, box-shadow 260ms ease, border-color 260ms ease",
+          "transform 620ms cubic-bezier(.16,1,.3,1), opacity 500ms ease",
       }}
     >
-      <Container
+      {!mobile && <TopUtilityBar waitlist={waitlist} />}
+      <nav
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          height: mobile ? 60 : 72,
+          background: solid ? "rgba(255,255,255,0.94)" : "rgba(255,255,255,0.86)",
+          backdropFilter: "saturate(180%) blur(10px)",
+          WebkitBackdropFilter: "saturate(180%) blur(10px)",
+          borderBottom: `1px solid ${solid ? "var(--gray-100)" : "transparent"}`,
+          boxShadow: solid ? "var(--shadow-sm)" : "none",
+          transition:
+            "background 260ms ease, box-shadow 260ms ease, border-color 260ms ease",
         }}
       >
-        <Link
-          href="#top"
+        <Container
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 12,
-            flexShrink: 0,
+            gap: 24,
+            height: mobile ? 60 : 76,
           }}
         >
-          <Image
-            src={ASSETS.logoS}
-            alt=""
-            width={mobile ? 34 : 44}
-            height={mobile ? 34 : 44}
-            style={{
-              display: "block",
-              transformOrigin: "center",
-              transform: `rotate(${logoRotation}deg)`,
-              willChange: "transform",
-            }}
-            priority
-          />
-          <Image
-            src={ASSETS.logoWordmark}
-            alt="ScrewIt Pros"
-            width={mobile ? 120 : 168}
-            height={mobile ? 30 : 42}
-            style={{ height: mobile ? 30 : 42, width: "auto", display: "block" }}
-            priority
-          />
-        </Link>
-
-        {!mobile && (
-          <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
-            <NavLink href="#how">{t("nav.howItWorks")}</NavLink>
-            <NavDropdown />
-            <NavLink href="#why">{t("nav.whyUs")}</NavLink>
-            <NavLink href="#faq">{t("nav.faq")}</NavLink>
-          </div>
-        )}
-
-        {!mobile ? (
-          <div
+          <Link
+            href="#top"
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 8,
+              gap: 12,
               flexShrink: 0,
             }}
           >
-            <LangSwitcher />
-            <Button variant="primary" size="sm" onClick={onCta}>
-              {t("common.joinNow")}
-            </Button>
-          </div>
-        ) : (
-          <Burger open={menuOpen} onClick={onToggleMenu} />
-        )}
-      </Container>
-    </nav>
+            <Image
+              id="nav-logo-mark"
+              src={ASSETS.logoS}
+              alt=""
+              width={mobile ? 34 : 42}
+              height={mobile ? 34 : 42}
+              style={{
+                display: "block",
+                transformOrigin: "center",
+                transform: `rotate(${logoRotation}deg)`,
+                willChange: "transform",
+              }}
+              priority
+            />
+            <Image
+              src={ASSETS.logoWordmark}
+              alt="ScrewIt Pros"
+              width={mobile ? 120 : 168}
+              height={mobile ? 30 : 40}
+              style={{ height: mobile ? 30 : 40, width: "auto", display: "block" }}
+              priority
+            />
+          </Link>
+
+          {!mobile && (
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 36,
+              }}
+            >
+              <NavLink href="#how">{t("nav.howItWorks")}</NavLink>
+              <NavDropdown />
+              <NavLink href="#why">{t("nav.whyUs")}</NavLink>
+              <NavLink href="#faq">{t("nav.faq")}</NavLink>
+            </div>
+          )}
+
+          {!mobile ? (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                flexShrink: 0,
+              }}
+            >
+              <LangSwitcher />
+              <IconButton label={t("nav.search")} onClick={onQuote} />
+              <NavCTA
+                label={waitlist ? t("common.joinNow") : t("common.getQuote")}
+                onClick={onQuote}
+              />
+            </div>
+          ) : (
+            <Burger open={menuOpen} onClick={onToggleMenu} />
+          )}
+        </Container>
+      </nav>
+    </div>
   );
 }

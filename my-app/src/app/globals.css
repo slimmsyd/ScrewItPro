@@ -135,6 +135,19 @@
  box-sizing: border-box;
 }
 
+/* Visually hidden — keep available to assistive tech */
+.sr-only {
+ position: absolute;
+ width: 1px;
+ height: 1px;
+ padding: 0;
+ margin: -1px;
+ overflow: hidden;
+ clip: rect(0, 0, 0, 0);
+ white-space: nowrap;
+ border: 0;
+}
+
 html {
  scroll-behavior: smooth;
 }
@@ -401,6 +414,175 @@ header[id] {
  will-change: transform;
 }
 
+/* How It Works — van traveling along the step connector (StepFlow) */
+@keyframes flowVan {
+  0% {
+    left: 0%;
+    top: -16px;
+  }
+  38% {
+    left: 38%;
+    top: 42px;
+  }
+  63% {
+    left: 63%;
+    top: -16px;
+  }
+  100% {
+    left: 100%;
+    top: 42px;
+  }
+}
+.flow-van {
+  animation: flowVan 7.5s ease-in-out infinite;
+}
+
+/* Retailer band — Lugg-style logo + rating-row layout, infinite marquee */
+.retailer-marquee {
+  overflow: hidden;
+  width: 100%;
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 5%,
+    #000 95%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 5%,
+    #000 95%,
+    transparent
+  );
+}
+.retailer-track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  will-change: transform;
+  animation: retailerScroll 40s linear infinite;
+  padding: 4px 0;
+}
+.retailer-marquee:hover .retailer-track {
+  animation-play-state: paused;
+}
+
+/* One unit: [app-icon tile] [bold name + muted sub] [soft sep] */
+.retailer-item {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 28px 0 8px;
+}
+.retailer-tile {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 1px 2px rgba(11, 16, 48, 0.04);
+}
+.retailer-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: block;
+}
+.retailer-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.retailer-name {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  color: var(--ink-900);
+  line-height: 1.15;
+  white-space: nowrap;
+}
+.retailer-sub {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 13.5px;
+  color: var(--ink-300);
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.retailer-sep {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 12px;
+  color: var(--gray-200);
+  opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+  .retailer-track {
+    animation-duration: 32s;
+  }
+  .retailer-item {
+    gap: 10px;
+    padding: 0 18px 0 4px;
+  }
+  .retailer-tile {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+  .retailer-logo {
+    width: 24px;
+    height: 24px;
+  }
+  .retailer-name {
+    font-size: 18px;
+  }
+  .retailer-sub {
+    font-size: 12.5px;
+  }
+  .retailer-sep {
+    margin-left: 6px;
+  }
+}
+
+/* Seamless loop: track is 2× the list, so -50% restarts cleanly */
+@keyframes retailerScroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Differentiators — Houston map pin ping */
+@keyframes mapPing {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+.map-ping {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mapPing 2.6s ease-out infinite;
+}
+
 .screwit-greeting {
  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
  transform-origin: bottom right;
@@ -486,6 +668,19 @@ header[id] {
  }
 
  .footer-logo-spin {
+ animation: none;
+ }
+
+ .flow-van {
+ display: none;
+ }
+
+ /* Decorative logo marquee: slow instead of freeze so brand strip still works */
+ .retailer-track {
+ animation-duration: 60s;
+ }
+
+ .map-ping {
  animation: none;
  }
 

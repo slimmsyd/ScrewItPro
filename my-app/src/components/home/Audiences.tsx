@@ -1,196 +1,149 @@
 "use client";
 
-import Image from "next/image";
-import { motion, MotionConfig } from "framer-motion";
+import { useState } from "react";
 import {
   Briefcase,
+  Building2,
+  ChevronRight,
   GraduationCap,
   HeartHandshake,
   Home,
   KeyRound,
+  PackageOpen,
+  Store,
   type LucideIcon,
 } from "lucide-react";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import Container from "@/components/ui/Container";
 import Eyebrow from "@/components/ui/Eyebrow";
-import SectionTitle from "@/components/ui/SectionTitle";
-import { ASSETS } from "@/lib/site";
+import Reveal from "@/components/ui/Reveal";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
-const CARD_W = 262;
-const GAP = 16;
+const tints = {
+  blue: { bg: "#EEF3FF", fg: "#1D6EFE" },
+  green: { bg: "#E6F6EE", fg: "#0E8A5F" },
+  amber: { bg: "#FDF1E0", fg: "#B96A00" },
+  purple: { bg: "#EFE9FF", fg: "#6D46C6" },
+  teal: { bg: "#E3F6F5", fg: "#0E8A8A" },
+  rose: { bg: "#FBE9EE", fg: "#C6325C" },
+  indigo: { bg: "#E9ECFB", fg: "#3744BF" },
+  sky: { bg: "#E6F2FD", fg: "#0F7BD9" },
+} as const;
 
-function AudienceCard({
+type Tint = keyof typeof tints;
+
+function AudienceTile({
   icon: Icon,
   title,
-  body,
+  c,
 }: {
   icon: LucideIcon;
   title: string;
-  body: string;
+  c: Tint;
 }) {
+  const [h, setH] = useState(false);
+  const tint = tints[c];
   return (
     <div
+      onMouseEnter={() => setH(true)}
+      onMouseLeave={() => setH(false)}
       style={{
         display: "flex",
-        flexDirection: "column",
-        gap: 10,
-        padding: 22,
+        alignItems: "center",
+        gap: 13,
+        padding: "11px 15px",
         borderRadius: "var(--radius-lg)",
-        background: "var(--gray-50)",
-        border: "1px solid var(--gray-100)",
-        width: CARD_W,
-        minWidth: CARD_W,
-        flex: `0 0 ${CARD_W}px`,
-        boxSizing: "border-box",
+        background: h ? tint.bg : "var(--white)",
+        border: `1px solid ${h ? tint.fg : "var(--gray-100)"}`,
+        cursor: "pointer",
+        boxShadow: h ? "0 12px 26px -16px rgba(11,16,48,0.32)" : "none",
+        transform: h ? "translateY(-2px)" : "none",
+        transition:
+          "background 200ms ease, border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease",
       }}
     >
-      <Icon size={24} color="var(--blue-electric)" aria-hidden />
-      <div
+      <span
         style={{
+          flex: "none",
+          width: 36,
+          height: 36,
+          borderRadius: 10,
+          background: h ? "var(--white)" : tint.bg,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transition: "background 200ms ease",
+        }}
+      >
+        <Icon size={19} color={tint.fg} aria-hidden />
+      </span>
+      <span
+        style={{
+          flex: 1,
           fontFamily: "var(--font-body)",
-          fontSize: 15.5,
-          fontWeight: 600,
-          color: "var(--text-heading)",
+          fontSize: 15,
+          fontWeight: 700,
+          color: h ? tint.fg : "var(--text-heading)",
+          transition: "color 200ms ease",
         }}
       >
         {title}
-      </div>
-      <div
-        style={{
-          fontFamily: "var(--font-body)",
-          fontSize: 13.5,
-          lineHeight: 1.5,
-          color: "var(--text-muted)",
-        }}
-      >
-        {body}
-      </div>
+      </span>
+      <ChevronRight size={16} color={h ? tint.fg : "var(--ink-300)"} aria-hidden />
     </div>
   );
 }
 
 export default function Audiences() {
+  const mobile = useIsMobile();
   const { t } = useLocale();
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [halfWidth, setHalfWidth] = useState(0);
 
-  const audiences = useMemo(
-    () => [
-      { icon: Briefcase, title: t("audiences.pros"), body: t("audiences.prosBody") },
-      { icon: HeartHandshake, title: t("audiences.seniors"), body: t("audiences.seniorsBody") },
-      { icon: Home, title: t("audiences.families"), body: t("audiences.familiesBody") },
-      { icon: GraduationCap, title: t("audiences.students"), body: t("audiences.studentsBody") },
-      { icon: KeyRound, title: t("audiences.managers"), body: t("audiences.managersBody") },
-    ],
-    [t]
-  );
-
-  const oneSetWidth =
-    audiences.length * CARD_W + (audiences.length - 1) * GAP;
-
-  useLayoutEffect(() => {
-    const el = trackRef.current;
-    if (!el) return;
-    const measure = () => {
-      const w = el.scrollWidth / 2;
-      setHalfWidth(w > 0 ? w : oneSetWidth);
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [oneSetWidth, audiences]);
-
-  const loopDistance = halfWidth || oneSetWidth;
-  const duration = Math.max(18, loopDistance / 42);
+  const audiences: { icon: LucideIcon; title: string; c: Tint }[] = [
+    { icon: Briefcase, title: t("audiences.pros"), c: "blue" },
+    { icon: HeartHandshake, title: t("audiences.seniors"), c: "rose" },
+    { icon: Home, title: t("audiences.families"), c: "green" },
+    { icon: GraduationCap, title: t("audiences.students"), c: "purple" },
+    { icon: KeyRound, title: t("audiences.managers"), c: "amber" },
+    { icon: Building2, title: t("audiences.renters"), c: "indigo" },
+    { icon: Store, title: t("audiences.smallBiz"), c: "teal" },
+    { icon: PackageOpen, title: t("audiences.newHomeowners"), c: "sky" },
+  ];
 
   return (
-    <>
-      <section
-        style={{
-          background: "var(--white)",
-          padding: "var(--section-pad-y) 0",
-          overflow: "hidden",
-        }}
-      >
-        <Container>
-          <Eyebrow>{t("audiences.eyebrow")}</Eyebrow>
-          <SectionTitle>{t("audiences.title")}</SectionTitle>
-        </Container>
-
-        <div
+    <Reveal
+      as="section"
+      style={{ background: "var(--white)", padding: "var(--section-pad-y) 0" }}
+    >
+      <Container>
+        <Eyebrow>{t("audiences.eyebrow")}</Eyebrow>
+        <h2
           style={{
-            marginTop: 40,
-            overflow: "hidden",
-            width: "100%",
-            maskImage:
-              "linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent)",
-            WebkitMaskImage:
-              "linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent)",
+            fontFamily: "var(--font-body)",
+            fontWeight: 700,
+            fontSize: mobile
+              ? "clamp(32px,8.5vw,42px)"
+              : "clamp(46px,5.4vw,68px)",
+            lineHeight: 1.03,
+            letterSpacing: "-0.025em",
+            color: "var(--text-heading)",
+            margin: "10px 0 0",
           }}
         >
-          <MotionConfig reducedMotion="never">
-            <motion.div
-              ref={trackRef}
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                flexWrap: "nowrap",
-                gap: GAP,
-                width: "max-content",
-                willChange: "transform",
-              }}
-              animate={{ x: [0, -loopDistance] }}
-              transition={{
-                duration,
-                ease: "linear",
-                repeat: Infinity,
-                repeatType: "loop",
-              }}
-              aria-label={t("audiences.marqueeLabel")}
-            >
-              {audiences.map((a) => (
-                <AudienceCard key={`a-${a.title}`} {...a} />
-              ))}
-              {audiences.map((a) => (
-                <AudienceCard key={`b-${a.title}`} {...a} />
-              ))}
-            </motion.div>
-          </MotionConfig>
-        </div>
-      </section>
-
-      <section
-        style={{
-          background: "var(--white)",
-          paddingTop: 8,
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div style={{ maxWidth: 1080, margin: "0 auto", padding: "0 20px" }}>
-          <Image
-            src={ASSETS.audiencesCrew}
-            alt={t("audiences.photoAlt")}
-            width={1080}
-            height={600}
-            style={{ display: "block", width: "100%", height: "auto" }}
-          />
-        </div>
+          {t("audiences.title")}
+        </h2>
         <div
           style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 240,
-            background:
-              "linear-gradient(to bottom, rgba(244,246,251,0) 0%, var(--gray-50) 90%)",
-            pointerEvents: "none",
+            marginTop: 36,
+            display: "grid",
+            gridTemplateColumns: mobile ? "1fr" : "repeat(2, 1fr)",
+            gap: 14,
           }}
-        />
-      </section>
-    </>
+        >
+          {audiences.map((a) => (
+            <AudienceTile key={a.title} {...a} />
+          ))}
+        </div>
+      </Container>
+    </Reveal>
   );
 }
