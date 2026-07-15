@@ -72,6 +72,19 @@ export const en = {
     addrDeliverPh: "Delivery address",
     ctaWaitlist: "Join waitlist",
     ctaQuote: "Get a quote",
+    placesListLabel: "Address suggestions",
+    placesSearching: "Searching Houston addresses…",
+    placesNoMatch: "No matches — try a Houston street, store, or landmark",
+    placesResolving: "Checking…",
+    placesSelectBoth:
+      "Select both a pickup and delivery address from the suggestions.",
+    placesOutOfAreaBlock:
+      "That address is outside our Houston Metro service area. We can’t continue with it yet.",
+    placesWaitlistInArea:
+      "You're in our Houston Metro waitlist area — join the waitlist to lock in early access when we launch.",
+    placesWaitlistOutOfArea:
+      "Outside Houston Metro for now — join the waitlist and we’ll notify you when we expand to your area.",
+    placesResolveError: "Couldn’t verify that place. Try another suggestion.",
   },
   search: {
     popular: "Popular services",

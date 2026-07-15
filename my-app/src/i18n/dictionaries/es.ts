@@ -75,6 +75,21 @@ export const es: Dictionary = {
     addrDeliverPh: "Dirección de entrega",
     ctaWaitlist: "Unirme a la lista",
     ctaQuote: "Obtener cotización",
+    placesListLabel: "Sugerencias de dirección",
+    placesSearching: "Buscando direcciones en Houston…",
+    placesNoMatch:
+      "Sin coincidencias — prueba una calle, tienda o punto de referencia en Houston",
+    placesResolving: "Verificando…",
+    placesSelectBoth:
+      "Selecciona una dirección de recogida y otra de entrega de las sugerencias.",
+    placesOutOfAreaBlock:
+      "Esa dirección está fuera del área metropolitana de Houston. Aún no podemos continuar con ella.",
+    placesWaitlistInArea:
+      "Estás en nuestra zona de lista de espera del área metropolitana de Houston — únete para asegurar acceso anticipado al lanzar.",
+    placesWaitlistOutOfArea:
+      "Fuera del área metropolitana de Houston por ahora — únete a la lista y te avisaremos cuando expandamos a tu zona.",
+    placesResolveError:
+      "No pudimos verificar ese lugar. Prueba otra sugerencia.",
   },
   search: {
     popular: "Servicios populares",
