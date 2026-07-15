@@ -192,23 +192,23 @@ export default function Hero({
             style={{
               fontFamily: "var(--font-display)",
               fontWeight: 400,
-              // Mobile: scale to keep "Furniture assembled and delivered ready." on one line
+              // Mobile: larger type that wraps naturally (no nowrap overflow)
               fontSize: mobile
-                ? "clamp(17px, 5.4vw, 28px)"
+                ? "clamp(28px, 8.5vw, 40px)"
                 : "var(--text-hero)",
-              lineHeight: 1.08,
+              lineHeight: 1.1,
               letterSpacing: "var(--tracking-display)",
               color: "var(--text-heading)",
               margin: "0 0 20px",
               maxWidth: mobile ? "100%" : "18ch",
-              whiteSpace: mobile ? "nowrap" : "normal",
+              whiteSpace: "normal",
+              textWrap: mobile ? "balance" : undefined,
             }}
           >
             {t("hero.v2TitleA")}{" "}
             <span style={{ color: "var(--blue-electric)" }}>
               {t("hero.v2TitleAccent")}
-            </span>
-            {mobile ? " " : <br />}
+            </span>{" "}
             <span style={{ color: "var(--ink-300)" }}>
               {t("hero.v2TitleB")}
             </span>
