@@ -11,7 +11,7 @@ import {
 
 /**
  * POST /api/auth/signup
- * Create a Supabase Auth user (email confirmed immediately — no confirmation email)
+ * Create a Supabase Auth user (email confirmed immediately - no confirmation email)
  * and enroll them on the waitlist. Custom transactional email can be added later.
  */
 const bodySchema = z.object({

@@ -102,7 +102,7 @@ export default function DividerBand() {
       <ul className="sr-only">
         {RETAILERS.map((r) => (
           <li key={r.name}>
-            {r.name} — {t("divider.itemSub")}
+            {r.name} - {t("divider.itemSub")}
           </li>
         ))}
       </ul>

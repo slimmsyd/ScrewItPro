@@ -78,16 +78,16 @@ export const es: Dictionary = {
     placesListLabel: "Sugerencias de dirección",
     placesSearching: "Buscando direcciones en Houston…",
     placesNoMatch:
-      "Sin coincidencias — prueba una calle, tienda o punto de referencia en Houston",
+      "Sin coincidencias - prueba una calle, tienda o punto de referencia en Houston",
     placesResolving: "Verificando…",
     placesSelectBoth:
       "Selecciona una dirección de recogida y otra de entrega de las sugerencias.",
     placesOutOfAreaBlock:
       "Esa dirección está fuera del área metropolitana de Houston. Aún no podemos continuar con ella.",
     placesWaitlistInArea:
-      "Estás en nuestra zona de lista de espera del área metropolitana de Houston — únete para asegurar acceso anticipado al lanzar.",
+      "Estás en nuestra zona de lista de espera del área metropolitana de Houston - únete para asegurar acceso anticipado al lanzar.",
     placesWaitlistOutOfArea:
-      "Fuera del área metropolitana de Houston por ahora — únete a la lista y te avisaremos cuando expandamos a tu zona.",
+      "Fuera del área metropolitana de Houston por ahora - únete a la lista y te avisaremos cuando expandamos a tu zona.",
     placesResolveError:
       "No pudimos verificar ese lugar. Prueba otra sugerencia.",
   },
@@ -343,7 +343,7 @@ export const es: Dictionary = {
   join: {
     beta: "Beta privada",
     title: "Crea tu cuenta",
-    sub: "Crea una cuenta para reservar tu lugar en la lista — o continúa con Google.",
+    sub: "Crea una cuenta para reservar tu lugar en la lista - o continúa con Google.",
     loginTitle: "Bienvenido de nuevo",
     loginSub: "Entra con el correo y contraseña que usaste para unirte.",
     name: "Nombre",

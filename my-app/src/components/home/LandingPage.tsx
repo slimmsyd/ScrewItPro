@@ -67,7 +67,7 @@ export default function LandingPage() {
       };
     }
 
-    // ~2.5–3s progress so the bar is readable, then brief hold + exit.
+    // ~2.5-3s progress so the bar is readable, then brief hold + exit.
     const id = setInterval(() => {
       p = Math.min(100, p + (Math.random() * 8 + 5));
       setProgress(p);
