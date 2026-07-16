@@ -11,7 +11,6 @@ import {
   Ruler,
   ShieldCheck,
   Sparkles,
-  Star,
   Truck,
   Wrench,
   Zap,
@@ -729,111 +728,70 @@ function GuaranteeVisual({ mobile = false }: { mobile?: boolean }) {
 }
 
 function RatedVisual({
-  names,
   traits,
 }: {
-  names: string;
   traits: { label: string; icon: ReactNode }[];
 }) {
-  return (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        maxWidth: 240,
-        height: 168,
-        margin: "0 auto",
-      }}
-    >
-      {/* Trait chips */}
-      {traits.map((tr, i) => {
-        const spots = [
-          { top: 4, left: 8 },
-          { top: 4, right: 8, left: "auto" as const },
-          { top: 58, left: 0 },
-          { top: 58, right: 0, left: "auto" as const },
-          { bottom: 8, left: "50%", transform: "translateX(-50%)" },
-        ];
-        const s = spots[i] ?? spots[0];
-        return (
-          <div
-            key={tr.label}
-            style={{
-              position: "absolute",
-              ...s,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              background: "var(--white)",
-              border: "1px solid var(--gray-100)",
-              borderRadius: 12,
-              padding: "7px 10px",
-              fontFamily: "var(--font-body)",
-              fontSize: 12,
-              fontWeight: 600,
-              color: "var(--ink-700)",
-              boxShadow: "0 6px 16px rgba(11,16,48,0.08)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {tr.icon}
-            {tr.label}
-          </div>
-        );
-      })}
+  // Soft float like the guarantee checkmarks — staggered so tags feel alive.
+  const spots = [
+    { top: 10, left: 4 },
+    { top: 8, right: 4, left: "auto" as const },
+    { top: 72, left: 0 },
+    { top: 68, right: 0, left: "auto" as const },
+    { bottom: 12, left: "50%", x: "-50%" as const },
+  ];
 
-      {/* Avatar pair + stars */}
+  return (
+    <MotionConfig reducedMotion="never">
       <div
         style={{
-          position: "absolute",
-          left: "50%",
-          top: "46%",
-          transform: "translate(-50%, -50%)",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 6,
+          position: "relative",
+          width: "100%",
+          maxWidth: 260,
+          height: 168,
+          margin: "0 auto",
         }}
       >
-        <div style={{ display: "flex", marginLeft: 10 }}>
-          {["#1d6efe", "#04209b"].map((c, i) => (
-            <div
-              key={c}
+        {traits.map((tr, i) => {
+          const s = spots[i] ?? spots[0];
+          const { x, ...pos } = s as typeof s & { x?: string };
+          return (
+            <motion.div
+              key={tr.label}
               style={{
-                width: 48,
-                height: 48,
-                borderRadius: "50%",
-                background: `linear-gradient(145deg, ${c}, ${i ? "#1d6efe" : "#436db5"})`,
-                border: "3px solid var(--white)",
-                marginLeft: i ? -14 : 0,
-                boxShadow: "0 8px 18px rgba(4,32,155,0.2)",
+                position: "absolute",
+                ...pos,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                background: "var(--white)",
+                border: "1px solid var(--gray-100)",
+                borderRadius: 12,
+                padding: "7px 10px",
+                fontFamily: "var(--font-body)",
+                fontSize: 12,
+                fontWeight: 600,
+                color: "var(--ink-700)",
+                boxShadow: "0 6px 16px rgba(11,16,48,0.08)",
+                whiteSpace: "nowrap",
+                x: x ?? 0,
+                zIndex: 1,
               }}
-            />
-          ))}
-        </div>
-        <span
-          style={{
-            fontFamily: "var(--font-body)",
-            fontSize: 12,
-            fontWeight: 600,
-            color: "var(--ink-700)",
-          }}
-        >
-          {names}
-        </span>
-        <div style={{ display: "flex", gap: 2 }}>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Star
-              key={i}
-              size={14}
-              fill="#f5c542"
-              color="#f5c542"
-              strokeWidth={0}
-            />
-          ))}
-        </div>
+              animate={{ y: [0, -7, 0] }}
+              transition={{
+                duration: 3.8 + i * 0.35,
+                delay: i * 0.22,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              {tr.icon}
+              {tr.label}
+            </motion.div>
+          );
+        })}
       </div>
-    </div>
+    </MotionConfig>
   );
 }
 
@@ -995,7 +953,7 @@ export default function Differentiators() {
               title={t("diff.ratedTitle")}
               body={t("diff.ratedBody")}
               visual={
-                <RatedVisual names={t("diff.ratedNames")} traits={traits} />
+                <RatedVisual traits={traits} />
               }
             />
           </div>
