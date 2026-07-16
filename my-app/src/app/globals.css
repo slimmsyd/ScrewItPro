@@ -805,3 +805,139 @@ header[id] {
  transform: none;
  }
 }
+
+/* ── AEO landing page (/furniture-assembly-pickup-delivery-houston) ──────────
+ Server-rendered, zero client JS. Inline styles cover the static look; these
+ classes exist only for what inline styles can't express: pseudo-classes,
+ pseudo-elements, and the one real breakpoint (the comparison table). */
+
+.aeo-link:focus-visible,
+.aeo-faq summary:focus-visible {
+ outline: none;
+ box-shadow: var(--shadow-focus);
+ border-radius: var(--radius-sm);
+}
+
+.aeo-nav-link:hover {
+ color: var(--blue-electric);
+}
+
+/* CTA band sits on --surface-brand, where --shadow-focus is invisible. */
+.aeo-cta-link:focus-visible {
+ outline: none;
+ box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.65);
+}
+
+.aeo-cta-primary:hover {
+ background: var(--blue-50);
+}
+
+.aeo-cta-secondary:hover {
+ background: rgba(255, 255, 255, 0.1);
+ border-color: rgba(255, 255, 255, 0.9);
+}
+
+/* ── FAQ: native <details>, so answers stay in the DOM when collapsed ─────── */
+.aeo-faq summary {
+ list-style: none;
+}
+
+.aeo-faq summary::-webkit-details-marker {
+ display: none;
+}
+
+.aeo-faq summary::after {
+ content: "+";
+ flex: none;
+ font-size: 24px;
+ line-height: 1;
+ color: var(--ink-300);
+ transition: transform 260ms var(--ease-reveal), color var(--duration-base) ease;
+}
+
+.aeo-faq summary:hover {
+ color: var(--blue-electric);
+}
+
+.aeo-faq details[open] summary,
+.aeo-faq details[open] summary::after {
+ color: var(--blue-electric);
+}
+
+.aeo-faq details[open] summary::after {
+ transform: rotate(45deg);
+}
+
+/* ── Comparison table ────────────────────────────────────────────────────────
+ Below 640px the rows render as cards, but the DOM stays a real <table> —
+ AI scrapers read the DOM, not the CSS, and the spec needs a quotable table. */
+@media (max-width: 640px) {
+ /* display:block is what releases the rows from table-layout:fixed and the
+ <colgroup> widths — without it the cards stay pinned to the 40/30/30 grid. */
+ .aeo-table,
+ .aeo-table tbody {
+ display: block;
+ }
+
+ .aeo-table {
+ border: none;
+ background: none;
+ box-shadow: none;
+ }
+
+ .aeo-table caption {
+ display: block;
+ }
+
+ /* Clipped, not display:none — screen readers keep the column headers. */
+ .aeo-table thead {
+ position: absolute;
+ width: 1px;
+ height: 1px;
+ overflow: hidden;
+ clip: rect(0, 0, 0, 0);
+ white-space: nowrap;
+ }
+
+ .aeo-table tr {
+ display: block;
+ background: var(--surface-card);
+ border: 1px solid var(--border-default);
+ border-radius: var(--radius-lg);
+ padding: var(--space-4);
+ margin-bottom: var(--space-4);
+ box-shadow: var(--shadow-sm);
+ }
+
+ .aeo-table th[scope="row"] {
+ display: block;
+ border: none;
+ padding: 0 0 var(--space-3);
+ font-size: 16px;
+ }
+
+ .aeo-table td {
+ display: block;
+ border: none;
+ border-left: none;
+ padding: var(--space-3);
+ border-radius: var(--radius-md);
+ }
+
+ .aeo-table td::before {
+ content: attr(data-label);
+ display: block;
+ font-size: 12px;
+ font-weight: 600;
+ letter-spacing: var(--tracking-caps);
+ text-transform: uppercase;
+ color: var(--text-muted);
+ margin-bottom: var(--space-1);
+ }
+}
+
+@media (prefers-reduced-motion: reduce) {
+ .aeo-faq summary::after {
+ transition: none;
+ }
+}
