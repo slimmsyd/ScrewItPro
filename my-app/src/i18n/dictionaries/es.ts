@@ -316,6 +316,9 @@ export const es: Dictionary = {
       "Estás en la fila. Te contactaremos en cuanto ScrewIt Pros abra en tu zona. Los miembros tempranos ganan puntos desde su primer ensamblaje.",
     sentQuote:
       "Gracias, te responderemos en un día hábil con tu cotización gratis.",
+    errorEmail: "Ingresa un correo electrónico válido.",
+    errorGeneric: "Algo salió mal. Inténtalo de nuevo.",
+    sending: "Enviando…",
   },
   credibility: {
     badge: "Próximamente: historias de clientes",

@@ -65,6 +65,10 @@ export const serverEnv = {
  get googleClientSecret() {
  return getEnv("GOOGLE_CLIENT_SECRET", true);
  },
+ /** n8n webhook that mirrors people (waitlist + inquiries) into the Users CRM sheet. Optional (gated). */
+ get n8nCrmWebhookUrl() {
+ return getEnv("N8N_CRM_WEBHOOK_URL", true);
+ },
 } as const;
 
 /** Which integrations have non-empty env values (no secrets exposed). */
@@ -107,6 +111,9 @@ export function getEnvStatus() {
  framerMotion: {
  configured: true,
  note: "Bundled client library - no API key required",
+ },
+ n8n: {
+ crmWebhookConfigured: has("N8N_CRM_WEBHOOK_URL"),
  },
  };
 }

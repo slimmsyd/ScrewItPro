@@ -309,6 +309,9 @@ export const en = {
       "You're in line. We'll reach out the moment ScrewIt Pros opens in your area. Early members start earning points from their very first build.",
     sentQuote:
       "Thanks, we'll get back to you within one business day with your free quote.",
+    errorEmail: "Please enter a valid email address.",
+    errorGeneric: "Something went wrong. Please try again.",
+    sending: "Sending…",
   },
   credibility: {
     badge: "Coming Soon: Customer Success Stories",
