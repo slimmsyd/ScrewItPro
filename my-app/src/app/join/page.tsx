@@ -3,12 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { ASSETS, PRIVACY_PATH, TERMS_PATH } from "@/lib/site";
 import { signInWithProvider } from "@/lib/auth/oauth";
 import { createClient } from "@/lib/supabase/client";
 import { publicEnv } from "@/lib/env";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { fireWaitlistConfetti } from "@/lib/confetti";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD = 8;
@@ -291,6 +292,18 @@ function JoinForm() {
   const [err, setErr] = useState("");
   const [socialBusy, setSocialBusy] = useState(false);
   const [pos, setPos] = useState<number | null>(null);
+  const confettiFiredRef = useRef(false);
+
+  // Celebrate once when the success screen appears (all signup / login / OAuth paths).
+  useEffect(() => {
+    if (phase !== "done") {
+      confettiFiredRef.current = false;
+      return;
+    }
+    if (confettiFiredRef.current) return;
+    confettiFiredRef.current = true;
+    void fireWaitlistConfetti();
+  }, [phase]);
 
   useEffect(() => {
     if (searchParams.get("mode") === "login") {
