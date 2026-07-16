@@ -17,5 +17,7 @@ export const ASSETS = {
 
 export const CTA_LABEL = isWaitlist ? "Join Now" : "Get a Free Quote";
 export const JOIN_PATH = "/join";
+/** AEO landing page targeting "furniture assembly with pickup and delivery in Houston". */
+export const HOUSTON_ASSEMBLY_PATH = "/furniture-assembly-pickup-delivery-houston";
 export const PRIVACY_PATH = "/privacy";
 export const TERMS_PATH = "/terms";

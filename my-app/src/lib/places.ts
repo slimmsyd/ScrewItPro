@@ -7,12 +7,16 @@
  */
 
 import { isGoogleMapsConfigured, loadGoogleMaps } from "@/lib/google";
+import { BUSINESS } from "@/lib/seo/business";
 
-/** Downtown Houston - bias + service-area center */
-export const HOUSTON_CENTER = { lat: 29.7604, lng: -95.3698 } as const;
+/** Downtown Houston - bias + service-area center. Owned by @/lib/seo/business. */
+export const HOUSTON_CENTER = {
+  lat: BUSINESS.geo.lat,
+  lng: BUSINESS.geo.lng,
+} as const;
 
 /** ~50 miles - covers Katy, Sugar Land, The Woodlands, Pearland, etc. */
-export const HOUSTON_METRO_RADIUS_M = 80_000;
+export const HOUSTON_METRO_RADIUS_M = BUSINESS.geo.radiusM;
 
 export type PlaceSuggestion = {
   placeId: string;

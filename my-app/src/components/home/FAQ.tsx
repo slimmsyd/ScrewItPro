@@ -6,6 +6,7 @@ import Container from "@/components/ui/Container";
 import Reveal from "@/components/ui/Reveal";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { HOME_FAQ_COUNT } from "@/lib/seo/homeFaqs";
 
 function FaqRow({
   title,
@@ -131,7 +132,7 @@ export default function FAQ({
 
   const faqs = useMemo(
     () =>
-      Array.from({ length: 10 }, (_, i) => ({
+      Array.from({ length: HOME_FAQ_COUNT }, (_, i) => ({
         title: t(`faq.q${i + 1}`),
         content: t(`faq.a${i + 1}`),
       })),

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { publicEnv } from "@/lib/env";
+import { HOUSTON_ASSEMBLY_PATH } from "@/lib/site";
 
 /**
  * XML sitemap served at /sitemap.xml.
@@ -17,6 +18,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: "weekly",
       priority: 1.0,
+    },
+    {
+      url: `${base}${HOUSTON_ASSEMBLY_PATH}`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.9,
     },
     {
       url: `${base}/join`,

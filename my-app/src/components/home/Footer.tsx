@@ -3,7 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { ASSETS, JOIN_PATH, PRIVACY_PATH, TERMS_PATH } from "@/lib/site";
+import {
+  ASSETS,
+  HOUSTON_ASSEMBLY_PATH,
+  JOIN_PATH,
+  PRIVACY_PATH,
+  TERMS_PATH,
+} from "@/lib/site";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
 function FooterLink({
@@ -81,6 +87,10 @@ export default function Footer() {
     {
       head: t("footer.services"),
       items: [
+        {
+          label: t("footer.houstonAssembly"),
+          href: HOUSTON_ASSEMBLY_PATH,
+        },
         { label: t("footer.furnitureAssembly"), href: "/#services" },
         { label: t("footer.largeAssembly"), href: "/#services" },
         { label: t("footer.officeAssembly"), href: "/#services" },
