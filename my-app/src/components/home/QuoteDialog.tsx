@@ -20,6 +20,42 @@ export default function QuoteDialog({
 }) {
   const { t } = useLocale();
   const [sent, setSent] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [service, setService] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit() {
+    setError(null);
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError(t("quote.errorEmail"));
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/inquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim() || null,
+          email: email.trim(),
+          service: service || null,
+          source: "quote_dialog",
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.ok) {
+        setError(data?.message ?? t("quote.errorGeneric"));
+        return;
+      }
+      setSent(true);
+    } catch {
+      setError(t("quote.errorGeneric"));
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -204,6 +240,8 @@ export default function QuoteDialog({
                 <input
                   id="quote-name"
                   placeholder={t("quote.namePh")}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   style={fieldStyle}
                 />
               </div>
@@ -215,6 +253,8 @@ export default function QuoteDialog({
                   id="quote-email"
                   type="email"
                   placeholder={t("quote.emailPh")}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   style={fieldStyle}
                 />
               </div>
@@ -222,7 +262,12 @@ export default function QuoteDialog({
                 <label htmlFor="quote-service" style={labelStyle}>
                   {t("quote.service")}
                 </label>
-                <select id="quote-service" defaultValue="" style={fieldStyle}>
+                <select
+                  id="quote-service"
+                  value={service}
+                  onChange={(e) => setService(e.target.value)}
+                  style={fieldStyle}
+                >
                   <option value="" disabled>
                     {t("quote.servicePh")}
                   </option>
@@ -235,6 +280,20 @@ export default function QuoteDialog({
               </div>
             </div>
 
+            {error && (
+              <p
+                role="alert"
+                style={{
+                  margin: "16px 0 0",
+                  fontFamily: "var(--font-body)",
+                  fontSize: 13.5,
+                  color: "#b42318",
+                }}
+              >
+                {error}
+              </p>
+            )}
+
             <div
               style={{
                 display: "flex",
@@ -246,8 +305,16 @@ export default function QuoteDialog({
               <Button variant="secondary" onClick={onClose}>
                 {t("quote.cancel")}
               </Button>
-              <Button variant="primary" onClick={() => setSent(true)}>
-                {waitlist ? t("quote.submitWaitlist") : t("quote.submitQuote")}
+              <Button
+                variant="primary"
+                onClick={handleSubmit}
+                disabled={submitting}
+              >
+                {submitting
+                  ? t("quote.sending")
+                  : waitlist
+                    ? t("quote.submitWaitlist")
+                    : t("quote.submitQuote")}
               </Button>
             </div>
           </>
