@@ -26,14 +26,18 @@ const HERO_POSTER_SRC = "/assets/hero-loop-poster.jpg?v=4";
 export default function Hero({
   onQuote,
   waitlist,
+  ctaLabel,
 }: {
   onQuote: () => void;
   waitlist: boolean;
+  /** Resolved primary CTA label (Join / Share / Quote). */
+  ctaLabel?: string;
 }) {
   const mobile = useIsMobile();
   const { t } = useLocale();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const cta = waitlist ? t("hero.ctaWaitlist") : t("hero.ctaQuote");
+  const cta =
+    ctaLabel ?? (waitlist ? t("hero.ctaWaitlist") : t("hero.ctaQuote"));
 
   useEffect(() => {
     const el = videoRef.current;

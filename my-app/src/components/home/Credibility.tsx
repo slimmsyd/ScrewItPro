@@ -10,9 +10,11 @@ import { useLocale } from "@/components/providers/LocaleProvider";
 export default function Credibility({
   onQuote,
   waitlist,
+  ctaLabel,
 }: {
   onQuote: () => void;
   waitlist: boolean;
+  ctaLabel?: string;
 }) {
   const { t } = useLocale();
   return (
@@ -47,7 +49,8 @@ export default function Credibility({
           {t("credibility.body")}
         </p>
         <Button variant="primary" size="lg" onClick={onQuote}>
-          {waitlist ? t("common.joinNow") : t("common.getQuote")}
+          {ctaLabel ??
+            (waitlist ? t("common.joinNow") : t("common.getQuote"))}
         </Button>
       </Container>
     </Reveal>

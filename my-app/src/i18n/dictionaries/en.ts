@@ -2,6 +2,8 @@ export const en = {
   common: {
     joinNow: "Join Now",
     getQuote: "Get a Free Quote",
+    shareWithFriend: "Share with a friend",
+    finishJoining: "Finish joining",
     learnMore: "Learn more",
     backToSite: "Back to site",
     startOver: "Start over",
@@ -9,7 +11,10 @@ export const en = {
     or: "or",
     loading: "Loading…",
     signIn: "Sign in",
+    signOut: "Sign out",
     alreadyMember: "Already a member?",
+    linkCopied: "Link copied — send it to a friend",
+    shareFailed: "Couldn't share right now. Try again.",
   },
   nav: {
     howItWorks: "How It Works",
@@ -28,6 +33,8 @@ export const en = {
     search: "Search",
     login: "Login",
     contactUs: "Contact Us",
+    youreIn: "You're in",
+    youreInPosition: "You're in · #{position}",
   },
   util: {
     announceWaitlist:
@@ -35,6 +42,12 @@ export const en = {
     announceServing: "Serving the Houston Metro Area, seven days a week. ",
     joinEarly: "Join early.",
     bookToday: "Book today.",
+    shareEarly: "Share with a friend.",
+    youreOnTheList: "You're on the list — invite a friend.",
+  },
+  share: {
+    title: "ScrewIt Pros",
+    text: "I joined the ScrewIt Pros waitlist — furniture assembly without the hassle in Houston. Join me:",
   },
   announce: {
     mvp: "MVP",
@@ -325,6 +338,7 @@ export const en = {
     company: "Company",
     support: "Support",
     legal: "Legal",
+    houstonAssembly: "Assembly & Delivery in Houston",
     furnitureAssembly: "Furniture Assembly",
     largeAssembly: "Large Furniture Assembly",
     officeAssembly: "Office Furniture Assembly",

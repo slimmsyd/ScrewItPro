@@ -9,7 +9,12 @@ import { signInWithProvider } from "@/lib/auth/oauth";
 import { createClient } from "@/lib/supabase/client";
 import { publicEnv } from "@/lib/env";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { useMember } from "@/components/providers/MemberProvider";
 import { fireWaitlistConfetti } from "@/lib/confetti";
+import {
+  shareWaitlistInvite,
+  waitlistInviteUrl,
+} from "@/lib/member";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD = 8;
@@ -281,6 +286,8 @@ async function enrollWaitlist(opts: {
 function JoinForm() {
   const searchParams = useSearchParams();
   const { t } = useLocale();
+  const { status: memberStatus, user: memberUser, refresh: refreshMember } =
+    useMember();
   const [phase, setPhase] = useState<Phase>("form");
   const [mode, setMode] = useState<Mode>("signup");
   const [name, setName] = useState("");
@@ -292,7 +299,9 @@ function JoinForm() {
   const [err, setErr] = useState("");
   const [socialBusy, setSocialBusy] = useState(false);
   const [pos, setPos] = useState<number | null>(null);
+  const [shareNote, setShareNote] = useState("");
   const confettiFiredRef = useRef(false);
+  const memberGateDoneRef = useRef(false);
 
   // Celebrate once when the success screen appears (all signup / login / OAuth paths).
   useEffect(() => {
@@ -303,13 +312,27 @@ function JoinForm() {
     if (confettiFiredRef.current) return;
     confettiFiredRef.current = true;
     void fireWaitlistConfetti();
-  }, [phase]);
+    void refreshMember();
+  }, [phase, refreshMember]);
 
   useEffect(() => {
     if (searchParams.get("mode") === "login") {
       setMode("login");
     }
   }, [searchParams]);
+
+  // Already on the waitlist with a live session → skip form, show success + share.
+  useEffect(() => {
+    if (memberGateDoneRef.current) return;
+    if (searchParams.get("error")) return;
+    if (searchParams.get("joined") === "1") return;
+    if (memberStatus === "loading") return;
+    if (memberStatus !== "waitlisted" || !memberUser) return;
+    memberGateDoneRef.current = true;
+    setEmail(memberUser.email);
+    if (memberUser.position) setPos(memberUser.position);
+    setPhase("done");
+  }, [memberStatus, memberUser, searchParams]);
 
   useEffect(() => {
     const authErr = searchParams.get("error");
@@ -951,10 +974,62 @@ function JoinForm() {
                 </span>
               </div>
             )}
-            <div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <button
+                type="button"
+                onClick={async () => {
+                  const result = await shareWaitlistInvite({
+                    title: t("share.title"),
+                    text: t("share.text"),
+                    url: waitlistInviteUrl(),
+                  });
+                  if (result === "copied") setShareNote(t("common.linkCopied"));
+                  else if (result === "failed")
+                    setShareNote(t("common.shareFailed"));
+                  else setShareNote("");
+                }}
+                style={{
+                  display: "inline-flex",
+                  height: 48,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "0 22px",
+                  borderRadius: "var(--radius-md)",
+                  border: "none",
+                  background: "var(--blue-deep)",
+                  color: "#fff",
+                  fontFamily: "var(--font-body)",
+                  fontSize: 15,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  minWidth: 200,
+                }}
+              >
+                {t("common.shareWithFriend")}
+              </button>
               <Link href="/" className="join-back-link">
                 {t("common.backToSite")}
               </Link>
+              {shareNote ? (
+                <p
+                  role="status"
+                  style={{
+                    margin: 0,
+                    fontFamily: "var(--font-body)",
+                    fontSize: 13,
+                    color: "var(--ink-500)",
+                  }}
+                >
+                  {shareNote}
+                </p>
+              ) : null}
             </div>
           </div>
         )}

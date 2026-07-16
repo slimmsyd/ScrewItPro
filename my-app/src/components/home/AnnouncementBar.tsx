@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { JOIN_PATH } from "@/lib/site";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { useMember } from "@/components/providers/MemberProvider";
 import MvpBadge from "@/components/home/MvpBadge";
+import {
+  shareWaitlistInvite,
+  waitlistInviteUrl,
+} from "@/lib/member";
 
 /**
  * Mobile announcement strip - mirrors the desktop TopUtilityBar look:
@@ -11,6 +16,17 @@ import MvpBadge from "@/components/home/MvpBadge";
  */
 export default function AnnouncementBar({ waitlist }: { waitlist: boolean }) {
   const { t } = useLocale();
+  const { status } = useMember();
+  const waitlisted = status === "waitlisted";
+
+  const onShare = () => {
+    void shareWaitlistInvite({
+      title: t("share.title"),
+      text: t("share.text"),
+      url: waitlistInviteUrl(),
+    });
+  };
+
   return (
     <div
       style={{
@@ -31,17 +47,41 @@ export default function AnnouncementBar({ waitlist }: { waitlist: boolean }) {
     >
       <MvpBadge />
       <span>
-        {waitlist ? t("util.announceWaitlist") : t("util.announceServing")}
-        <Link
-          href={JOIN_PATH}
-          style={{
-            color: "var(--blue-deep)",
-            fontWeight: 700,
-            textDecoration: "none",
-          }}
-        >
-          {waitlist ? t("util.joinEarly") : t("util.bookToday")}
-        </Link>
+        {waitlisted
+          ? t("util.youreOnTheList")
+          : waitlist
+            ? t("util.announceWaitlist")
+            : t("util.announceServing")}
+        {waitlisted ? (
+          <button
+            type="button"
+            onClick={onShare}
+            style={{
+              color: "var(--blue-deep)",
+              fontWeight: 700,
+              textDecoration: "none",
+              background: "none",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              fontSize: "inherit",
+            }}
+          >
+            {t("util.shareEarly")}
+          </button>
+        ) : (
+          <Link
+            href={JOIN_PATH}
+            style={{
+              color: "var(--blue-deep)",
+              fontWeight: 700,
+              textDecoration: "none",
+            }}
+          >
+            {waitlist ? t("util.joinEarly") : t("util.bookToday")}
+          </Link>
+        )}
       </span>
     </div>
   );
