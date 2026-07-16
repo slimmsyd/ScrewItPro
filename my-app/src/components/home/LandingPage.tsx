@@ -55,6 +55,15 @@ export default function LandingPage() {
     const reduce =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Mobile: ~20% faster splash so first paint feels snappier on small screens
+    const isMobileSplash =
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 768px)").matches;
+    const speed = isMobileSplash ? 0.8 : 1;
+    const tickMs = Math.round(260 * speed);
+    const holdMs = Math.round(420 * speed);
+    const exitMs = Math.round(940 * speed);
+    const stepScale = isMobileSplash ? 1.25 : 1;
 
     if (reduce) {
       setProgress(100);
@@ -62,26 +71,26 @@ export default function LandingPage() {
       const t = setTimeout(() => {
         setLoading(false);
         document.body.style.overflow = "";
-      }, 300);
+      }, Math.round(300 * speed));
       return () => {
         clearTimeout(t);
         document.body.style.overflow = "";
       };
     }
 
-    // ~2.5-3s progress so the bar is readable, then brief hold + exit.
+    // ~2.5-3s desktop; ~20% quicker on mobile, then brief hold + exit.
     const id = setInterval(() => {
-      p = Math.min(100, p + (Math.random() * 8 + 5));
+      p = Math.min(100, p + (Math.random() * 8 + 5) * stepScale);
       setProgress(p);
       if (p >= 100) {
         clearInterval(id);
-        setTimeout(() => setExiting(true), 420);
+        setTimeout(() => setExiting(true), holdMs);
         setTimeout(() => {
           setLoading(false);
           document.body.style.overflow = "";
-        }, 420 + 940);
+        }, holdMs + exitMs);
       }
-    }, 260);
+    }, tickMs);
 
     return () => {
       clearInterval(id);
