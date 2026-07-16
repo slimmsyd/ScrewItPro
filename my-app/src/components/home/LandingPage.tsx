@@ -146,6 +146,10 @@ export default function LandingPage() {
           left: 0,
           right: 0,
           zIndex: 1000,
+          // Solid stack — never a translucent layer over the page
+          background: "var(--white)",
+          // No filter inheritance / frosted sampling into page content
+          isolation: "isolate",
         }}
       >
         {/* Mobile strip matches desktop TopUtilityBar (MVP pill + announce) */}

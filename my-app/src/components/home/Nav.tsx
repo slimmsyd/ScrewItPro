@@ -384,16 +384,20 @@ export default function Nav({
       <nav
         className={mobile ? "mobile-chrome-nav" : undefined}
         style={{
-          // Mobile: solid white (no frosted glass — blur samples page and reads as grey wash)
+          // Never use translucent + blur on mobile (frost greys the whole scroll surface)
           background: mobile
-            ? "var(--white)"
+            ? "#ffffff"
             : solid
               ? "rgba(255,255,255,0.94)"
               : "rgba(255,255,255,0.86)",
-          backdropFilter: mobile ? "none" : "saturate(180%) blur(10px)",
-          WebkitBackdropFilter: mobile ? "none" : "saturate(180%) blur(10px)",
-          borderBottom: `1px solid ${solid || mobile ? "var(--gray-100)" : "transparent"}`,
-          boxShadow: solid ? "var(--shadow-sm)" : "none",
+          backdropFilter: mobile ? undefined : "saturate(180%) blur(10px)",
+          WebkitBackdropFilter: mobile
+            ? undefined
+            : "saturate(180%) blur(10px)",
+          borderBottom: `1px solid ${
+            solid || mobile ? "var(--gray-100)" : "transparent"
+          }`,
+          boxShadow: solid && !mobile ? "var(--shadow-sm)" : "none",
           transition:
             "background 260ms ease, box-shadow 260ms ease, border-color 260ms ease",
         }}

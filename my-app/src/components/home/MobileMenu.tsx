@@ -51,23 +51,28 @@ export default function MobileMenu({
 
   return (
     <>
-      <div
-        onClick={onClose}
-        aria-hidden={!open}
-        style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(11,16,48,0.34)",
-          zIndex: 800,
-          opacity: open ? 1 : 0,
-          pointerEvents: open ? "auto" : "none",
-          transition: "opacity .32s ease",
-        }}
-      />
+      {/*
+        Only mount the dimmer while the menu is open.
+        A full-screen fixed layer left at opacity:0 still promotes a GPU layer on
+        iOS Safari and greys the whole page (banner vs body become one wash).
+      */}
+      {open && (
+        <div
+          onClick={onClose}
+          aria-hidden
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(11,16,48,0.34)",
+            zIndex: 800,
+          }}
+        />
+      )}
       <aside
         role="dialog"
         aria-modal="true"
         aria-label="Menu"
+        aria-hidden={!open}
         onPointerDown={(e) => {
           startX.current = e.clientX;
         }}
@@ -99,6 +104,8 @@ export default function MobileMenu({
           boxShadow: "-12px 0 44px rgba(4,32,155,0.18)",
           zIndex: 850,
           transform: open ? `translateX(${drag}px)` : "translateX(100%)",
+          // Keep off-screen drawer from participating in hit-testing / compositing
+          visibility: open || drag > 0 ? "visible" : "hidden",
           transition: dragging
             ? "none"
             : "transform .34s cubic-bezier(.16,1,.3,1)",
@@ -107,6 +114,7 @@ export default function MobileMenu({
           // Top padding +20% so links clear the fixed header strip on mobile
           padding: `${Math.round((navOffset + 18) * 1.2)}px 26px 28px`,
           touchAction: "pan-y",
+          pointerEvents: open ? "auto" : "none",
         }}
       >
         {links.map(([l, h], i) => (
