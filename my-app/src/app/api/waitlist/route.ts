@@ -9,7 +9,6 @@ import {
 } from "@/lib/waitlist";
 import { dispatchEmail } from "@/lib/emails/dispatch";
 import { waitlistConfirmation } from "@/lib/emails/templates";
-import { forwardUserToN8n } from "@/lib/crm";
 
 /**
  * POST /api/waitlist
@@ -50,22 +49,14 @@ export async function POST(request: Request) {
 
     const result = await upsertWaitlistEntry(input);
 
-    // Send (or capture, while Resend is gated) the waitlist confirmation, and
-    // mirror the person into the Users CRM sheet. Only on first join — re-joins
-    // keep their spot (and their original CRM row) silently.
+    // Send (or capture, while Resend is gated) the waitlist confirmation.
+    // CRM sheet mirror runs inside upsertWaitlistEntry on first join only
+    // (shared by email signup, Google OAuth, and this route).
     if (result.created) {
       await dispatchEmail(
         result.email,
         waitlistConfirmation({ name: input.name, position: result.position })
       );
-      await forwardUserToN8n({
-        email: result.email,
-        name: input.name,
-        onWaitlist: true,
-        provider: result.provider,
-        source: input.source,
-        createdAt: new Date().toISOString(),
-      });
     }
 
     return NextResponse.json(
