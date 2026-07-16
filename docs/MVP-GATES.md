@@ -106,18 +106,33 @@ the interim gate. Leave unset to keep the page disabled. (Set locally already.)
 
 ---
 
-## 🔒 Gate 5 — Google Analytics (GA4)
+## ✅ Gate 5 — Google Analytics (GA4) — CLOSED (local); production env still needed
 
-**Status:** SEO + analytics **built** — `sitemap.ts`, `robots.ts`, JSON-LD
-(`LocalBusiness` + `WebSite`), GA4 loader (gated), per-page metadata + noindex on
-private pages. The GA loader renders nothing until the Measurement ID is set.
+**Status:** SEO + analytics **built and live locally**. `sitemap.ts`, `robots.ts`,
+JSON-LD (`LocalBusiness` + `WebSite`), GA4 loader, per-page metadata + noindex on
+private pages.
 
-**Blocked on:** the client's GA4 **Measurement ID** — **the domain is NOT
-required** to get one.
+Measurement ID **`G-42LFZYNNQ2`** is set in `.env.local`. Verified in a real
+browser: gtag injects post-hydration, `window.gtag` is a function, and
+`POST google-analytics.com/g/collect?...&tid=G-42LFZYNNQ2&en=page_view` returns
+**204**. Data is collecting.
 
-**Setup:**
-1. Create a GA4 property + Web data stream (the stream URL can be a placeholder; update it once the real domain is live).
-2. Copy the **Measurement ID** (`G-XXXXXXXXXX`) into `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` and redeploy → gtag goes live (verified working with a test ID).
+**Remaining:** set `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=G-42LFZYNNQ2` in the
+**production (Vercel) env** — `.env.local` is gitignored and does not deploy.
+
+**Stream URL is just a label.** GA4 never verifies domain ownership (that's Search
+Console). The Measurement ID binds to the *data stream*, not the domain, so the
+property was created against the Vercel URL. At domain cutover, edit
+Admin → Data streams → stream URL. The ID does not change and no code changes.
+
+**Recommended GA4 console settings** (not code, do once):
+- **Data retention → 14 months** (Admin → Data retention). Defaults to 2 months and is **not retroactive**.
+- **Add `stripe.com` to unwanted referrals** (Admin → Data streams → Configure tag settings). Checkout sends users to Stripe and back; without this, Stripe gets credited as the referral source and clobbers real attribution.
+- Expect a hostname split in historical data: pre-cutover hits record the `vercel.app` host, post-cutover the real domain.
+
+**Note:** `anonymize_ip` is deliberately **not** passed. GA4 anonymizes IPs
+unconditionally; passing it makes gtag send it as a custom event parameter
+(`ep.anonymize_ip=true`) on every hit while doing nothing for privacy.
 
 **Domain cutover (one env var, flips everything):** set `NEXT_PUBLIC_APP_URL` to
 the real domain → all canonical URLs, Open Graph URLs, `sitemap.xml`, `robots.txt`
@@ -141,5 +156,5 @@ sitemap line, and JSON-LD URLs update at once. Until then they read `localhost`.
 - [ ] Gate 1: `RESEND_API_KEY` + `RESEND_FROM_EMAIL` set → live email
 - [ ] Gate 2: Stripe keys + webhook endpoint registered → live payments
 - [x] Gate 4: `ADMIN_DASHBOARD_TOKEN` set locally → leads dashboard accessible — **add to production env too**
-- [ ] Gate 5: `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` (GA4 Measurement ID) → analytics live
+- [x] Gate 5: `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=G-42LFZYNNQ2` set locally → analytics verified collecting (204 on `/g/collect`) — **add to production env too**
 - [ ] Domain cutover: set `NEXT_PUBLIC_APP_URL` to the real domain → canonical/OG/sitemap/JSON-LD URLs all update
