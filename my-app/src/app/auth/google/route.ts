@@ -1,34 +1,41 @@
 import { NextResponse } from "next/server";
-import {
- buildGoogleAuthUrl,
- getAppOrigin,
- isGoogleOAuthConfigured,
-} from "@/lib/auth/google";
+import { createClient } from "@/lib/supabase/server";
+import { getAppOrigin } from "@/lib/auth/origin";
 
 /**
  * GET /auth/google
- * Starts Google OAuth - redirects the browser to Google consent.
+ * Starts Google sign-in through Supabase Auth.
+ *
+ * Supabase owns the Google handshake and redirects back to /auth/callback with
+ * a code we exchange for a real session. CSRF is covered by the PKCE verifier
+ * cookie set here, so the old hand-rolled sip_oauth_state check is gone.
+ *
+ * Google Cloud Console must list Supabase's callback as an authorized redirect
+ * URI (NOT this app's): https://<project>.supabase.co/auth/v1/callback
  */
 export async function GET(request: Request) {
- if (!isGoogleOAuthConfigured()) {
- return NextResponse.redirect(
- new URL("/join?error=google_not_configured", request.url)
- );
- }
+  const { origin: requestOrigin } = new URL(request.url);
+  const origin = getAppOrigin(requestOrigin);
 
- const { origin: requestOrigin } = new URL(request.url);
- const origin = getAppOrigin(requestOrigin);
+  let supabase;
+  try {
+    supabase = await createClient();
+  } catch {
+    return NextResponse.redirect(`${origin}/join?error=auth_not_configured`);
+  }
 
- // CSRF state - validated on callback
- const state = crypto.randomUUID();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${origin}/auth/callback`,
+      queryParams: { prompt: "select_account" },
+    },
+  });
 
- const res = NextResponse.redirect(buildGoogleAuthUrl({ origin, state }));
- res.cookies.set("sip_oauth_state", state, {
- httpOnly: true,
- secure: process.env.NODE_ENV === "production",
- sameSite: "lax",
- path: "/",
- maxAge: 60 * 10, // 10 minutes
- });
- return res;
+  if (error || !data?.url) {
+    console.error("[auth/google]", error?.message);
+    return NextResponse.redirect(`${origin}/join?error=auth_failed`);
+  }
+
+  return NextResponse.redirect(data.url);
 }
