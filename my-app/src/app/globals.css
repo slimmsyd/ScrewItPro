@@ -164,8 +164,8 @@ body {
 /*
  * Mobile page wash fix:
  * Why Us looks “pure white” because the car video’s plate is true #fff.
- * Other sections used cool blue-greys (#f4f6fb, #eef3ff, frosted nav) so the
- * rest of the page read as grey next to that video. Force clean whites on small screens.
+ * Other sections used cool blue-greys + frosted / fixed GPU layers so the
+ * rest of the page read as one grey wash. Nuke filters + force white surfaces.
  */
 @media (max-width: 768px) {
  :root {
@@ -184,15 +184,22 @@ body {
   background: #ffffff !important;
  }
 
- /* Kill frosted-glass sampling that greys content under the fixed header */
- .mobile-chrome-nav {
-  background: #ffffff !important;
+ /*
+  * Nuclear: any backdrop-filter on mobile greys the page via GPU compositing
+  * (nav frosted glass was the main offender; block all of them).
+  */
+ *,
+ *::before,
+ *::after {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
  }
 
+ .mobile-chrome-nav,
  .mobile-chrome-announce {
   background: #ffffff !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
  }
 }
 
