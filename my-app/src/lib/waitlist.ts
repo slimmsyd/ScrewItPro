@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { getEnvStatus } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { forwardUserToN8n } from "@/lib/crm";
 
 export const waitlistProviders = ["email", "google", "apple"] as const;
 export type WaitlistProvider = (typeof waitlistProviders)[number];
@@ -50,8 +51,31 @@ function normalizeEmail(email: string): string {
 }
 
 /**
+ * Mirror a first-time waitlist lead into n8n → Users CRM sheet.
+ * Fire-and-forget: never throws (webhook must not break join).
+ */
+async function mirrorNewWaitlistLeadToCrm(opts: {
+  email: string;
+  name: string | null;
+  provider: WaitlistProvider;
+  source: string;
+  userId?: string | null;
+}): Promise<void> {
+  await forwardUserToN8n({
+    email: opts.email,
+    name: opts.name,
+    onWaitlist: true,
+    provider: opts.provider,
+    source: opts.source,
+    createdAt: new Date().toISOString(),
+    userId: opts.userId ?? null,
+  });
+}
+
+/**
  * Upsert a waitlist entry and return stable queue position (1-based by created_at).
  * Idempotent on email_normalized - re-joins keep original spot and refresh profile fields.
+ * On first insert only, mirrors the person to n8n → Google Sheet (if configured).
  */
 export async function upsertWaitlistEntry(
   raw: WaitlistSignupInput
@@ -192,6 +216,18 @@ export async function upsertWaitlistEntry(
   }
 
   const position = await getWaitlistPosition(emailNormalized);
+
+  // Every first-time waitlist enrollment (email signup, Google OAuth, /api/waitlist)
+  // mirrors into the CRM sheet via n8n. Re-joins skip (created === false).
+  if (created) {
+    await mirrorNewWaitlistLeadToCrm({
+      email: parsed.email,
+      name,
+      provider,
+      source: parsed.source,
+      userId: parsed.convertedUserId ?? null,
+    });
+  }
 
   return {
     id,
