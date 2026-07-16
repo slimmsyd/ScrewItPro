@@ -38,10 +38,7 @@ export default function WhyUs() {
         isolation: "isolate",
       }}
     >
-      {/* Decorative driving loop — always behind copy; never intercepts taps.
-          Mobile Safari often fails HEVC alpha, so the white plate paints as a
-          grey wash. multiply/darken drops that white plate against section white
-          (desktop keeps normal alpha composite — no grey overlay there). */}
+      {/* Decorative driving loop — behind copy; not interactive */}
       <div
         aria-hidden
         style={{
@@ -53,7 +50,6 @@ export default function WhyUs() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          // Kill any default media chrome grey under the video
           background: "transparent",
         }}
       >
@@ -72,22 +68,11 @@ export default function WhyUs() {
             objectPosition: "center center",
             pointerEvents: "none",
             background: "transparent",
-            // Decorative only — never a focus/hit target on iOS
             WebkitTouchCallout: "none",
             userSelect: "none",
-            // Mobile: white plate of the asset → invisible against section white
-            ...(mobile
-              ? {
-                  mixBlendMode: "multiply" as const,
-                  // Slightly full so the car still reads after multiply
-                  opacity: 0.92,
-                }
-              : null),
           }}
         >
-          {/* Safari: HEVC + alpha (desktop/Safari). On iOS alpha often fails → multiply above. */}
           <source src="/assets/why-driving-loop.mov" type='video/mp4; codecs="hvc1"' />
-          {/* Chrome / Firefox / Edge: VP9 + alpha */}
           <source src="/assets/why-driving-loop.webm" type="video/webm" />
         </video>
       </div>

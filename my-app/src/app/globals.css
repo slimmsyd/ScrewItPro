@@ -26,6 +26,7 @@
  --ink-300: #9aa1bc;
  --gray-200: #d8ddeb;
  --gray-100: #e9edf6;
+ /* Cool blue-grey wash — fine on desktop; mobile overrides below */
  --gray-50: #f4f6fb;
  --white: #ffffff;
 
@@ -158,6 +159,25 @@ body {
  color: var(--text-body);
  background: var(--surface-page);
  -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * Mobile: pure white page surfaces so sections don’t read as a cool grey wash
+ * next to the Why Us video’s true white plate. Desktop keeps the blue-grey neutrals.
+ */
+@media (max-width: 768px) {
+ :root {
+  --gray-50: #ffffff;
+  --gray-100: #eef0f5;
+  --surface-page: #ffffff;
+  --surface-subtle: #ffffff;
+  --surface-card: #ffffff;
+ }
+
+ html,
+ body {
+  background: #ffffff;
+ }
 }
 
 a {
