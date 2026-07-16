@@ -147,7 +147,7 @@ export default function Footer() {
   return (
     <footer
       style={{
-        background: "var(--gray-50)",
+        background: "var(--white)",
         color: "var(--ink-700)",
         borderTop: "1px solid var(--gray-100)",
       }}

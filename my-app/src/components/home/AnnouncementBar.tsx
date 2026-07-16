@@ -29,8 +29,9 @@ export default function AnnouncementBar({ waitlist }: { waitlist: boolean }) {
 
   return (
     <div
+      className="mobile-chrome-announce"
       style={{
-        background: "var(--gray-50)",
+        background: "var(--white)",
         borderBottom: "1px solid var(--gray-100)",
         color: "var(--ink-700)",
         textAlign: "center",

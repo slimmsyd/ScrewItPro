@@ -18,7 +18,7 @@ export default function ServiceArea() {
       as="section"
       id="area"
       style={{
-        background: "var(--gray-50)",
+        background: "var(--white)",
         // Top only - map bleeds flush to bottom edge of section
         padding: "var(--section-pad-y) 0 0",
         overflow: "hidden",

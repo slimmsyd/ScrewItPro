@@ -20,14 +20,15 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
 const tints = {
-  blue: { bg: "#EEF3FF", fg: "#1D6EFE" },
-  green: { bg: "#E6F6EE", fg: "#0E8A5F" },
-  amber: { bg: "#FDF1E0", fg: "#B96A00" },
-  purple: { bg: "#EFE9FF", fg: "#6D46C6" },
-  teal: { bg: "#E3F6F5", fg: "#0E8A8A" },
-  rose: { bg: "#FBE9EE", fg: "#C6325C" },
-  indigo: { bg: "#E9ECFB", fg: "#3744BF" },
-  sky: { bg: "#E6F2FD", fg: "#0F7BD9" },
+  // Slightly softer pastels so mobile tiles don’t wash the section cool-grey
+  blue: { bg: "#F5F8FF", fg: "#1D6EFE" },
+  green: { bg: "#F3FAF6", fg: "#0E8A5F" },
+  amber: { bg: "#FFF9F2", fg: "#B96A00" },
+  purple: { bg: "#F8F5FF", fg: "#6D46C6" },
+  teal: { bg: "#F2FAF9", fg: "#0E8A8A" },
+  rose: { bg: "#FDF5F7", fg: "#C6325C" },
+  indigo: { bg: "#F5F6FD", fg: "#3744BF" },
+  sky: { bg: "#F4F9FD", fg: "#0F7BD9" },
 } as const;
 
 type Tint = keyof typeof tints;
