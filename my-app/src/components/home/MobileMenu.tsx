@@ -104,7 +104,8 @@ export default function MobileMenu({
             : "transform .34s cubic-bezier(.16,1,.3,1)",
           display: "flex",
           flexDirection: "column",
-          padding: `${navOffset + 18}px 26px 28px`,
+          // Top padding +20% so links clear the fixed header strip on mobile
+          padding: `${Math.round((navOffset + 18) * 1.2)}px 26px 28px`,
           touchAction: "pan-y",
         }}
       >
