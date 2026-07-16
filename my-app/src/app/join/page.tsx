@@ -952,22 +952,7 @@ function JoinForm() {
               </div>
             )}
             <div>
-              <Link
-                href="/"
-                style={{
-                  display: "inline-flex",
-                  height: 48,
-                  alignItems: "center",
-                  padding: "0 22px",
-                  borderRadius: "var(--radius-md)",
-                  border: "1px solid var(--gray-200)",
-                  fontFamily: "var(--font-body)",
-                  fontSize: 15,
-                  fontWeight: 600,
-                  color: "var(--blue-deep)",
-                  textDecoration: "none",
-                }}
-              >
+              <Link href="/" className="join-back-link">
                 {t("common.backToSite")}
               </Link>
             </div>

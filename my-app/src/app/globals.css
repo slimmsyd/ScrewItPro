@@ -170,6 +170,47 @@ a:hover {
  color: var(--blue-700);
 }
 
+/* Join success — "Back to site" CTA */
+.join-back-link {
+ display: inline-flex;
+ height: 48px;
+ align-items: center;
+ padding: 0 22px;
+ border-radius: var(--radius-md);
+ border: 1px solid var(--gray-200);
+ background: var(--white);
+ font-family: var(--font-body);
+ font-size: 15px;
+ font-weight: 600;
+ color: var(--blue-deep) !important;
+ text-decoration: none;
+ cursor: pointer;
+ transition:
+   background-color 180ms var(--ease-out),
+   border-color 180ms var(--ease-out),
+   color 180ms var(--ease-out),
+   box-shadow 180ms var(--ease-out),
+   transform 180ms var(--ease-out);
+}
+
+.join-back-link:hover {
+ background: var(--blue-50);
+ border-color: var(--blue-200);
+ color: var(--blue-electric) !important;
+ box-shadow: 0 4px 14px rgba(4, 32, 155, 0.12);
+ transform: translateY(-1px);
+}
+
+.join-back-link:active {
+ transform: translateY(0);
+ box-shadow: 0 2px 6px rgba(4, 32, 155, 0.08);
+}
+
+.join-back-link:focus-visible {
+ outline: 3px solid var(--blue-200);
+ outline-offset: 2px;
+}
+
 ::selection {
  background: var(--blue-100);
  color: var(--blue-deep);
@@ -757,5 +798,10 @@ header[id] {
  .screwit-launcher .screwit-mark,
  .screwit-launcher {
  transition-duration: 0.2s;
+ }
+
+ .join-back-link:hover,
+ .join-back-link:active {
+ transform: none;
  }
 }
