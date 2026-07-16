@@ -3,6 +3,7 @@ import { Instrument_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import MotionProvider from "@/components/providers/MotionProvider";
 import LocaleProvider from "@/components/providers/LocaleProvider";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import "./globals.css";
 
 const instrument = Instrument_Sans({
@@ -107,6 +108,7 @@ export default function RootLayout({
         <LocaleProvider>
           <MotionProvider>{children}</MotionProvider>
         </LocaleProvider>
+        <GoogleAnalytics />
       </body>
     </html>
   );
