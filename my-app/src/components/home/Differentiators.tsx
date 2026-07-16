@@ -326,39 +326,36 @@ function CardVisual({ card }: { card: FeatureCard }) {
   const showImg = !useMap && !showVignette && imgOk && !!card.img;
   const showTexas = useMap || (!imgOk && !showVignette && card.texasFallback);
 
+  const bandStyle: CSSProperties = {
+    marginTop: "auto",
+    height: mobile ? (card.scene || card.vignette ? 200 : 180) : card.vis,
+    overflow: "hidden",
+    background:
+      showImg || showTexas || showVignette
+        ? "transparent"
+        : card.grad
+          ? "rgba(255,255,255,0.1)"
+          : "var(--white)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    padding: card.cover ? (mobile ? "0 14px" : "0 18px") : undefined,
+    textAlign: "center",
+  };
+
+  const centerFill: CSSProperties = {
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  };
+
   return (
-    <div
-      style={{
-        marginTop: "auto",
-        height: mobile ? (card.scene || card.vignette ? 200 : 180) : card.vis,
-        overflow: "hidden",
-        background:
-          showImg || showTexas || showVignette
-            ? "transparent"
-            : card.grad
-              ? "rgba(255,255,255,0.1)"
-              : "var(--white)",
-        display: "flex",
-        alignItems:
-          showTexas || showVignette
-            ? "center"
-            : card.scene
-              ? "center"
-              : "flex-end",
-        justifyContent: card.alignRight ? "flex-end" : "center",
-        padding: card.cover ? (mobile ? "0 14px" : "0 18px") : undefined,
-      }}
-    >
+    <div style={bandStyle}>
       {showVignette ? (
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+        <div style={centerFill}>
           {card.vignette === "workshop" ? (
             <WorkshopVignette reduce={reduce} label={t("diff.chipWorkshop")} />
           ) : (
@@ -366,60 +363,52 @@ function CardVisual({ card }: { card: FeatureCard }) {
           )}
         </div>
       ) : showImg ? (
-        // Decorative; plain img so onError can trigger the fallback.
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={card.img}
-          alt=""
-          onError={() => setImgOk(false)}
+        // Decorative; flex + place-items so every asset is truly centered in the band.
+        <div
           style={{
-            width: card.scene || card.cover ? "100%" : undefined,
-            maxWidth: card.cover
-              ? "100%"
-              : card.scene
-                ? "100%"
-                : card.big
-                  ? "112%"
-                  : "86%",
-            maxHeight: card.cover
-              ? "100%"
-              : card.scene
-                ? "100%"
-                : card.big
-                  ? "116%"
-                  : "90%",
-            height: card.scene || card.cover ? "100%" : undefined,
-            objectFit: card.cover ? "cover" : "contain",
-            objectPosition: card.cover
-              ? "center"
-              : card.scene
-                ? "center bottom"
-                : "center",
-            borderRadius: card.cover ? "8px 8px 0 0" : undefined,
-            display: "block",
-            filter:
-              card.noShadow || card.cover
-                ? "none"
-                : card.big || card.scene
-                  ? "drop-shadow(0 16px 30px rgba(4,20,90,0.35))"
-                  : "drop-shadow(0 18px 30px rgba(4,32,155,0.35))",
+            ...centerFill,
+            placeItems: "center",
           }}
-        />
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={card.img}
+            alt=""
+            onError={() => setImgOk(false)}
+            style={{
+              // Cover (map): fill band, crop centered. Scene/other: contain, centered.
+              width: card.cover ? "100%" : "auto",
+              height: card.cover ? "100%" : "auto",
+              maxWidth: "100%",
+              maxHeight: "100%",
+              objectFit: card.cover ? "cover" : "contain",
+              objectPosition: "center center",
+              margin: "0 auto",
+              borderRadius: card.cover ? "8px 8px 0 0" : undefined,
+              display: "block",
+              filter:
+                card.noShadow || card.cover
+                  ? "none"
+                  : card.big || card.scene
+                    ? "drop-shadow(0 16px 30px rgba(4,20,90,0.35))"
+                    : "drop-shadow(0 18px 30px rgba(4,32,155,0.35))",
+            }}
+          />
+        </div>
       ) : showTexas ? (
         <div
           style={{
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            ...centerFill,
             padding: mobile ? "2px 8px 10px" : "4px 12px 14px",
           }}
         >
           <TexasMap label={t("diff.houstonLabel")} />
         </div>
       ) : (
-        <ImageSlot label={card.ph} style={{ minHeight: "100%", width: "100%" }} />
+        <ImageSlot
+          label={card.ph}
+          style={{ minHeight: "100%", width: "100%", margin: "0 auto" }}
+        />
       )}
     </div>
   );
@@ -551,8 +540,8 @@ function TrustCard({
           minHeight: mobile ? 220 : 160,
           display: "flex",
           alignItems: "center",
-          // Mobile: sit the visual under the copy on the left
-          justifyContent: mobile ? "flex-start" : "center",
+          justifyContent: "center",
+          width: "100%",
         }}
       >
         {visual}
@@ -591,9 +580,9 @@ function GuaranteeVisual({ mobile = false }: { mobile?: boolean }) {
   const shellH = mobile ? 220 : 168;
   const mascotW = mobile ? 196 : 118;
   const mascotH = mobile ? 196 : 118;
-  // Orbit origin: center of the mascot plate (left-anchored on mobile)
-  const originLeft = mobile ? mascotW / 2 : "50%";
-  const originTop = mobile ? "50%" : "52%";
+  // Orbit + plate always centered in the visual band
+  const originLeft = "50%";
+  const originTop = "50%";
 
   return (
     // Force motion for this decorative bit - CSS was frozen by reduced-motion
@@ -605,7 +594,7 @@ function GuaranteeVisual({ mobile = false }: { mobile?: boolean }) {
           width: "100%",
           maxWidth: shellMax,
           height: shellH,
-          margin: mobile ? "0" : "0 auto",
+          margin: "0 auto",
         }}
       >
         <div aria-hidden className="guarantee-glow" />
@@ -615,11 +604,11 @@ function GuaranteeVisual({ mobile = false }: { mobile?: boolean }) {
           className="guarantee-mascot"
           style={{
             position: "absolute",
-            left: mobile ? 0 : "50%",
+            left: "50%",
             top: originTop,
             width: mascotW,
             height: mascotH,
-            marginLeft: mobile ? 0 : -mascotW / 2,
+            marginLeft: -mascotW / 2,
             marginTop: -mascotH / 2,
             zIndex: 1,
             pointerEvents: "none",
@@ -753,6 +742,7 @@ function RatedVisual({
         width: "100%",
         maxWidth: 240,
         height: 168,
+        margin: "0 auto",
       }}
     >
       {/* Trait chips */}
