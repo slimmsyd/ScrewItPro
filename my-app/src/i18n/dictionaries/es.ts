@@ -4,6 +4,8 @@ export const es: Dictionary = {
   common: {
     joinNow: "Únete ahora",
     getQuote: "Cotización gratis",
+    shareWithFriend: "Comparte con un amigo",
+    finishJoining: "Terminar registro",
     learnMore: "Saber más",
     backToSite: "Volver al sitio",
     startOver: "Empezar de nuevo",
@@ -11,7 +13,10 @@ export const es: Dictionary = {
     or: "o",
     loading: "Cargando…",
     signIn: "Iniciar sesión",
+    signOut: "Cerrar sesión",
     alreadyMember: "¿Ya eres miembro?",
+    linkCopied: "Enlace copiado — envíaselo a un amigo",
+    shareFailed: "No se pudo compartir. Inténtalo de nuevo.",
   },
   nav: {
     howItWorks: "Cómo funciona",
@@ -30,6 +35,8 @@ export const es: Dictionary = {
     search: "Buscar",
     login: "Entrar",
     contactUs: "Contáctanos",
+    youreIn: "Ya estás dentro",
+    youreInPosition: "Ya estás dentro · #{position}",
   },
   util: {
     announceWaitlist:
@@ -38,6 +45,12 @@ export const es: Dictionary = {
       "Sirviendo el área metropolitana de Houston, siete días a la semana. ",
     joinEarly: "Únete pronto.",
     bookToday: "Reserva hoy.",
+    shareEarly: "Comparte con un amigo.",
+    youreOnTheList: "Ya estás en la lista — invita a un amigo.",
+  },
+  share: {
+    title: "ScrewIt Pros",
+    text: "Me uní a la lista de ScrewIt Pros: ensamblaje de muebles sin complicaciones en Houston. Únete:",
   },
   announce: {
     mvp: "MVP",
@@ -332,6 +345,7 @@ export const es: Dictionary = {
     company: "Empresa",
     support: "Soporte",
     legal: "Legal",
+    houstonAssembly: "Ensamblaje y entrega en Houston",
     furnitureAssembly: "Ensamblaje de muebles",
     largeAssembly: "Muebles grandes",
     officeAssembly: "Muebles de oficina",

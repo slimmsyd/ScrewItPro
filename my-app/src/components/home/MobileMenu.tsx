@@ -8,11 +8,13 @@ export default function MobileMenu({
   open,
   onClose,
   onQuote,
+  ctaLabel,
   waitlist,
 }: {
   open: boolean;
   onClose: () => void;
   onQuote: () => void;
+  ctaLabel?: string;
   waitlist: boolean;
 }) {
   const { t, locale, setLocale, labels } = useLocale();
@@ -150,7 +152,8 @@ export default function MobileMenu({
             transition: stag(0.28),
           }}
         >
-          {waitlist ? t("common.joinNow") : t("common.getQuote")}
+          {ctaLabel ??
+            (waitlist ? t("common.joinNow") : t("common.getQuote"))}
         </button>
         <div
           style={{

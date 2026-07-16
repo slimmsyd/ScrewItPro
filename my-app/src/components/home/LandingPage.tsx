@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import SplashLoader from "@/components/home/SplashLoader";
 import AnnouncementBar from "@/components/home/AnnouncementBar";
 import Nav from "@/components/home/Nav";
@@ -21,7 +20,8 @@ import Footer from "@/components/home/Footer";
 import QuoteDialog from "@/components/home/QuoteDialog";
 import SupportChat from "@/components/home/SupportChat";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { isWaitlist, JOIN_PATH } from "@/lib/site";
+import { usePrimaryCta } from "@/hooks/usePrimaryCta";
+import { isWaitlist } from "@/lib/site";
 
 /**
  * Full marketing landing page - V2 design.
@@ -31,7 +31,6 @@ import { isWaitlist, JOIN_PATH } from "@/lib/site";
  * Assets: /public/assets/* · Tokens: globals.css · Motion: Framer Motion + CSS.
  */
 export default function LandingPage() {
-  const router = useRouter();
   const mobile = useIsMobile();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -39,6 +38,9 @@ export default function LandingPage() {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [exiting, setExiting] = useState(false);
+  const primaryCta = usePrimaryCta({
+    onQuote: () => setQuoteOpen(true),
+  });
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 6);
@@ -91,12 +93,8 @@ export default function LandingPage() {
     if (!mobile) setMenuOpen(false);
   }, [mobile]);
 
-  const onQuote = () => {
-    if (isWaitlist) {
-      router.push(JOIN_PATH);
-      return;
-    }
-    setQuoteOpen(true);
+  const onPrimaryCta = () => {
+    void primaryCta.run();
   };
 
   // Fixed header height: desktop = utility + nav; mobile = announce strip + nav
@@ -106,6 +104,31 @@ export default function LandingPage() {
   return (
     <div>
       {loading && <SplashLoader progress={progress} exiting={exiting} />}
+
+      {primaryCta.shareFeedback && (
+        <div
+          role="status"
+          style={{
+            position: "fixed",
+            bottom: 24,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 2000,
+            background: "var(--blue-deep)",
+            color: "#fff",
+            fontFamily: "var(--font-body)",
+            fontSize: 14,
+            fontWeight: 600,
+            padding: "12px 18px",
+            borderRadius: "var(--radius-pill)",
+            boxShadow: "0 10px 30px rgba(4, 32, 155, 0.25)",
+            maxWidth: "min(92vw, 360px)",
+            textAlign: "center",
+          }}
+        >
+          {primaryCta.shareFeedback}
+        </div>
+      )}
 
       <div
         style={{
@@ -119,7 +142,8 @@ export default function LandingPage() {
         {/* Mobile strip matches desktop TopUtilityBar (MVP pill + announce) */}
         {mobile && <AnnouncementBar waitlist={isWaitlist} />}
         <Nav
-          onQuote={onQuote}
+          onQuote={onPrimaryCta}
+          ctaLabel={primaryCta.label}
           onToggleMenu={() => setMenuOpen((o) => !o)}
           menuOpen={menuOpen}
           scrolled={scrolled}
@@ -129,7 +153,11 @@ export default function LandingPage() {
 
       <div id="app-shell" className={mobile && menuOpen ? "peek" : undefined}>
         <div style={{ height: headerHeight }} />
-        <Hero onQuote={onQuote} waitlist={isWaitlist} />
+        <Hero
+          onQuote={onPrimaryCta}
+          waitlist={isWaitlist}
+          ctaLabel={primaryCta.label}
+        />
         <DividerBand />
         <Differentiators />
         <Audiences />
@@ -138,8 +166,16 @@ export default function LandingPage() {
         <WhyUs />
         <AudiencesPhoto />
         <ServiceArea />
-        <FAQ onQuote={onQuote} waitlist={isWaitlist} />
-        <Credibility onQuote={onQuote} waitlist={isWaitlist} />
+        <FAQ
+          onQuote={onPrimaryCta}
+          waitlist={isWaitlist}
+          ctaLabel={primaryCta.label}
+        />
+        <Credibility
+          onQuote={onPrimaryCta}
+          waitlist={isWaitlist}
+          ctaLabel={primaryCta.label}
+        />
         <Footer />
       </div>
 
@@ -147,7 +183,8 @@ export default function LandingPage() {
         <MobileMenu
           open={menuOpen}
           onClose={() => setMenuOpen(false)}
-          onQuote={onQuote}
+          onQuote={onPrimaryCta}
+          ctaLabel={primaryCta.label}
           waitlist={isWaitlist}
         />
       )}

@@ -339,12 +339,15 @@ function Burger({ open, onClick }: { open: boolean; onClick: () => void }) {
 
 export default function Nav({
   onQuote,
+  ctaLabel,
   onToggleMenu,
   menuOpen,
   scrolled,
   waitlist,
 }: {
   onQuote: () => void;
+  /** Resolved primary CTA label (Join / Share / Quote). */
+  ctaLabel?: string;
   onToggleMenu: () => void;
   menuOpen: boolean;
   scrolled: boolean;
@@ -459,7 +462,10 @@ export default function Nav({
               <LangSwitcher />
               <IconButton label={t("nav.search")} onClick={onQuote} />
               <NavCTA
-                label={waitlist ? t("common.joinNow") : t("common.getQuote")}
+                label={
+                  ctaLabel ??
+                  (waitlist ? t("common.joinNow") : t("common.getQuote"))
+                }
                 onClick={onQuote}
               />
             </div>

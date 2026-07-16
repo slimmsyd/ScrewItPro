@@ -119,9 +119,11 @@ function FaqCta({ onClick, label }: { onClick: () => void; label: string }) {
 export default function FAQ({
   onQuote,
   waitlist,
+  ctaLabel,
 }: {
   onQuote: () => void;
   waitlist: boolean;
+  ctaLabel?: string;
 }) {
   const mobile = useIsMobile();
   const { t } = useLocale();
@@ -195,7 +197,10 @@ export default function FAQ({
         >
           <FaqCta
             onClick={onQuote}
-            label={waitlist ? t("faq.ctaWaitlist") : t("faq.ctaQuote")}
+            label={
+              ctaLabel ??
+              (waitlist ? t("faq.ctaWaitlist") : t("faq.ctaQuote"))
+            }
           />
         </div>
       </Container>

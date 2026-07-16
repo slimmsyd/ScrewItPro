@@ -3,6 +3,7 @@ import { Instrument_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import MotionProvider from "@/components/providers/MotionProvider";
 import LocaleProvider from "@/components/providers/LocaleProvider";
+import MemberProvider from "@/components/providers/MemberProvider";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import "./globals.css";
 
@@ -106,7 +107,9 @@ export default function RootLayout({
     <html lang="en" className={`${instrument.variable} ${miguer.variable}`}>
       <body className="antialiased">
         <LocaleProvider>
-          <MotionProvider>{children}</MotionProvider>
+          <MemberProvider>
+            <MotionProvider>{children}</MotionProvider>
+          </MemberProvider>
         </LocaleProvider>
         <GoogleAnalytics />
       </body>
