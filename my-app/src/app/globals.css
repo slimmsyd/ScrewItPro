@@ -162,22 +162,62 @@ body {
 }
 
 /*
- * Mobile: pure white page surfaces so sections don’t read as a cool grey wash
- * next to the Why Us video’s true white plate. Desktop keeps the blue-grey neutrals.
+ * Mobile page wash fix:
+ * Why Us looks “pure white” because the car video’s plate is true #fff.
+ * Other sections used cool blue-greys (#f4f6fb, #eef3ff, frosted nav) so the
+ * rest of the page read as grey next to that video. Force clean whites on small screens.
  */
 @media (max-width: 768px) {
  :root {
   --gray-50: #ffffff;
-  --gray-100: #eef0f5;
+  --gray-100: #eceef3;
+  --gray-200: #e2e5ec;
+  --blue-50: #ffffff;
   --surface-page: #ffffff;
   --surface-subtle: #ffffff;
   --surface-card: #ffffff;
  }
 
  html,
- body {
-  background: #ffffff;
+ body,
+ #app-shell {
+  background: #ffffff !important;
  }
+
+ /* Kill frosted-glass sampling that greys content under the fixed header */
+ .mobile-chrome-nav {
+  background: #ffffff !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+ }
+
+ .mobile-chrome-announce {
+  background: #ffffff !important;
+ }
+}
+
+.truck-page {
+ min-height: 100vh;
+ background: radial-gradient(circle at 50% 18%, #ffffff 0, #eef3ff 48%, #e6ecf8 100%);
+ color: var(--ink-900);
+ padding: 28px 24px 40px;
+}
+
+.truck-shell { max-width: 1240px; margin: 0 auto; }
+.truck-back { display: inline-block; color: var(--blue-deep); font-weight: 600; font-size: 14px; margin-bottom: 52px; }
+.truck-copy { max-width: 580px; position: relative; z-index: 1; }
+.truck-kicker { margin: 0 0 12px; color: var(--blue-electric); font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+.truck-copy h1 { margin: 0; color: var(--blue-deep); font-size: clamp(42px, 7vw, 78px); line-height: .96; letter-spacing: -.055em; }
+.truck-copy p:not(.truck-kicker) { max-width: 500px; margin: 24px 0 0; color: var(--ink-500); font-size: 17px; line-height: 1.6; }
+.truck-stage { height: min(64vh, 620px); min-height: 430px; margin-top: -52px; border: 1px solid rgba(67, 109, 181, .14); border-radius: 28px; overflow: hidden; box-shadow: 0 28px 80px rgba(42, 56, 141, .14); }
+.truck-canvas { width: 100%; height: 100%; }
+.truck-hint { margin: 14px 0 0; text-align: center; color: var(--ink-500); font-size: 13px; }
+
+@media (max-width: 760px) {
+ .truck-page { padding: 20px 16px 28px; }
+ .truck-back { margin-bottom: 30px; }
+ .truck-stage { height: 54vh; min-height: 380px; margin-top: 30px; border-radius: 20px; }
+ .truck-copy p:not(.truck-kicker) { font-size: 15px; }
 }
 
 a {

@@ -20,7 +20,7 @@ export default function Credibility({
   return (
     <Reveal
       as="section"
-      style={{ background: "var(--gray-50)", padding: "var(--section-pad-y) 0" }}
+      style={{ background: "var(--white)", padding: "var(--section-pad-y) 0" }}
     >
       <Container
         style={{

@@ -382,11 +382,17 @@ export default function Nav({
     >
       {!mobile && <TopUtilityBar waitlist={waitlist} />}
       <nav
+        className={mobile ? "mobile-chrome-nav" : undefined}
         style={{
-          background: solid ? "rgba(255,255,255,0.94)" : "rgba(255,255,255,0.86)",
-          backdropFilter: "saturate(180%) blur(10px)",
-          WebkitBackdropFilter: "saturate(180%) blur(10px)",
-          borderBottom: `1px solid ${solid ? "var(--gray-100)" : "transparent"}`,
+          // Mobile: solid white (no frosted glass — blur samples page and reads as grey wash)
+          background: mobile
+            ? "var(--white)"
+            : solid
+              ? "rgba(255,255,255,0.94)"
+              : "rgba(255,255,255,0.86)",
+          backdropFilter: mobile ? "none" : "saturate(180%) blur(10px)",
+          WebkitBackdropFilter: mobile ? "none" : "saturate(180%) blur(10px)",
+          borderBottom: `1px solid ${solid || mobile ? "var(--gray-100)" : "transparent"}`,
           boxShadow: solid ? "var(--shadow-sm)" : "none",
           transition:
             "background 260ms ease, box-shadow 260ms ease, border-color 260ms ease",
