@@ -34,6 +34,23 @@ export type LayoutOptions = {
 };
 
 /**
+ * Base URL for images embedded in email.
+ *
+ * Deliberately NOT the same as appUrl: a mail client fetches images from the
+ * recipient's machine, so a localhost URL renders as a broken image in every
+ * inbox. When running locally we therefore point assets at the deployed origin
+ * so dev sends still show the logo.
+ *
+ * Set EMAIL_ASSET_BASE_URL once a custom domain is live.
+ */
+function assetBase(appUrl: string): string {
+  if (appUrl.startsWith("https://")) return appUrl;
+  return (
+    process.env.EMAIL_ASSET_BASE_URL ?? "https://screw-it-pro.vercel.app"
+  ).replace(/\/$/, "");
+}
+
+/**
  * Wrap body HTML in the branded shell (header wordmark + footer).
  * `bodyHtml` should be the inner content only.
  */
@@ -41,6 +58,7 @@ export function renderLayout(bodyHtml: string, options: LayoutOptions = {}): str
   const appUrl =
     options.appUrl ?? process.env.NEXT_PUBLIC_APP_URL ?? "https://screwitpros.com";
   const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "ScrewIt Pros";
+  const assets = assetBase(appUrl);
   const year = new Date().getFullYear();
   const preheader = options.preheader ?? "";
 
@@ -65,9 +83,23 @@ ${
     <td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:${brand.white};border:1px solid ${brand.gray200};border-radius:16px;overflow:hidden;">
         <tr>
-          <td style="background:${brand.blueDeep};padding:22px 32px;">
-            <a href="${appUrl}" style="text-decoration:none;color:${brand.white};font-size:19px;font-weight:700;letter-spacing:-0.02em;">
-              ${appName}
+          <td style="background:${brand.blueDeep};padding:20px 32px;">
+            <a href="${appUrl}" style="text-decoration:none;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                <tr>
+                  <td style="padding-right:12px;vertical-align:middle;line-height:0;">
+                    <img
+                      src="${assets}/assets/logo-s-white.png"
+                      width="34" height="34"
+                      alt="${appName}"
+                      style="display:block;border:0;outline:none;width:34px;height:34px;"
+                    />
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <span style="color:${brand.white};font-size:19px;font-weight:700;letter-spacing:-0.02em;">${appName}</span>
+                  </td>
+                </tr>
+              </table>
             </a>
           </td>
         </tr>
@@ -79,7 +111,7 @@ ${
         <tr>
           <td style="padding:20px 32px;background:${brand.gray50};border-top:1px solid ${brand.gray200};">
             <p style="margin:0;font-size:12px;line-height:1.6;color:${brand.ink500};">
-              ${appName} — furniture assembly &amp; white-glove delivery, Houston metro.<br />
+              ${appName} provides furniture assembly &amp; white-glove delivery across the Houston metro.<br />
               If You Don't Want to Do It, ScrewIt!
             </p>
             <p style="margin:8px 0 0;font-size:12px;color:${brand.ink500};">
