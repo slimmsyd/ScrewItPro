@@ -1,52 +1,61 @@
 # ScrewIt Pros — MVP Gates & Next Steps
 
-_Last updated: 2026-07-15 · Branch: `mvp` (feature work merges here before `main`)_
+_Last updated: 2026-07-20 · Phase: **Sprint 0 closed** (waitlist launch)_
 
 This tracks what is **built and working now** vs. what is **blocked on a
 credential or a manual setup step**. Everything gated was scaffolded with a
 readiness check, so **going live = provide the credential + redeploy. No code
 change.**
 
+**Phase status:** see [`SPRINT-0-STATUS.md`](./SPRINT-0-STATUS.md) for the
+closeout verdict. Sprint 0 is complete for waitlist operation. Only Gate 2
+(Stripe) remains open, and it does not block capture. Team notify is optional
+at low lead volume.
+
 ---
 
-## ✅ Working now (no credentials beyond Supabase, which you already have)
+## ✅ Working now (production)
 
 | Capability | Where | Notes |
 |---|---|---|
-| Email template designs + preview | `/dev/emails` | In-browser gallery of every transactional email. Dev-only (404 in prod). |
-| Email "outbox" capture | `/dev/emails` sidebar | Real signups/inquiries render the email and capture it here while Resend is gated. |
-| People capture → Supabase | `POST /api/waitlist`, `POST /api/inquiries` | Waitlist signups + quote leads persist to Supabase. |
-| People mirror → Users CRM Google Sheet | n8n workflow (**live**) | Upserts each person by email; `N8N_CRM_WEBHOOK_URL` set (see Gate 3). |
-| Waitlist confirmation email | `POST /api/waitlist` | Renders + captures to outbox on first join. |
-| Internal leads view + CSV | `/admin/leads?key=…` | Gated by `ADMIN_DASHBOARD_TOKEN` (see Gate 4). |
-| Stripe deposit checkout + webhook | `/api/payments/*` | Fully written; returns 503 until keys (see Gate 2). |
+| Email template designs + preview | `/dev/emails` | In-browser gallery. Dev-only (404 in prod). |
+| Transactional email (Resend) | `dispatchEmail()` + `email_log` | **Gate 1 closed** — live sends in prod. |
+| People capture → Supabase | `POST /api/waitlist`, `POST /api/inquiries` | Waitlist + quote leads persist. |
+| People mirror → Users CRM Google Sheet | n8n workflow | **Gate 3 closed in prod.** |
+| Waitlist confirmation + first-join team path | `upsertWaitlistEntry` | Confirmation on all 3 join paths; team notice only if notify list set. |
+| Internal leads view + CSV | `/admin/leads?key=…` | **Gate 4 closed in prod** (`ADMIN_DASHBOARD_TOKEN`). |
+| GA4 + SEO | gtag, sitemap, robots, JSON-LD | **Gate 5 closed in prod.** |
+| Domain cutover | `NEXT_PUBLIC_APP_URL` | **Closed** → `https://www.screwitpro.com` (canonical/OG/sitemap/JSON-LD/OAuth origin). |
+| Stripe deposit checkout + webhook | `/api/payments/*` | Fully written; returns 503 until keys (**Gate 2 open**). |
 
-### Database migrations to apply (Supabase SQL Editor or `supabase db push`)
+### Database migrations applied
 - `supabase/migrations/20260715120000_inquiries.sql` — lead capture table
 - `supabase/migrations/20260715140000_orders_payments_interim.sql` — deposit-checkout tables
 - `supabase/migrations/20260720120000_email_log.sql` — email send log + reminder idempotency guard — **applied via psql 2026-07-20**
 
 ---
 
-## 🔒 Gate 1 — Transactional email (Resend)
+## ✅ Gate 1 — Transactional email (Resend) — CLOSED (prod)
 
-**Blocked on:** client sets up the sender mailbox + verifies the sending domain,
-then provides the API key.
+**Status:** live in production. `RESEND_API_KEY` + `RESEND_FROM_EMAIL` set on
+Vercel (Preview + Production). `isEmailReady()` is true; sends go through Resend
+and are logged to `email_log`.
 
-**Provide:**
-- `RESEND_API_KEY` — Resend dashboard → API Keys
-- `RESEND_FROM_EMAIL` — e.g. `ScrewIt Pros <hello@screwitpros.com>` (domain must be verified in Resend first)
-- `INQUIRY_NOTIFY_EMAIL` — internal address that receives "new lead" alerts (optional)
+**Optional companion:** `TEAM_NOTIFY_EMAILS` (or legacy `INQUIRY_NOTIFY_EMAIL`)
+for internal new-lead pings. Deferred while lead volume is low — does not block
+customer confirmation email. See scoreboard below.
 
-**Cutover:** set the vars + redeploy. `isEmailReady()` flips and
-`dispatchEmail()` starts sending live instead of capturing to the outbox. No
-code change. Templates are already approved via `/dev/emails`.
+**Templates:** waitlist confirmation, inquiry ack, new-lead notice (live).
+`verification` / `welcome` remain design stubs until M1 auth email wiring.
 
 ---
 
-## 🔒 Gate 2 — Payments (Stripe)
+## 🔒 Gate 2 — Payments (Stripe) — OPEN (non-blocking for waitlist)
 
-**Blocked on:** client provides Stripe keys.
+**Blocked on:** Stripe keys + webhook registration.
+
+**Does not block Sprint 0 / waitlist.** Checkout and webhook return 503 until
+configured. No customer booking UI depends on this yet (full book flow is M2).
 
 **Provide:**
 - `STRIPE_SECRET_KEY` (`sk_test_…` then `sk_live_…`)
@@ -54,8 +63,12 @@ code change. Templates are already approved via `/dev/emails`.
 - `STRIPE_WEBHOOK_SECRET` (`whsec_…`) — from the webhook endpoint you register
 
 **Setup once keys exist:**
-1. Register a webhook endpoint in Stripe → `https://<domain>/api/payments/webhook`, events `checkout.session.completed`, `checkout.session.expired`. Copy its signing secret into `STRIPE_WEBHOOK_SECRET`.
-2. Local test: `stripe listen --forward-to localhost:3000/api/payments/webhook`, then pay with test card `4242 4242 4242 4242`.
+1. Register a webhook endpoint in Stripe →  
+   `https://www.screwitpro.com/api/payments/webhook`  
+   events `checkout.session.completed`, `checkout.session.expired`.  
+   Copy its signing secret into `STRIPE_WEBHOOK_SECRET`.
+2. Local test: `stripe listen --forward-to localhost:3000/api/payments/webhook`,  
+   then pay with test card `4242 4242 4242 4242`.
 3. Verify the `orders` row flips to `deposit_paid` and a `payments` row is written.
 
 **Cutover:** `isStripeReady()` / `isStripeWebhookReady()` flip; checkout + webhook
@@ -63,30 +76,23 @@ routes go live. Card is saved off-session for the balance-at-delivery charge (M4
 
 ---
 
-## ✅ Gate 3 — People mirror to Users CRM Google Sheet (n8n) — DONE & LIVE
+## ✅ Gate 3 — People mirror to Users CRM Google Sheet (n8n) — CLOSED (prod)
 
-**Status:** built, configured, and **active**. Verified end-to-end (a waitlist
-signup wrote a correct row).
+**Status:** built, configured, and **active in production**. Verified end-to-end
+(a waitlist signup wrote a correct row). `N8N_CRM_WEBHOOK_URL` is set on Vercel.
 
-- Workflow: "ScrewIt Pros — Users CRM → Google Sheets" (`https://oncode.app.n8n.cloud/workflow/zRkcIerGqorr0zN7`), **active**.
-- Webhook path: `screwitpro-crm` → prod URL `https://oncode.app.n8n.cloud/webhook/screwitpro-crm`.
-- Sheet: **ScrewIt Pros — Users CRM** (`https://docs.google.com/spreadsheets/d/1Ye_dRK7Bi0MpddnbPhvRvHji2qg7H9oiIpnOCh1KgTk`), owned by oncodesoftware@gmail.com. Credential: "Oncode |Account".
+- Workflow: "ScrewIt Pros — Users CRM → Google Sheets"  
+  (`https://oncode.app.n8n.cloud/workflow/zRkcIerGqorr0zN7`), **active**.
+- Webhook path: `screwitpro-crm` → prod URL  
+  `https://oncode.app.n8n.cloud/webhook/screwitpro-crm`.
+- Sheet: **ScrewIt Pros — Users CRM**  
+  (`https://docs.google.com/spreadsheets/d/1Ye_dRK7Bi0MpddnbPhvRvHji2qg7H9oiIpnOCh1KgTk`).
 - Node operation: **append-or-update keyed on `email`** (upsert — no duplicate people).
 - Columns: `email, name, on_waitlist, provider, source, created_at, converted_at, user_id`.
 
-**Model:** one row per person. A waitlist entry and a "user" are the same person
-until conversion, so they share this sheet, distinguished by `on_waitlist`
-(TRUE = waiting, FALSE = converted). Both waitlist signups (`source=join`) and
-quote inquiries (`source=quote`) upsert here.
-
-**Wiring:** `N8N_CRM_WEBHOOK_URL` is set in local `.env.local`. **For production:
-add `N8N_CRM_WEBHOOK_URL=https://oncode.app.n8n.cloud/webhook/screwitpro-crm` to
-the deployed environment.** Unset = Supabase only, no error.
-
-**Note:** the sheet's first tab is named "Untitled" (gid `1098182048`); the
-workflow targets it by gid, so you can rename the tab to "Users" in the sheet UI
-without breaking anything. There is one leftover test row ("CRM Verify") — delete
-it whenever; it just confirms the pipe works.
+**Model:** one row per person. Waitlist entry and "user" share this sheet until
+conversion (`on_waitlist` TRUE = waiting, FALSE = converted). Both waitlist
+signups (`source=join`) and quote inquiries (`source=quote`) upsert here.
 
 **Later — flip on_waitlist to FALSE on conversion:** when a person becomes an
 active/serviced customer (M2 first order), POST the same webhook with
@@ -97,65 +103,94 @@ active/serviced customer (M2 first order), POST the same webhook with
 
 ---
 
-## 🔒 Gate 4 — Internal leads dashboard token
+## ✅ Gate 4 — Internal leads dashboard token — CLOSED (prod)
 
-**Blocked on:** nothing — just choose a token.
-
-**Provide:** `ADMIN_DASHBOARD_TOKEN` = any strong random string. Then open
-`/admin/leads?key=<token>`. Until M1 role-based auth lands, this shared token is
-the interim gate. Leave unset to keep the page disabled. (Set locally already.)
+**Status:** `ADMIN_DASHBOARD_TOKEN` set on Vercel (Preview + Production).  
+Open `/admin/leads?key=<token>`. Until M1 role-based auth lands, this shared
+token is the interim gate.
 
 ---
 
-## ✅ Gate 5 — Google Analytics (GA4) — CLOSED (local); production env still needed
+## ✅ Gate 5 — Google Analytics (GA4) — CLOSED (prod)
 
-**Status:** SEO + analytics **built and live locally**. `sitemap.ts`, `robots.ts`,
-JSON-LD (`LocalBusiness` + `WebSite`), GA4 loader, per-page metadata + noindex on
-private pages.
-
-Measurement ID **`G-42LFZYNNQ2`** is set in `.env.local`. Verified in a real
-browser: gtag injects post-hydration, `window.gtag` is a function, and
-`POST google-analytics.com/g/collect?...&tid=G-42LFZYNNQ2&en=page_view` returns
-**204**. Data is collecting.
-
-**Remaining:** set `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=G-42LFZYNNQ2` in the
-**production (Vercel) env** — `.env.local` is gitignored and does not deploy.
+**Status:** SEO + analytics built; Measurement ID **`G-42LFZYNNQ2`** set on
+Vercel as `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID`. Collecting in production.
 
 **Stream URL is just a label.** GA4 never verifies domain ownership (that's Search
-Console). The Measurement ID binds to the *data stream*, not the domain, so the
-property was created against the Vercel URL. At domain cutover, edit
-Admin → Data streams → stream URL. The ID does not change and no code changes.
+Console). The Measurement ID binds to the *data stream*, not the domain. After
+domain cutover, update the stream website URL in the GA4 console to
+`https://www.screwitpro.com` (see steps in `SPRINT-0-STATUS.md` / below). The
+ID does not change and no code changes.
+
+### How to update the GA4 stream to the real domain
+
+1. Open [Google Analytics](https://analytics.google.com/) → select the ScrewIt property.
+2. Bottom-left **Admin** (gear).
+3. Under **Data collection and modification** (or property column) → **Data streams**.
+4. Click the **Web** stream that uses measurement ID `G-42LFZYNNQ2`.
+5. Click the pencil / edit control next to **Stream details** (or **Website URL**).
+6. Set **Website URL** to `https://www.screwitpro.com` (match production; www is canonical).
+7. Save. No redeploy required — hits already use the Measurement ID.
 
 **Recommended GA4 console settings** (not code, do once):
 - **Data retention → 14 months** (Admin → Data retention). Defaults to 2 months and is **not retroactive**.
-- **Add `stripe.com` to unwanted referrals** (Admin → Data streams → Configure tag settings). Checkout sends users to Stripe and back; without this, Stripe gets credited as the referral source and clobbers real attribution.
-- Expect a hostname split in historical data: pre-cutover hits record the `vercel.app` host, post-cutover the real domain.
+- **Add `stripe.com` to unwanted referrals** (Admin → Data streams → Configure tag settings → List unwanted referrals). Checkout sends users to Stripe and back; without this, Stripe gets credited as the referral source.
+- Expect a hostname split in historical data: pre-cutover hits may show `vercel.app`; post-cutover show `www.screwitpro.com`.
 
 **Note:** `anonymize_ip` is deliberately **not** passed. GA4 anonymizes IPs
 unconditionally; passing it makes gtag send it as a custom event parameter
 (`ep.anonymize_ip=true`) on every hit while doing nothing for privacy.
 
-**Domain cutover (one env var, flips everything):** set `NEXT_PUBLIC_APP_URL` to
-the real domain → all canonical URLs, Open Graph URLs, `sitemap.xml`, `robots.txt`
-sitemap line, and JSON-LD URLs update at once. Until then they read `localhost`.
+---
+
+## ✅ Domain cutover — CLOSED
+
+**Status:** `NEXT_PUBLIC_APP_URL` set on Vercel to **`https://www.screwitpro.com`**.
+
+Verified live: `/robots.txt` host + `/sitemap.xml` locs all use
+`https://www.screwitpro.com`. Apex `screwitpro.com` 308s to www.
+
+This single var drives canonical URLs, Open Graph, sitemap, robots host,
+JSON-LD, OAuth redirect origin, and (when Gate 2 opens) Stripe return URLs.
 
 ---
 
-## Deferred to M1+ (per docs/ARCHITECTURE-PLAN.md)
+## Deferred / optional
 
-- Replace hand-rolled Google OAuth (`sip_session`) with Supabase OAuth + role hook.
-- Sign-in / password-reset / logout; email verification wired into signup (templates already built: `verification`, `welcome`).
-- 13 canonical migrations; the interim `orders`/`payments`/`inquiries` tables are forward-compatible subsets that M1 extends.
+### Team notify (optional — deferred at low volume)
+
+| Env | Purpose |
+|---|---|
+| `TEAM_NOTIFY_EMAILS` | Comma-separated team inboxes for new-lead notices |
+| `INQUIRY_NOTIFY_EMAIL` | Legacy single-address fallback |
+
+Unset = no team ping; customer confirmation + Supabase + CRM + admin still work.
+Enable when lead volume or SLA needs inbox alerts.
+
+### Deferred to M1+ (per docs/ARCHITECTURE-PLAN.md)
+
+- Full portal route groups + role middleware (token admin is interim).
+- Sign-in / password-reset pages; email verification wired into signup
+  (`verification` / `welcome` templates already designed).
+- 13 canonical ops migrations; interim `orders` / `payments` / `inquiries` are
+  forward-compatible subsets that M1 extends.
 - Role-based guards replace the `ADMIN_DASHBOARD_TOKEN` gate.
+- CRM `on_waitlist=FALSE` flip on first serviced order (M2).
 
 ---
 
-## "Ready to flip" checklist
+## Scoreboard / "ready to operate" checklist
 
-- [x] Supabase migrations applied (`inquiries`, `orders_payments_interim`) — applied via psql
-- [x] Gate 3: Users CRM sheet created + n8n workflow active + `N8N_CRM_WEBHOOK_URL` set locally — **add it to the production env too**
-- [ ] Gate 1: `RESEND_API_KEY` + `RESEND_FROM_EMAIL` set → live email
-- [ ] Gate 2: Stripe keys + webhook endpoint registered → live payments
-- [x] Gate 4: `ADMIN_DASHBOARD_TOKEN` set locally → leads dashboard accessible — **add to production env too**
-- [x] Gate 5: `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=G-42LFZYNNQ2` set locally → analytics verified collecting (204 on `/g/collect`) — **add to production env too**
-- [ ] Domain cutover: set `NEXT_PUBLIC_APP_URL` to the real domain → canonical/OG/sitemap/JSON-LD URLs all update
+- [x] Supabase migrations applied (`inquiries`, `orders_payments_interim`, `email_log`)
+- [x] **Gate 1:** Resend live in prod → customer emails sending
+- [ ] **Gate 2:** Stripe keys + webhook → live payments (**open — non-blocking**)
+- [x] **Gate 3:** n8n CRM webhook live in prod → sheet rows on join
+- [x] **Gate 4:** `ADMIN_DASHBOARD_TOKEN` in prod → leads dashboard
+- [x] **Gate 5:** `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` in prod → GA4 collecting
+- [x] **Domain:** `NEXT_PUBLIC_APP_URL=https://www.screwitpro.com`
+- [ ] **Optional:** `TEAM_NOTIFY_EMAILS` when volume warrants team pings
+- [ ] **Optional:** GA4 stream Website URL label → `https://www.screwitpro.com`
+- [ ] **Optional:** GA4 data retention 14 months + `stripe.com` unwanted referral
+
+**Sprint 0 operate-as-waitlist: YES.**  
+**Next product phase: M1 (or Gate 2 when you want deposits).**
