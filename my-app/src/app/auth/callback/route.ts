@@ -30,6 +30,16 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const oauthError = searchParams.get("error");
 
+  // Boundary trace. If NOTHING from [auth/callback] appears in the dev server
+  // log after a Google sign-in, this route was never reached — Supabase sent the
+  // browser to the Site URL instead, which means /auth/callback is missing from
+  // Authentication → URL Configuration → Redirect URLs.
+  console.info(
+    `[auth/callback] hit origin=${origin} code=${code ? "present" : "MISSING"} error=${
+      oauthError ?? "none"
+    }`
+  );
+
   if (oauthError) {
     return NextResponse.redirect(
       `${origin}/join?error=${encodeURIComponent(oauthError)}`
@@ -51,9 +61,18 @@ export async function GET(request: Request) {
   const user = data?.user;
 
   if (error || !user?.email) {
-    console.error("[auth/callback] exchange", error?.message);
+    // A PKCE verifier-cookie mismatch lands here ("both auth code and code
+    // verifier should be non-empty") — it means the flow started on a different
+    // origin than it returned to, not that Google rejected the user.
+    console.error(
+      `[auth/callback] exchange FAILED — ${error?.message ?? "no user email on session"}`
+    );
     return NextResponse.redirect(`${origin}/join?error=auth_failed`);
   }
+
+  console.info(
+    `[auth/callback] session established for ${user.email} — waitlistReady=${isWaitlistBackendReady()}`
+  );
 
   const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
   const name =
@@ -69,7 +88,7 @@ export async function GET(request: Request) {
   // what flips a waitlist lead into a converted user (converted_user_id).
   if (isWaitlistBackendReady()) {
     try {
-      await upsertWaitlistEntry({
+      const entry = await upsertWaitlistEntry({
         email: user.email,
         name,
         picture,
@@ -77,6 +96,10 @@ export async function GET(request: Request) {
         source: "join_google",
         convertedUserId: user.id,
       });
+      // created=false means a re-join: no email and no CRM mirror, by design.
+      console.info(
+        `[auth/callback] waitlist upsert ok created=${entry.created} position=${entry.position}`
+      );
     } catch (e) {
       if (e instanceof WaitlistConfigError) {
         return NextResponse.redirect(
