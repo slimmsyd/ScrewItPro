@@ -1,7 +1,9 @@
 import { z } from "zod";
-import { getEnvStatus } from "@/lib/env";
+import { getEnvStatus, serverEnv } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { forwardUserToN8n } from "@/lib/crm";
+import { dispatchEmail } from "@/lib/emails/dispatch";
+import { newLeadNotice, waitlistConfirmation } from "@/lib/emails/templates";
 
 export const waitlistProviders = ["email", "google", "apple"] as const;
 export type WaitlistProvider = (typeof waitlistProviders)[number];
@@ -70,6 +72,62 @@ async function mirrorNewWaitlistLeadToCrm(opts: {
     createdAt: new Date().toISOString(),
     userId: opts.userId ?? null,
   });
+}
+
+/**
+ * Confirmation to the person who joined + new-lead ping to the team.
+ *
+ * Lives here rather than in the route because THREE paths create waitlist
+ * entries — /api/waitlist, /api/auth/signup, and the OAuth /auth/callback —
+ * and only the first one used to send mail. A Google sign-in produced a CRM
+ * row and no email. Co-locating the sends with the CRM mirror inside the
+ * `if (created)` block makes all three behave identically by construction.
+ *
+ * dispatchEmail never throws, so no try/catch is needed: a mail outage cannot
+ * break a signup.
+ */
+async function sendNewWaitlistLeadEmails(opts: {
+  email: string;
+  name: string | null;
+  position: number;
+  provider: WaitlistProvider;
+  source: string;
+}): Promise<void> {
+  console.info(
+    `[waitlist] sending lead emails email=${opts.email} position=${opts.position} source=${opts.source}`
+  );
+
+  await dispatchEmail(
+    opts.email,
+    waitlistConfirmation({ name: opts.name, position: opts.position }),
+    {
+      payload: {
+        position: opts.position,
+        provider: opts.provider,
+        source: opts.source,
+      },
+    }
+  );
+
+  const teamTo = serverEnv.teamNotifyEmails;
+  if (teamTo.length === 0) {
+    console.info(
+      "[waitlist] (no team notice — TEAM_NOTIFY_EMAILS unset) email=" + opts.email
+    );
+    return;
+  }
+
+  await dispatchEmail(
+    teamTo,
+    newLeadNotice({
+      name: opts.name,
+      email: opts.email,
+      source: opts.source,
+      message: `Joined the waitlist at position #${opts.position} via ${opts.provider}.`,
+    }),
+    // replyTo lets the team answer the lead directly from the notification.
+    { replyTo: opts.email, payload: { position: opts.position } }
+  );
 }
 
 /**
@@ -196,6 +254,13 @@ export async function upsertWaitlistEntry(
         created = false;
         provider = raced.provider as WaitlistProvider;
         const position = await getWaitlistPosition(emailNormalized);
+        // Early return: this path deliberately skips the CRM mirror AND the
+        // emails, because another concurrent request already ran them. If a row
+        // exists with no email_log row and no CRM entry, THIS is where it went —
+        // two overlapping requests for the same email.
+        console.warn(
+          `[waitlist] unique-conflict race email=${parsed.email} — side effects skipped (another request won)`
+        );
         return {
           id,
           email: parsed.email,
@@ -218,7 +283,19 @@ export async function upsertWaitlistEntry(
   const position = await getWaitlistPosition(emailNormalized);
 
   // Every first-time waitlist enrollment (email signup, Google OAuth, /api/waitlist)
-  // mirrors into the CRM sheet via n8n. Re-joins skip (created === false).
+  // mirrors into the CRM sheet via n8n AND sends the confirmation + team notice.
+  // Re-joins skip all of it (created === false), which is what keeps a re-join
+  // from re-sending mail or duplicating the CRM row.
+  //
+  // Fan-out, not a pipeline: the Supabase write above is the trigger for both
+  // legs, and each swallows its own failures. n8n down still sends the email;
+  // Resend down still updates the sheet. Neither can fail a signup.
+  console.info(
+    `[waitlist] upsert done email=${parsed.email} created=${created} position=${position} — side effects ${
+      created ? "WILL run" : "SKIPPED (re-join)"
+    }`
+  );
+
   if (created) {
     await mirrorNewWaitlistLeadToCrm({
       email: parsed.email,
@@ -226,6 +303,14 @@ export async function upsertWaitlistEntry(
       provider,
       source: parsed.source,
       userId: parsed.convertedUserId ?? null,
+    });
+
+    await sendNewWaitlistLeadEmails({
+      email: parsed.email,
+      name,
+      position,
+      provider,
+      source: parsed.source,
     });
   }
 

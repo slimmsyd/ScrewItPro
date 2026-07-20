@@ -24,6 +24,7 @@ change.**
 ### Database migrations to apply (Supabase SQL Editor or `supabase db push`)
 - `supabase/migrations/20260715120000_inquiries.sql` — lead capture table
 - `supabase/migrations/20260715140000_orders_payments_interim.sql` — deposit-checkout tables
+- `supabase/migrations/20260720120000_email_log.sql` — email send log + reminder idempotency guard — **applied via psql 2026-07-20**
 
 ---
 
