@@ -15,7 +15,24 @@ import {
   renderLayout,
 } from "./layout";
 
+/**
+ * Stable identifier for a template, carried by the rendered email itself.
+ *
+ * Lives on the template (not the call site) so a code can never be mismatched
+ * to the body it labels. Persisted to `email_log.template_code`, where it is
+ * both the diagnostic discriminator and the reminder idempotency key
+ * ("has code X already been sent for order Y?"). Codes are therefore append-only
+ * and must never be renamed once a row exists carrying one.
+ */
+export type EmailTemplateCode =
+  | "waitlist-confirmation"
+  | "inquiry-ack"
+  | "new-lead-notice"
+  | "verification"
+  | "welcome";
+
 export type RenderedEmail = {
+  code: EmailTemplateCode;
   subject: string;
   html: string;
   text: string;
@@ -40,14 +57,14 @@ export function waitlistConfirmation(
           `You're currently <strong style="color:${brand.blueDeep};">#${data.position}</strong> in line. We'll email you the moment your spot opens up.`
         )
       : paragraph(
-          "We'll email you the moment your spot opens up — no need to check back."
+          "We'll email you the moment your spot opens up. No need to check back."
         );
 
   const body = `
     ${heading("You're on the list! 🎉")}
     ${paragraph(greeting)}
     ${paragraph(
-      "Thanks for joining the ScrewIt Pros private beta. We're building the easiest way to get flat-pack furniture assembled and delivered — fully built and placed in your home."
+      "Thanks for joining the ScrewIt Pros private beta. We're building the easiest way to get flat-pack furniture assembled and delivered, fully built and placed in your home."
     )}
     ${spot}
     ${paragraph(
@@ -57,9 +74,10 @@ export function waitlistConfirmation(
   `;
 
   return {
+    code: "waitlist-confirmation",
     subject: "You're on the ScrewIt Pros waitlist ✅",
     html: renderLayout(body, {
-      preheader: "Your spot is saved — here's what happens next.",
+      preheader: "Your spot is saved. Here's what happens next.",
     }),
     text: [
       "You're on the list!",
@@ -103,14 +121,15 @@ export function inquiryAck(data: InquiryAckData = {}): RenderedEmail {
     )}
     ${svc}
     ${paragraph(
-      "If you need to add anything, just reply to this email — it comes straight to us."
+      "If you need to add anything, just reply to this email and it comes straight to us."
     )}
   `;
 
   return {
+    code: "inquiry-ack",
     subject: "We received your ScrewIt Pros request",
     html: renderLayout(body, {
-      preheader: "Thanks — a team member will be in touch shortly.",
+      preheader: "Thanks! A team member will be in touch shortly.",
     }),
     text: [
       "We got your request",
@@ -141,11 +160,11 @@ export type NewLeadData = {
 
 export function newLeadNotice(data: NewLeadData): RenderedEmail {
   const rows: Array<[string, string]> = [
-    ["Name", data.name || "—"],
+    ["Name", data.name || "Not provided"],
     ["Email", data.email],
-    ["Service", data.service || "—"],
-    ["Source", data.source || "—"],
-    ["Message", data.message || "—"],
+    ["Service", data.service || "Not provided"],
+    ["Source", data.source || "Not provided"],
+    ["Message", data.message || "Not provided"],
   ];
 
   const table = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${brand.gray200};border-radius:10px;overflow:hidden;">
@@ -176,8 +195,9 @@ export function newLeadNotice(data: NewLeadData): RenderedEmail {
   `;
 
   return {
+    code: "new-lead-notice",
     subject: `New lead: ${data.name || data.email}${
-      data.service ? ` — ${data.service}` : ""
+      data.service ? ` (${data.service})` : ""
     }`,
     html: renderLayout(body, { preheader: `New inquiry from ${data.email}` }),
     text: rows.map(([k, v]) => `${k}: ${v}`).join("\n"),
@@ -209,6 +229,7 @@ export function verification(data: VerificationData): RenderedEmail {
     )}
   `;
   return {
+    code: "verification",
     subject: "Confirm your ScrewIt Pros email",
     html: renderLayout(body, { preheader: "One click to activate your account." }),
     text: `${greeting}\n\nConfirm your email to activate your account:\n${data.verifyUrl}\n\nThis link expires in 24 hours.`,
@@ -234,6 +255,7 @@ export function welcome(data: WelcomeData = {}): RenderedEmail {
     ${button("Get started", process.env.NEXT_PUBLIC_APP_URL ?? "https://screwitpros.com")}
   `;
   return {
+    code: "welcome",
     subject: "Welcome to ScrewIt Pros 🎉",
     html: renderLayout(body, { preheader: "Your account is ready." }),
     text: `${greeting}\n\nYour ScrewIt Pros account is active. You're all set to book assembly + white-glove delivery.`,
@@ -245,20 +267,20 @@ export function welcome(data: WelcomeData = {}): RenderedEmail {
 /* ------------------------------------------------------------------ */
 
 /** Every template with sample data, for the in-browser preview gallery. */
-export const emailPreviews = [
+const previewSamples: ReadonlyArray<{
+  label: string;
+  render: () => RenderedEmail;
+}> = [
   {
-    key: "waitlist-confirmation",
     label: "Waitlist confirmation",
     render: () => waitlistConfirmation({ name: "Jordan", position: 42 }),
   },
   {
-    key: "inquiry-ack",
     label: "Inquiry acknowledgement (customer)",
     render: () =>
       inquiryAck({ name: "Jordan", service: "Large furniture assembly" }),
   },
   {
-    key: "new-lead-notice",
     label: "New lead notice (internal)",
     render: () =>
       newLeadNotice({
@@ -270,7 +292,6 @@ export const emailPreviews = [
       }),
   },
   {
-    key: "verification",
     label: "Email verification",
     render: () =>
       verification({
@@ -279,10 +300,16 @@ export const emailPreviews = [
       }),
   },
   {
-    key: "welcome",
     label: "Welcome",
     render: () => welcome({ name: "Jordan" }),
   },
-] as const;
+];
 
-export type EmailPreviewKey = (typeof emailPreviews)[number]["key"];
+// `key` is DERIVED from what the template actually returns rather than written
+// alongside it, so a preview can never be labelled with a code it doesn't render.
+export const emailPreviews = previewSamples.map((sample) => ({
+  ...sample,
+  key: sample.render().code,
+}));
+
+export type EmailPreviewKey = EmailTemplateCode;
