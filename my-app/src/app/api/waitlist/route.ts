@@ -7,8 +7,6 @@ import {
   WaitlistDbError,
   waitlistSignupSchema,
 } from "@/lib/waitlist";
-import { dispatchEmail } from "@/lib/emails/dispatch";
-import { waitlistConfirmation } from "@/lib/emails/templates";
 
 /**
  * POST /api/waitlist
@@ -47,17 +45,10 @@ export async function POST(request: Request) {
       convertedUserId: raw.convertedUserId ?? raw.converted_user_id ?? null,
     });
 
+    // First-join side effects (confirmation email, team notice, CRM sheet mirror)
+    // all run inside upsertWaitlistEntry, so this route, email signup, and the
+    // Google OAuth callback behave identically.
     const result = await upsertWaitlistEntry(input);
-
-    // Send (or capture, while Resend is gated) the waitlist confirmation.
-    // CRM sheet mirror runs inside upsertWaitlistEntry on first join only
-    // (shared by email signup, Google OAuth, and this route).
-    if (result.created) {
-      await dispatchEmail(
-        result.email,
-        waitlistConfirmation({ name: input.name, position: result.position })
-      );
-    }
 
     return NextResponse.json(
       {

@@ -8,6 +8,7 @@ import {
   InquiryDbError,
 } from "@/lib/inquiries";
 import { forwardUserToN8n } from "@/lib/crm";
+import { serverEnv } from "@/lib/env";
 import { dispatchEmail } from "@/lib/emails/dispatch";
 import { inquiryAck, newLeadNotice } from "@/lib/emails/templates";
 
@@ -64,10 +65,13 @@ export async function POST(request: Request) {
     // Customer acknowledgement + internal new-lead notice.
     await dispatchEmail(
       inquiry.email,
-      inquiryAck({ name: input.name, service: input.service })
+      inquiryAck({ name: input.name, service: input.service }),
+      { inquiryId: inquiry.id }
     );
-    const internalTo = process.env.INQUIRY_NOTIFY_EMAIL;
-    if (internalTo) {
+    // Same accessor the waitlist path uses, so both lead sources notify the same
+    // list. Still honours INQUIRY_NOTIFY_EMAIL as a fallback.
+    const internalTo = serverEnv.teamNotifyEmails;
+    if (internalTo.length > 0) {
       await dispatchEmail(
         internalTo,
         newLeadNotice({
@@ -77,7 +81,7 @@ export async function POST(request: Request) {
           message: input.message,
           source: inquiry.source,
         }),
-        { replyTo: inquiry.email }
+        { replyTo: inquiry.email, inquiryId: inquiry.id }
       );
     }
 

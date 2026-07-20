@@ -69,6 +69,21 @@ export const serverEnv = {
  get n8nCrmWebhookUrl() {
  return getEnv("N8N_CRM_WEBHOOK_URL", true);
  },
+ /**
+  * Internal recipients for new-lead notifications (waitlist joins + inquiries).
+  * Comma-separated — Resend accepts an array in `to`, so the ops list can
+  * change without a code deploy.
+  * Falls back to the older INQUIRY_NOTIFY_EMAIL so existing envs keep working.
+  * Optional: empty means no team notification is sent.
+  */
+ get teamNotifyEmails(): string[] {
+ const raw =
+ process.env.TEAM_NOTIFY_EMAILS ?? process.env.INQUIRY_NOTIFY_EMAIL ?? "";
+ return raw
+ .split(",")
+ .map((e) => e.trim())
+ .filter(Boolean);
+ },
 } as const;
 
 /** Which integrations have non-empty env values (no secrets exposed). */
@@ -114,6 +129,14 @@ export function getEnvStatus() {
  },
  n8n: {
  crmWebhookConfigured: has("N8N_CRM_WEBHOOK_URL"),
+ },
+ notifications: {
+ // Whether anyone is actually pinged on a new lead. Previously invisible:
+ // INQUIRY_NOTIFY_EMAIL was read straight from process.env and reported nowhere,
+ // so a silent typo meant no team ever knew leads were arriving.
+ teamNotifyConfigured:
+ has("TEAM_NOTIFY_EMAILS") || has("INQUIRY_NOTIFY_EMAIL"),
+ teamNotifyCount: serverEnv.teamNotifyEmails.length,
  },
  };
 }
