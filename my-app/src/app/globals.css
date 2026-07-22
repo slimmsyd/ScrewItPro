@@ -1058,6 +1058,35 @@ header[id] {
   cursor: pointer;
 }
 
+/* Voice equalizer bars inside the task textarea (home mode) */
+@keyframes quoteEq {
+  from {
+    transform: scaleY(0.45);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.quote-eq-bar {
+  display: inline-block;
+  transform-origin: bottom center;
+  will-change: transform;
+}
+
+/* Focus ring on the composite voice field (border lives on the wrapper) */
+.quote-voice-field:focus-within:not([data-listening="true"]) {
+  border-color: var(--blue-electric) !important;
+  box-shadow: 0 0 0 4px rgba(29, 110, 254, 0.12) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quote-eq-bar {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
 /* Visually hidden but available to screen readers */
 .sr-only {
   position: absolute;

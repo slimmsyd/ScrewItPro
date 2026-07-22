@@ -578,44 +578,145 @@ function HomeMode({ onAdd }: { onAdd: (item: QuoteItem) => void }) {
         </button>
       </div>
 
-      <FieldLabel htmlFor="home-details">Tell us about the task</FieldLabel>
-      <div style={{ position: "relative", marginBottom: 16 }}>
+      <FieldLabel htmlFor="home-details">
+        Tell us about the task{" "}
+        <span
+          style={{
+            fontWeight: 500,
+            textTransform: "none",
+            letterSpacing: 0,
+            color: "var(--ink-300)",
+          }}
+        >
+          (type or talk)
+        </span>
+      </FieldLabel>
+      {/*
+        Composite field (handoff TaskVoice): border on the wrapper so the mic
+        sits inside the input. Never put margin on the textarea or absolute
+        bottom/right lands outside the visible field.
+      */}
+      <div
+        className="quote-voice-field"
+        data-listening={listening ? "true" : "false"}
+        style={{
+          position: "relative",
+          marginBottom: 16,
+          borderRadius: 10,
+          border: `1.5px solid ${
+            listening ? "var(--blue-electric)" : "var(--border-default)"
+          }`,
+          boxShadow: listening ? "0 0 0 4px rgba(29,110,254,.12)" : "none",
+          background: "#fff",
+          transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+        }}
+      >
         <textarea
           id="home-details"
           value={details}
           onChange={(e) => setDetails(e.target.value)}
           rows={4}
           placeholder="Stairs? Missing hardware? Anything we should know…"
-          style={{ ...inputStyle, resize: "vertical", minHeight: 100, paddingRight: 52 }}
+          aria-describedby={listening ? "home-details-listening" : undefined}
+          style={{
+            display: "block",
+            width: "100%",
+            minHeight: 112,
+            boxSizing: "border-box",
+            border: "none",
+            outline: "none",
+            resize: "vertical",
+            margin: 0,
+            padding: listening ? "14px 56px 40px 15px" : "14px 56px 14px 15px",
+            fontSize: 15,
+            fontFamily: "var(--font-body)",
+            lineHeight: 1.55,
+            color: "var(--ink-900)",
+            background: "transparent",
+            borderRadius: 10,
+          }}
         />
         <button
           type="button"
-          title={listening ? "Stop" : "Talk to describe it"}
+          title={listening ? "Stop listening" : "Talk to describe it"}
           aria-label={listening ? "Stop listening" : "Voice input"}
+          aria-pressed={listening}
           onClick={toggleVoice}
+          className="quote-tap"
           style={{
             position: "absolute",
             right: 12,
             bottom: 12,
             width: 40,
             height: 40,
+            minWidth: 40,
+            minHeight: 40,
             borderRadius: 999,
             border: "none",
             cursor: "pointer",
-            background: listening ? "var(--status-error)" : "var(--blue-electric)",
-            color: "#fff",
+            background: listening ? "var(--blue-electric)" : "var(--blue-50)",
+            color: listening ? "#fff" : "var(--blue-electric)",
             display: "grid",
             placeItems: "center",
+            boxShadow: listening ? "0 0 0 6px rgba(29,110,254,.16)" : "none",
+            zIndex: 2,
+            transition: "background 0.15s ease, box-shadow 0.15s ease",
           }}
         >
-          {listening ? <Square size={14} fill="#fff" /> : <Mic size={16} />}
+          {listening ? (
+            <Square size={14} fill="currentColor" color="currentColor" />
+          ) : (
+            <Mic size={18} color="var(--blue-electric)" />
+          )}
         </button>
+        {listening && (
+          <div
+            id="home-details-listening"
+            role="status"
+            aria-live="polite"
+            style={{
+              position: "absolute",
+              left: 15,
+              bottom: 16,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontFamily: "var(--font-body)",
+              fontSize: 12.5,
+              fontWeight: 600,
+              color: "var(--blue-electric)",
+              pointerEvents: "none",
+              zIndex: 1,
+              maxWidth: "calc(100% - 68px)",
+            }}
+          >
+            <span
+              aria-hidden
+              style={{
+                display: "inline-flex",
+                gap: 3,
+                alignItems: "flex-end",
+                height: 16,
+              }}
+            >
+              {[10, 16, 7, 13].map((h, i) => (
+                <span
+                  key={i}
+                  className="quote-eq-bar"
+                  style={{
+                    width: 3,
+                    height: h,
+                    borderRadius: 2,
+                    background: "var(--blue-electric)",
+                    animation: `quoteEq 0.8s ease-in-out ${i * 0.12}s infinite alternate`,
+                  }}
+                />
+              ))}
+            </span>
+            Listening… tap mic to stop
+          </div>
+        )}
       </div>
-      {listening && (
-        <p style={{ fontSize: 13, color: "var(--blue-electric)", margin: "-8px 0 16px", fontWeight: 600 }}>
-          Listening… tap mic to stop
-        </p>
-      )}
 
       <div
         style={{
