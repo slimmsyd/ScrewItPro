@@ -1,0 +1,418 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  BadgeCheck,
+  Home,
+  Package,
+  Truck,
+} from "lucide-react";
+import QuoteShell from "@/components/quote/QuoteShell";
+import PaymentAside from "@/components/quote/PaymentAside";
+import ScreenTransition from "@/components/quote/ScreenTransition";
+import { useQuote } from "@/lib/quote/context";
+import { formatUsd } from "@/lib/quote/pricing";
+import { JOIN_PATH, QUOTE_ITEMS_PATH } from "@/lib/site";
+import { useIsMobile } from "@/hooks/useIsMobile";
+
+export default function PriceStep() {
+  const router = useRouter();
+  const mobile = useIsMobile();
+  const { draft, totals, canProceedFromItems, hydrated } = useQuote();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [softGate, setSoftGate] = useState(false);
+
+  useEffect(() => {
+    if (hydrated && !canProceedFromItems) {
+      router.replace(QUOTE_ITEMS_PATH);
+    }
+  }, [hydrated, canProceedFromItems, router]);
+
+  const book = async () => {
+    if (!canProceedFromItems || totals.subtotalCents <= 0) {
+      router.push(QUOTE_ITEMS_PATH);
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const readyRes = await fetch("/api/payments/checkout");
+      const readyJson = (await readyRes.json()) as { ready?: boolean };
+      if (!readyJson.ready) {
+        setSoftGate(true);
+        setBusy(false);
+        return;
+      }
+
+      const description = draft.items
+        .map((i) => i.name)
+        .slice(0, 3)
+        .join(", ");
+
+      const res = await fetch("/api/payments/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          totalCents: totals.subtotalCents,
+          description: `ScrewIt build: ${description}`,
+        }),
+      });
+      const json = (await res.json()) as {
+        ok?: boolean;
+        url?: string;
+        message?: string;
+        error?: string;
+      };
+
+      if (!res.ok || !json.ok || !json.url) {
+        if (json.error === "stripe_not_configured") {
+          setSoftGate(true);
+        } else {
+          setError(json.message ?? "Could not start checkout.");
+        }
+        setBusy(false);
+        return;
+      }
+      window.location.href = json.url;
+    } catch {
+      setError("Network error. Please try again.");
+      setBusy(false);
+    }
+  };
+
+  const lines = [
+    {
+      icon: Package,
+      label: `Assembly · ${totals.itemCount} item${totals.itemCount === 1 ? "" : "s"}`,
+      sub: draft.items.map((i) => i.name).join(" · ") || "Furniture assembly",
+      cents: totals.assemblyCents,
+    },
+    ...(draft.pickupMode === "pickup"
+      ? [
+          {
+            icon: Truck,
+            label: "Pickup · Houston Metro",
+            sub: draft.pickupAddress?.formattedAddress ?? "From your address",
+            cents: totals.pickupCents,
+          },
+        ]
+      : [
+          {
+            icon: Package,
+            label: "Inbound · Ship to hub",
+            sub: "You ship boxes to our workshop",
+            cents: 0,
+          },
+        ]),
+    {
+      icon: Home,
+      label: "Delivery · assembled & placed",
+      sub: draft.deliveryAddress?.formattedAddress ?? "White-glove delivery",
+      cents: totals.deliveryCents,
+    },
+  ];
+
+  const payment = (
+    <PaymentAside
+      totals={totals}
+      cta="Book my build"
+      ctaDisabled={!canProceedFromItems}
+      ctaBusy={busy}
+      onCta={() => void book()}
+      subcaption="Create your account at checkout · 30 seconds."
+    />
+  );
+
+  return (
+    <QuoteShell
+      step={2}
+      aside={payment}
+      mobileBar={
+        <div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: 10,
+              fontFamily: "var(--font-body)",
+            }}
+          >
+            <span style={{ fontSize: 13, color: "var(--ink-500)", fontWeight: 600 }}>
+              Due today (30%)
+            </span>
+            <span
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: 22,
+                color: "var(--blue-deep)",
+              }}
+            >
+              {formatUsd(totals.depositCents)}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => void book()}
+            disabled={busy || !canProceedFromItems}
+            style={{
+              width: "100%",
+              height: 48,
+              borderRadius: 9,
+              border: "none",
+              background: "var(--blue-electric)",
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: 15,
+              cursor: busy ? "wait" : "pointer",
+              opacity: canProceedFromItems ? 1 : 0.5,
+            }}
+          >
+            {busy ? "Starting checkout…" : "Book my build →"}
+          </button>
+        </div>
+      }
+    >
+      <ScreenTransition>
+        <div
+          style={{
+            background: mobile ? "transparent" : "var(--gray-50)",
+            margin: mobile ? 0 : "-34px -40px",
+            padding: mobile ? 0 : "34px 40px",
+            minHeight: "100%",
+          }}
+        >
+          <Link
+            href={QUOTE_ITEMS_PATH}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 13.5,
+              color: "var(--ink-500)",
+              textDecoration: "none",
+              marginBottom: 18,
+            }}
+          >
+            <ArrowLeft size={16} /> Back
+          </Link>
+
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              color: "var(--status-success)",
+              fontSize: 12,
+              fontWeight: 800,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              marginBottom: 10,
+            }}
+          >
+            <BadgeCheck size={18} />
+            Instant quote · No hidden fees
+          </div>
+
+          <h1
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 400,
+              fontSize: mobile ? 30 : 38,
+              letterSpacing: "-0.02em",
+              color: "var(--blue-deep)",
+              margin: "0 0 22px",
+            }}
+          >
+            Here&apos;s your honest breakdown
+          </h1>
+
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 12,
+              border: "1px solid var(--border-default)",
+              maxWidth: 600,
+              padding: "8px 20px",
+            }}
+          >
+            {lines.map((line, i) => {
+              const Icon = line.icon;
+              return (
+                <div
+                  key={line.label}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 14,
+                    padding: "16px 0",
+                    borderBottom:
+                      i < lines.length - 1 ? "1px solid var(--gray-100)" : "none",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: 11,
+                      background: "var(--blue-50)",
+                      display: "grid",
+                      placeItems: "center",
+                      flex: "0 0 auto",
+                    }}
+                  >
+                    <Icon size={20} color="var(--blue-electric)" />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontWeight: 700,
+                        fontSize: 14.5,
+                        color: "var(--ink-900)",
+                      }}
+                    >
+                      {line.label}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        color: "var(--ink-500)",
+                        marginTop: 2,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {line.sub}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      fontWeight: 700,
+                      fontSize: 15,
+                      color: "var(--ink-900)",
+                      flex: "0 0 auto",
+                    }}
+                  >
+                    {line.cents === 0 ? "Free" : formatUsd(line.cents)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <p
+            style={{
+              marginTop: 16,
+              fontSize: 13.5,
+              color: "var(--ink-500)",
+              maxWidth: 480,
+            }}
+          >
+            This is the whole price. What you see is what you pay.
+          </p>
+
+          {error && (
+            <p role="alert" style={{ marginTop: 12, color: "var(--status-error)", fontWeight: 600 }}>
+              {error}
+            </p>
+          )}
+
+          {mobile && (
+            <div style={{ marginTop: 28 }}>
+              <PaymentAside
+                totals={totals}
+                cta="Book my build"
+                ctaDisabled={!canProceedFromItems}
+                ctaBusy={busy}
+                onCta={() => void book()}
+                subcaption="Create your account at checkout · 30 seconds."
+              />
+            </div>
+          )}
+        </div>
+      </ScreenTransition>
+
+      {softGate && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="soft-gate-title"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 100,
+            background: "rgba(11,16,48,0.45)",
+            display: "grid",
+            placeItems: "center",
+            padding: 20,
+          }}
+          onClick={() => setSoftGate(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#fff",
+              borderRadius: 16,
+              padding: 28,
+              maxWidth: 400,
+              width: "100%",
+              boxShadow: "var(--shadow-lg)",
+            }}
+          >
+            <h2
+              id="soft-gate-title"
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: 24,
+                color: "var(--blue-deep)",
+                margin: "0 0 10px",
+              }}
+            >
+              Payments go live soon
+            </h2>
+            <p style={{ margin: "0 0 20px", color: "var(--ink-500)", lineHeight: 1.5, fontSize: 15 }}>
+              Your quote is saved on this device. Join the waitlist and we&apos;ll
+              notify you the moment deposit checkout opens in Houston.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <Link
+                href={JOIN_PATH}
+                style={{
+                  height: 48,
+                  borderRadius: 9,
+                  background: "var(--blue-electric)",
+                  color: "#fff",
+                  fontWeight: 700,
+                  display: "grid",
+                  placeItems: "center",
+                  textDecoration: "none",
+                }}
+              >
+                Join the waitlist
+              </Link>
+              <button
+                type="button"
+                onClick={() => setSoftGate(false)}
+                style={{
+                  height: 44,
+                  borderRadius: 9,
+                  border: "1px solid var(--border-default)",
+                  background: "#fff",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  color: "var(--ink-700)",
+                }}
+              >
+                Keep editing quote
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </QuoteShell>
+  );
+}

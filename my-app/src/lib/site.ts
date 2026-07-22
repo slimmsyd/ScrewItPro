@@ -17,6 +17,10 @@ export const ASSETS = {
 
 export const CTA_LABEL = isWaitlist ? "Join Now" : "Get a Free Quote";
 export const JOIN_PATH = "/join";
+/** Get-a-Price quote journey (Where → What → Price). */
+export const QUOTE_PATH = "/quote/where";
+export const QUOTE_ITEMS_PATH = "/quote/items";
+export const QUOTE_PRICE_PATH = "/quote/price";
 /** AEO landing page targeting "furniture assembly with pickup and delivery in Houston". */
 export const HOUSTON_ASSEMBLY_PATH = "/furniture-assembly-pickup-delivery-houston";
 export const PRIVACY_PATH = "/privacy";

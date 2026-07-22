@@ -10,7 +10,7 @@ import {
 
 /**
  * POST /api/payments/checkout
- * Create a Stripe Checkout Session for the 50% deposit on an order.
+ * Create a Stripe Checkout Session for the 30% deposit on an order.
  * The card is saved off-session (setup_future_usage) so the balance can be
  * charged automatically at delivery (per ARCHITECTURE-PLAN M2/M4).
  *
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
             currency: "usd",
             unit_amount: depositCents,
             product_data: {
-              name: input.description ?? "ScrewIt Pros — 50% deposit",
+              name: input.description ?? "ScrewIt Pros — 30% deposit",
             },
           },
         },

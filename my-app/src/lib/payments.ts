@@ -16,9 +16,9 @@ export function isStripeWebhookReady(): boolean {
   return getEnvStatus().stripe.webhookConfigured;
 }
 
-/** 50% deposit in integer cents, min 1 cent. */
+/** 30% deposit in integer cents, min 1 cent (quote journey handoff). */
 export function computeDepositCents(totalCents: number): number {
-  return Math.max(1, Math.round(totalCents / 2));
+  return Math.max(1, Math.round(totalCents * 0.3));
 }
 
 export function appUrl(): string {

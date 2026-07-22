@@ -9,6 +9,7 @@ import {
   type CSSProperties,
   type KeyboardEvent,
 } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowUp, ArrowDown, MapPin, type LucideIcon } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useLocale } from "@/components/providers/LocaleProvider";
@@ -19,6 +20,8 @@ import {
   type PlaceSuggestion,
   type ResolvedPlace,
 } from "@/lib/places";
+import { seedQuoteDraftFromHero } from "@/lib/quote/draft-storage";
+import { QUOTE_PATH } from "@/lib/site";
 
 type FieldKey = "pickup" | "deliver";
 
@@ -81,12 +84,13 @@ function HighlightMatch({ text, query }: { text: string; query: string }) {
  * Waitlist copy shows after every selection (product is waitlist-first).
  */
 export default function HeroAddressBar({
-  onQuote,
   cta,
 }: {
-  onQuote: () => void;
+  /** @deprecated Hero now routes to /quote/where; kept for API compatibility. */
+  onQuote?: () => void;
   cta: string;
 }) {
+  const router = useRouter();
   const mobile = useIsMobile();
   const { t } = useLocale();
   const listId = useId();
@@ -252,7 +256,9 @@ export default function HeroAddressBar({
       return;
     }
     setFormError(null);
-    onQuote();
+    // Get-a-Price journey: seed draft and enter Where step (price before bureaucracy).
+    seedQuoteDraftFromHero(pickupPlace, deliverPlace);
+    router.push(QUOTE_PATH);
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
