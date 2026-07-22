@@ -16,6 +16,7 @@ export default function QuoteShell({
   aside,
   mobileBar,
   asideWidth = 340,
+  mainBackground = "#fff",
 }: {
   step: QuoteStepIndex;
   children: ReactNode;
@@ -24,6 +25,8 @@ export default function QuoteShell({
   mobileBar?: ReactNode;
   /** Right rail width; payment aside uses 360 per handoff */
   asideWidth?: number;
+  /** Main column canvas (Price uses gray-50 full-bleed per handoff) */
+  mainBackground?: string;
 }) {
   const router = useRouter();
   const mobile = useIsMobile();
@@ -162,6 +165,7 @@ export default function QuoteShell({
             overflowX: "hidden",
             padding: mobile ? "24px 16px 120px" : "34px 40px",
             WebkitOverflowScrolling: "touch",
+            background: mainBackground,
           }}
         >
           {children}

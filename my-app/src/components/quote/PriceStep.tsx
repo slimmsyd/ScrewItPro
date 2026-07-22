@@ -8,6 +8,7 @@ import {
   BadgeCheck,
   Home,
   Package,
+  Sparkles,
   Truck,
 } from "lucide-react";
 import QuoteShell from "@/components/quote/QuoteShell";
@@ -18,6 +19,11 @@ import { formatUsd } from "@/lib/quote/pricing";
 import { JOIN_PATH, QUOTE_ITEMS_PATH } from "@/lib/site";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
+/**
+ * Price step — handoff locked layout:
+ * full-bleed gray-50 main, white payment rail 360px,
+ * badge-check eyebrow, breakdown card, 30% deposit aside.
+ */
 export default function PriceStep() {
   const router = useRouter();
   const mobile = useIsMobile();
@@ -132,6 +138,8 @@ export default function PriceStep() {
       step={2}
       aside={payment}
       asideWidth={360}
+      /* Full main column is gray-50 (handoff), not a partial content wrap */
+      mainBackground="var(--gray-50)"
       mobileBar={
         <div>
           <div
@@ -142,7 +150,9 @@ export default function PriceStep() {
               fontFamily: "var(--font-body)",
             }}
           >
-            <span style={{ fontSize: 13, color: "var(--ink-500)", fontWeight: 600 }}>
+            <span
+              style={{ fontSize: 13, color: "var(--ink-500)", fontWeight: 600 }}
+            >
               Due today (30%)
             </span>
             <span
@@ -178,163 +188,191 @@ export default function PriceStep() {
       }
     >
       <ScreenTransition>
-        <div
+        {/* Back — block-level so it never sits on the same row as the eyebrow */}
+        <Link
+          href={QUOTE_ITEMS_PATH}
           style={{
-            background: mobile ? "transparent" : "var(--gray-50)",
-            margin: mobile ? 0 : "-34px -40px",
-            padding: mobile ? 0 : "34px 40px",
-            minHeight: "100%",
+            display: "flex",
+            width: "fit-content",
+            alignItems: "center",
+            gap: 7,
+            fontSize: 13.5,
+            fontWeight: 600,
+            color: "var(--ink-500)",
+            textDecoration: "none",
+            marginBottom: 16,
+            fontFamily: "var(--font-body)",
           }}
         >
-          <Link
-            href={QUOTE_ITEMS_PATH}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 13.5,
-              color: "var(--ink-500)",
-              textDecoration: "none",
-              marginBottom: 18,
-            }}
-          >
-            <ArrowLeft size={16} /> Back
-          </Link>
+          <ArrowLeft size={16} color="var(--ink-500)" /> Back
+        </Link>
 
-          <div
+        {/* Handoff: badge-check + INSTANT QUOTE · NO HIDDEN FEES */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 8,
+          }}
+        >
+          <BadgeCheck
+            size={17}
+            color="var(--status-success)"
+            strokeWidth={2.25}
+            aria-hidden
+          />
+          <span
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              color: "var(--status-success)",
-              fontSize: 12,
+              fontFamily: "var(--font-body)",
+              fontSize: 12.5,
               fontWeight: 800,
-              letterSpacing: "0.1em",
+              color: "var(--status-success)",
+              letterSpacing: "0.03em",
               textTransform: "uppercase",
-              marginBottom: 10,
             }}
           >
-            <BadgeCheck size={18} />
             Instant quote · No hidden fees
-          </div>
+          </span>
+        </div>
 
-          <h1
-            style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 400,
-              fontSize: mobile ? 30 : 38,
-              letterSpacing: "-0.02em",
-              color: "var(--blue-deep)",
-              margin: "0 0 22px",
-            }}
-          >
-            Here&apos;s your honest breakdown
-          </h1>
+        <h1
+          style={{
+            fontFamily: "var(--font-display)",
+            fontWeight: 400,
+            fontSize: mobile ? 30 : 38,
+            letterSpacing: "-0.02em",
+            color: "var(--blue-deep)",
+            margin: "0 0 22px",
+            lineHeight: 1.1,
+          }}
+        >
+          Here&apos;s your honest breakdown
+        </h1>
 
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 12,
-              border: "1px solid var(--border-default)",
-              maxWidth: 600,
-              padding: "8px 20px",
-            }}
-          >
-            {lines.map((line, i) => {
-              const Icon = line.icon;
-              return (
+        <div
+          style={{
+            background: "#fff",
+            borderRadius: 12,
+            border: "1px solid var(--border-default)",
+            maxWidth: 600,
+            padding: "8px 22px",
+          }}
+        >
+          {lines.map((line, i) => {
+            const Icon = line.icon;
+            return (
+              <div
+                key={line.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  padding: "16px 0",
+                  borderBottom:
+                    i < lines.length - 1 ? "1px solid var(--gray-100)" : "none",
+                }}
+              >
                 <div
-                  key={line.label}
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 14,
-                    padding: "16px 0",
-                    borderBottom:
-                      i < lines.length - 1 ? "1px solid var(--gray-100)" : "none",
+                    width: 42,
+                    height: 42,
+                    borderRadius: 11,
+                    background: "var(--blue-50)",
+                    display: "grid",
+                    placeItems: "center",
+                    flex: "0 0 42px",
                   }}
                 >
+                  <Icon size={19} color="var(--blue-electric)" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div
                     style={{
-                      width: 42,
-                      height: 42,
-                      borderRadius: 11,
-                      background: "var(--blue-50)",
-                      display: "grid",
-                      placeItems: "center",
-                      flex: "0 0 auto",
-                    }}
-                  >
-                    <Icon size={20} color="var(--blue-electric)" />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontWeight: 700,
-                        fontSize: 14.5,
-                        color: "var(--ink-900)",
-                      }}
-                    >
-                      {line.label}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        color: "var(--ink-500)",
-                        marginTop: 2,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {line.sub}
-                    </div>
-                  </div>
-                  <div
-                    style={{
+                      fontFamily: "var(--font-body)",
                       fontWeight: 700,
                       fontSize: 15,
                       color: "var(--ink-900)",
-                      flex: "0 0 auto",
                     }}
                   >
-                    {line.cents === 0 ? "Free" : formatUsd(line.cents)}
+                    {line.label}
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: 12.5,
+                      color: "var(--ink-500)",
+                      marginTop: 1,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {line.sub}
                   </div>
                 </div>
-              );
-            })}
-          </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontWeight: 700,
+                    fontSize: 15.5,
+                    color: "var(--ink-900)",
+                    flex: "0 0 auto",
+                  }}
+                >
+                  {line.cents === 0 ? "Free" : formatUsd(line.cents)}
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 9,
+            marginTop: 16,
+            fontFamily: "var(--font-body)",
+            fontSize: 13,
+            color: "var(--ink-500)",
+            maxWidth: 600,
+          }}
+        >
+          <Sparkles
+            size={16}
+            color="var(--blue-steel)"
+            style={{ flex: "0 0 auto" }}
+            aria-hidden
+          />
+          This is the whole price. What you see is what you pay.
+        </div>
+
+        {error && (
           <p
+            role="alert"
             style={{
-              marginTop: 16,
-              fontSize: 13.5,
-              color: "var(--ink-500)",
-              maxWidth: 480,
+              marginTop: 12,
+              color: "var(--status-error)",
+              fontWeight: 600,
             }}
           >
-            This is the whole price. What you see is what you pay.
+            {error}
           </p>
+        )}
 
-          {error && (
-            <p role="alert" style={{ marginTop: 12, color: "var(--status-error)", fontWeight: 600 }}>
-              {error}
-            </p>
-          )}
-
-          {mobile && (
-            <div style={{ marginTop: 28 }}>
-              <PaymentAside
-                totals={totals}
-                cta="Book my build"
-                ctaDisabled={!canProceedFromItems}
-                ctaBusy={busy}
-                onCta={() => void book()}
-                subcaption="Create your account at checkout · 30 seconds."
-              />
-            </div>
-          )}
-        </div>
+        {mobile && (
+          <div style={{ marginTop: 28 }}>
+            <PaymentAside
+              totals={totals}
+              cta="Book my build"
+              ctaDisabled={!canProceedFromItems}
+              ctaBusy={busy}
+              onCta={() => void book()}
+              subcaption="Create your account at checkout · 30 seconds."
+            />
+          </div>
+        )}
       </ScreenTransition>
 
       {softGate && (
@@ -375,9 +413,17 @@ export default function PriceStep() {
             >
               Payments go live soon
             </h2>
-            <p style={{ margin: "0 0 20px", color: "var(--ink-500)", lineHeight: 1.5, fontSize: 15 }}>
-              Your quote is saved on this device. Join the waitlist and we&apos;ll
-              notify you the moment deposit checkout opens in Houston.
+            <p
+              style={{
+                margin: "0 0 20px",
+                color: "var(--ink-500)",
+                lineHeight: 1.5,
+                fontSize: 15,
+              }}
+            >
+              Your quote is saved on this device. Join the waitlist and
+              we&apos;ll notify you the moment deposit checkout opens in
+              Houston.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <Link
