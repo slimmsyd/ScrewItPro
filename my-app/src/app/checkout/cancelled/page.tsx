@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 /**
- * /checkout/cancelled — deposit checkout abandoned/cancelled landing.
+ * /checkout/cancelled: deposit checkout abandoned/cancelled landing.
  */
 export const metadata: Metadata = {
   title: "Checkout cancelled",

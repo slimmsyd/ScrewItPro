@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 /**
- * /checkout/success — deposit-paid confirmation landing.
+ * /checkout/success: deposit-paid confirmation landing.
  * Placeholder surface for the M2 booking flow; wired once Stripe is live.
  */
 export const metadata: Metadata = {
@@ -31,7 +31,7 @@ export default async function CheckoutSuccessPage({
         Deposit received
       </h1>
       <p style={{ fontSize: 16, lineHeight: 1.6, color: "#545b7a" }}>
-        Thanks — your 50% deposit is confirmed and we've saved your card for the
+        Thanks. Your deposit is confirmed and we&apos;ve saved your card for the
         balance at delivery. We'll be in touch with next steps.
       </p>
       {order && (
