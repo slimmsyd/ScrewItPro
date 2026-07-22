@@ -84,7 +84,9 @@ export default function BuildCart({
       className="quote-aside-desktop"
       style={{
         width: "100%",
-        flex: 1,
+        height: "100%",
+        maxHeight: "100%",
+        flex: "1 1 auto",
         borderLeft: "1px solid var(--border-default)",
         background: "var(--gray-50)",
         padding: "28px 26px",
@@ -92,6 +94,7 @@ export default function BuildCart({
         flexDirection: "column",
         minHeight: 0,
         boxSizing: "border-box",
+        overflow: "hidden",
       }}
     >
       <div
@@ -111,7 +114,7 @@ export default function BuildCart({
       {items.length === 0 ? (
         <div
           style={{
-            flex: 1,
+            flex: "0 0 auto",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -139,7 +142,10 @@ export default function BuildCart({
             flexDirection: "column",
             gap: 10,
             overflowY: "auto",
-            flex: 1,
+            overflowX: "hidden",
+            flex: "1 1 auto",
+            minHeight: 0,
+            WebkitOverflowScrolling: "touch",
           }}
         >
           {items.map((item) => {
@@ -212,7 +218,14 @@ export default function BuildCart({
         </ul>
       )}
 
-      <div style={{ marginTop: "auto", paddingTop: 16 }}>
+      <div
+        style={{
+          marginTop: "auto",
+          paddingTop: 16,
+          flex: "0 0 auto",
+          background: "var(--gray-50)",
+        }}
+      >
         {/* Price stays hidden until the Price step (handoff). */}
         <p
           style={{

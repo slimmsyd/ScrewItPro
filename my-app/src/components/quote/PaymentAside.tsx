@@ -29,6 +29,8 @@ export default function PaymentAside({
     <aside
       style={{
         width: "100%",
+        height: "100%",
+        maxHeight: "100%",
         flex: "1 1 auto",
         borderLeft: "1px solid var(--border-default)",
         background: "#fff",
@@ -37,6 +39,7 @@ export default function PaymentAside({
         flexDirection: "column",
         minHeight: 0,
         boxSizing: "border-box",
+        overflow: "hidden",
       }}
     >
       <div
@@ -163,7 +166,13 @@ export default function PaymentAside({
         You only pay the balance once it&apos;s built and delivered.
       </p>
 
-      <div style={{ marginTop: "auto", paddingTop: 24 }}>
+      <div
+        style={{
+          marginTop: "auto",
+          paddingTop: 24,
+          flex: "0 0 auto",
+        }}
+      >
         <button
           type="button"
           onClick={onCta}

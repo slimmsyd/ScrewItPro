@@ -30,12 +30,17 @@ export default function QuoteShell({
 
   return (
     <div
+      className="quote-shell"
       style={{
+        /* Fixed viewport height so the right rail does not grow with main content */
+        height: "100dvh",
         minHeight: "100dvh",
+        maxHeight: "100dvh",
         display: "flex",
         flexDirection: "column",
         background: "#fff",
         fontFamily: "var(--font-body)",
+        overflow: "hidden",
       }}
     >
       <header
@@ -48,8 +53,6 @@ export default function QuoteShell({
           borderBottom: "1px solid var(--border-default)",
           background: "#fff",
           gap: 12,
-          position: "sticky",
-          top: 0,
           zIndex: 30,
         }}
       >
@@ -142,29 +145,40 @@ export default function QuoteShell({
 
       <div
         style={{
-          flex: 1,
+          flex: "1 1 auto",
           display: "flex",
           minHeight: 0,
+          height: "100%",
+          overflow: "hidden",
           flexDirection: mobile ? "column" : "row",
         }}
       >
         <main
           style={{
-            flex: 1,
+            flex: "1 1 auto",
             minWidth: 0,
+            minHeight: 0,
             overflowY: "auto",
+            overflowX: "hidden",
             padding: mobile ? "24px 16px 120px" : "34px 40px",
+            WebkitOverflowScrolling: "touch",
           }}
         >
           {children}
         </main>
         {!mobile && aside ? (
           <div
+            className="quote-aside-slot"
             style={{
               flex: `0 0 ${asideWidth}px`,
               width: asideWidth,
+              maxWidth: asideWidth,
+              height: "100%",
+              maxHeight: "100%",
               display: "flex",
+              flexDirection: "column",
               minHeight: 0,
+              overflow: "hidden",
               alignSelf: "stretch",
             }}
           >

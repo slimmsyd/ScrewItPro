@@ -42,7 +42,9 @@ export default function QuoteAside({
       className="quote-aside-desktop"
       style={{
         width: "100%",
-        flex: 1,
+        height: "100%",
+        maxHeight: "100%",
+        flex: "1 1 auto",
         borderLeft: "1px solid var(--border-default)",
         background: "var(--gray-50)",
         padding: "28px 26px",
@@ -50,6 +52,7 @@ export default function QuoteAside({
         flexDirection: "column",
         minHeight: 0,
         boxSizing: "border-box",
+        overflow: "hidden",
       }}
     >
       <div
@@ -183,7 +186,13 @@ export default function QuoteAside({
             "Your full price appears the moment we know what to build, before any account."}
         </p>
       )}
-      <div style={{ marginTop: "auto", paddingTop: 20 }}>
+      <div
+        style={{
+          marginTop: "auto",
+          paddingTop: 20,
+          flex: "0 0 auto",
+        }}
+      >
         <button
           type="button"
           onClick={onCta}
