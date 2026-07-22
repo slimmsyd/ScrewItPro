@@ -4,9 +4,14 @@
  * - "waitlist" remains on `main` until cutover — do not flip production without a plan.
  */
 export type SiteMode = "waitlist" | "quote";
+/** Flip to "waitlist" only if you intentionally revive marketing-beta CTAs. */
 export const SITE_MODE: SiteMode = "quote";
 
-export const isWaitlist = SITE_MODE === "waitlist";
+/** Derived flag — compare via helper so TS does not collapse the mode literal. */
+export function siteIsWaitlist(mode: SiteMode = SITE_MODE): boolean {
+  return mode === "waitlist";
+}
+export const isWaitlist = siteIsWaitlist(SITE_MODE);
 
 export const ASSETS = {
   logoS: "/assets/logo-icon-s.png",
