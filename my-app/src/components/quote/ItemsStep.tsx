@@ -405,14 +405,14 @@ function BuyMode({
                 alignItems: "center",
                 padding: 16,
                 borderRadius: 11,
+                /* Green = confirmation (added to build) */
                 border: `1.5px solid ${
-                  selected ? "var(--blue-electric)" : "var(--border-default)"
+                  selected ? "var(--status-success)" : "var(--border-default)"
                 }`,
-                /* Handoff: selected outline glow 0 0 0 3px rgba(29,110,254,.1) */
                 boxShadow: selected
-                  ? "0 0 0 3px rgba(29,110,254,.1)"
+                  ? "0 0 0 3px rgba(14,138,95,.14)"
                   : "0 0 0 0 transparent",
-                background: selected ? "var(--blue-50)" : "#fff",
+                background: selected ? "var(--status-success-bg)" : "#fff",
                 cursor: "pointer",
                 transition:
                   "border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease",
@@ -484,11 +484,13 @@ function BuyMode({
                   height: 44,
                   padding: "0 20px",
                   borderRadius: 999,
-                  border: `1.5px solid ${
-                    selected ? "var(--blue-electric)" : "var(--border-default)"
-                  }`,
-                  background: selected ? "var(--blue-electric)" : "#fff",
-                  color: selected ? "#fff" : "var(--blue-deep)",
+                  border: selected
+                    ? "1.5px solid var(--status-success)"
+                    : "1.5px solid var(--blue-electric)",
+                  background: selected
+                    ? "var(--status-success-bg)"
+                    : "var(--blue-electric)",
+                  color: selected ? "var(--status-success)" : "#fff",
                   fontWeight: 700,
                   fontSize: 14,
                   fontFamily: "var(--font-body)",
@@ -503,11 +505,16 @@ function BuyMode({
               >
                 {selected ? (
                   <>
-                    <Check size={17} color="#fff" strokeWidth={2.5} /> Added
+                    <Check
+                      size={17}
+                      color="var(--status-success)"
+                      strokeWidth={2.5}
+                    />{" "}
+                    Added
                   </>
                 ) : (
                   <>
-                    <Plus size={17} color="var(--blue-electric)" /> Add to build
+                    <Plus size={17} color="#fff" /> Add to build
                   </>
                 )}
               </button>
