@@ -102,7 +102,7 @@ export default function QuoteAside({
                 color: showPrice ? "var(--ink-900)" : "var(--ink-300)",
               }}
             >
-              {showPrice ? formatUsd(row.cents) : "—"}
+              {showPrice ? formatUsd(row.cents) : "-"}
             </span>
           </div>
         ))}
@@ -133,7 +133,7 @@ export default function QuoteAside({
             color: showPrice ? "var(--blue-deep)" : "var(--ink-300)",
           }}
         >
-          {showPrice ? formatUsd(totals.subtotalCents) : "$—"}
+          {showPrice ? formatUsd(totals.subtotalCents) : "$-"}
         </span>
       </div>
       {showPrice ? (
@@ -180,7 +180,7 @@ export default function QuoteAside({
           }}
         >
           {hint ??
-            "Your full price appears the moment we know what to build — before any account."}
+            "Your full price appears the moment we know what to build, before any account."}
         </p>
       )}
       <div style={{ marginTop: "auto", paddingTop: 20 }}>

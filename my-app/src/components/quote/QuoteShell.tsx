@@ -22,7 +22,7 @@ export default function QuoteShell({
   aside?: ReactNode;
   /** Sticky mobile CTA strip */
   mobileBar?: ReactNode;
-  /** Right rail width — payment aside uses 360 per handoff */
+  /** Right rail width; payment aside uses 360 per handoff */
   asideWidth?: number;
 }) {
   const router = useRouter();

@@ -36,7 +36,7 @@ function SrcTag({ src, articleId }: { src: ItemSource; articleId?: string }) {
   if (src === "hub") {
     return (
       <span style={tagStyle}>
-        <Tag size={12} /> Art. #{articleId ?? "—"}
+        <Tag size={12} /> Art. #{articleId ?? "-"}
       </span>
     );
   }
@@ -223,7 +223,7 @@ export default function BuildCart({
             lineHeight: 1.5,
           }}
         >
-          Your full, itemized price appears on the next step — before any
+          Your full, itemized price appears on the next step, before any
           account.
         </p>
         <button

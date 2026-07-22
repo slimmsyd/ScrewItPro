@@ -58,7 +58,7 @@ const MODES: {
   {
     key: "store",
     title: "It's waiting at the store",
-    sub: "We collect — don't load your car",
+    sub: "We collect. Don't load your car",
     icon: Store,
   },
 ];
@@ -167,7 +167,7 @@ export default function ItemsStep() {
             maxWidth: 520,
           }}
         >
-          First — how do you have it? Workshop assembly only (never in-home).
+          First, how do you have it? Workshop assembly only (never in-home).
         </p>
 
         <div
@@ -330,7 +330,7 @@ function BuyMode({
         <span>
           {results.length} product{results.length === 1 ? "" : "s"}
         </span>
-        {/* Visual Filter control — retailer chips above already filter results */}
+        {/* Visual Filter control; retailer chips above already filter results */}
         <button
           type="button"
           aria-label="Filter products"
@@ -395,7 +395,7 @@ function BuyMode({
                     textTransform: "uppercase",
                   }}
                 >
-                  {p.brand} — {p.articleId}
+                  {p.brand} - {p.articleId}
                 </div>
                 <div
                   style={{
@@ -631,7 +631,7 @@ function HomeMode({ onAdd }: { onAdd: (item: QuoteItem) => void }) {
         <div style={{ fontWeight: 700, fontSize: 14, color: "var(--blue-deep)" }}>
           Drop a photo or tap to upload
         </div>
-        <div style={{ fontSize: 12.5, marginTop: 4 }}>(optional — helps us price accurately)</div>
+        <div style={{ fontSize: 12.5, marginTop: 4 }}>(optional, helps us price accurately)</div>
       </div>
 
       <button
@@ -684,7 +684,7 @@ function StoreMode({ onAdd }: { onAdd: (item: QuoteItem) => void }) {
   return (
     <div style={{ maxWidth: 520 }}>
       <p style={{ fontSize: 14, color: "var(--ink-500)", margin: "0 0 16px", lineHeight: 1.45 }}>
-        Don&apos;t load your car — we collect it from the store.
+        Don&apos;t load your car. We collect it from the store.
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
         {STORE_CHIPS.map((s) => {
@@ -733,7 +733,7 @@ function StoreMode({ onAdd }: { onAdd: (item: QuoteItem) => void }) {
         id="store-loc"
         value={location}
         onChange={(e) => setLocation(e.target.value)}
-        placeholder="e.g. IKEA Houston — Katy Freeway"
+        placeholder="e.g. IKEA Houston, Katy Freeway"
         style={inputStyle}
       />
       <FieldLabel htmlFor="ready-by">Ready-by date</FieldLabel>
@@ -758,7 +758,7 @@ function StoreMode({ onAdd }: { onAdd: (item: QuoteItem) => void }) {
         <div style={{ fontWeight: 700, fontSize: 14, color: "var(--blue-deep)" }}>
           Drop your receipt or order confirmation
         </div>
-        <div style={{ fontSize: 12.5, marginTop: 4 }}>(optional — speeds up store pickup)</div>
+        <div style={{ fontSize: 12.5, marginTop: 4 }}>(optional, speeds up store pickup)</div>
       </div>
 
       <button

@@ -20,7 +20,7 @@ import { QUOTE_ITEMS_PATH } from "@/lib/site";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
 /**
- * Where step — handoff: dual-stop route card (pickup + deliver) + ship/pickup mode.
+ * Where step: dual-stop route card (pickup + deliver) + ship/pickup mode.
  * Both stops are always visible; ship mode locks pickup to the ScrewIt Hub.
  */
 export default function WhereStep() {
@@ -125,7 +125,7 @@ export default function WhereStep() {
             maxWidth: 520,
           }}
         >
-          Two stops. We handle everything in between — no warehouse logistics
+          Two stops. We handle everything in between. No warehouse logistics
           for you to manage.
         </p>
 
@@ -274,7 +274,7 @@ export default function WhereStep() {
                 {
                   mode: "ship" as const,
                   title: "I'll ship it to your hub",
-                  sub: "Free — we send the address",
+                  sub: "Free. We send the address",
                   icon: Warehouse,
                 },
                 {
