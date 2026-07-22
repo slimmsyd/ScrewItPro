@@ -1,5 +1,10 @@
-/** Site-wide config. Waitlist is the beta launch mode per design handoff. */
-export const SITE_MODE = "waitlist" as const; // "waitlist" | "quote"
+/**
+ * Product mode on this branch (`develop`).
+ * - "quote" = real site CTAs → Get-a-Price journey (no waitlist share).
+ * - "waitlist" remains on `main` until cutover — do not flip production without a plan.
+ */
+export type SiteMode = "waitlist" | "quote";
+export const SITE_MODE: SiteMode = "quote";
 
 export const isWaitlist = SITE_MODE === "waitlist";
 
