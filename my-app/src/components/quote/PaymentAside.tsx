@@ -29,7 +29,6 @@ export default function PaymentAside({
     <aside
       style={{
         width: "100%",
-        maxWidth: 360,
         flex: "1 1 auto",
         borderLeft: "1px solid var(--border-default)",
         background: "#fff",

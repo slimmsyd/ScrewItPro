@@ -17,6 +17,7 @@ import {
   Plus,
   Search,
   ShoppingBag,
+  SlidersHorizontal,
   Square,
   Store,
   Table,
@@ -27,7 +28,6 @@ import ScreenTransition from "@/components/quote/ScreenTransition";
 import { useQuote } from "@/lib/quote/context";
 import {
   catalogToQuoteItem,
-  MOCK_PRODUCTS,
   RETAILER_CHIPS,
   searchCatalog,
   STORE_CHIPS,
@@ -321,14 +321,42 @@ function BuyMode({
           justifyContent: "space-between",
           alignItems: "center",
           marginBottom: 12,
-          fontSize: 13,
-          color: "var(--ink-500)",
+          fontSize: 13.5,
+          color: "var(--ink-700)",
           fontWeight: 600,
+          fontFamily: "var(--font-body)",
         }}
       >
         <span>
-          {results.length || MOCK_PRODUCTS.length} products
+          {results.length} product{results.length === 1 ? "" : "s"}
         </span>
+        {/* Visual Filter control — retailer chips above already filter results */}
+        <button
+          type="button"
+          aria-label="Filter products"
+          onClick={() => {
+            /* retailer chips are the filter; focus search for more refinement */
+            document.getElementById("product-search")?.focus();
+          }}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 7,
+            height: 34,
+            padding: "0 16px",
+            borderRadius: 999,
+            border: "1px solid var(--border-default)",
+            background: "#fff",
+            color: "var(--ink-700)",
+            fontWeight: 600,
+            fontSize: 13.5,
+            fontFamily: "var(--font-body)",
+            cursor: "pointer",
+          }}
+        >
+          <SlidersHorizontal size={16} color="var(--ink-500)" />
+          Filter
+        </button>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

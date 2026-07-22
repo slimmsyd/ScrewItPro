@@ -15,12 +15,15 @@ export default function QuoteShell({
   children,
   aside,
   mobileBar,
+  asideWidth = 340,
 }: {
   step: QuoteStepIndex;
   children: ReactNode;
   aside?: ReactNode;
   /** Sticky mobile CTA strip */
   mobileBar?: ReactNode;
+  /** Right rail width — payment aside uses 360 per handoff */
+  asideWidth?: number;
 }) {
   const router = useRouter();
   const mobile = useIsMobile();
@@ -158,8 +161,8 @@ export default function QuoteShell({
         {!mobile && aside ? (
           <div
             style={{
-              flex: "0 0 340px",
-              width: 340,
+              flex: `0 0 ${asideWidth}px`,
+              width: asideWidth,
               display: "flex",
               minHeight: 0,
               alignSelf: "stretch",

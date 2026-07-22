@@ -131,6 +131,7 @@ export default function PriceStep() {
     <QuoteShell
       step={2}
       aside={payment}
+      asideWidth={360}
       mobileBar={
         <div>
           <div

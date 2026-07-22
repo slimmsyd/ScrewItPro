@@ -14,7 +14,6 @@ import {
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { formatUsd } from "@/lib/quote/pricing";
 import type { ItemSource, QuoteItem } from "@/lib/quote/types";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -106,7 +105,7 @@ export default function BuildCart({
           marginBottom: 16,
         }}
       >
-        Your build
+        Your build{items.length > 0 ? ` (${items.length})` : ""}
       </div>
 
       {items.length === 0 ? (
@@ -116,15 +115,18 @@ export default function BuildCart({
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            justifyContent: "center",
+            justifyContent: "flex-start",
             textAlign: "center",
-            padding: "24px 8px",
-            color: "var(--ink-300)",
+            padding: "28px 20px",
+            color: "var(--ink-500)",
+            background: "#fff",
+            border: "1px dashed var(--border-default)",
+            borderRadius: 11,
           }}
         >
-          <PackageOpen size={36} strokeWidth={1.5} />
-          <p style={{ marginTop: 12, fontSize: 13.5, lineHeight: 1.45, maxWidth: 200 }}>
-            Add furniture on the left. Your build list appears here.
+          <PackageOpen size={26} strokeWidth={1.5} color="var(--ink-300)" />
+          <p style={{ marginTop: 8, fontSize: 13.5, lineHeight: 1.5, maxWidth: 200 }}>
+            Add items to start your build.
           </p>
         </div>
       ) : (
@@ -148,63 +150,45 @@ export default function BuildCart({
                 style={{
                   background: "#fff",
                   border: "1px solid var(--border-default)",
-                  borderRadius: 11,
-                  padding: 12,
+                  borderRadius: 10,
+                  padding: "10px 12px",
                   display: "flex",
-                  gap: 10,
-                  alignItems: "flex-start",
+                  gap: 11,
+                  alignItems: "center",
                 }}
               >
                 <div
                   style={{
-                    width: 36,
-                    height: 36,
+                    width: 38,
+                    height: 38,
                     borderRadius: 9,
-                    background: "var(--blue-50)",
+                    background: "var(--gray-50)",
+                    border: "1px solid var(--border-default)",
                     display: "grid",
                     placeItems: "center",
-                    flex: "0 0 auto",
+                    flex: "0 0 38px",
                   }}
                 >
-                  <Icon size={18} color="var(--blue-electric)" />
+                  <Icon size={18} color="var(--blue-steel)" />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  {item.brand && (
-                    <div
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 700,
-                        letterSpacing: "0.04em",
-                        textTransform: "uppercase",
-                        color: "var(--ink-300)",
-                      }}
-                    >
-                      {item.brand}
-                    </div>
-                  )}
                   <div
                     style={{
                       fontSize: 13.5,
-                      fontWeight: 600,
-                      color: "var(--ink-900)",
+                      fontWeight: 700,
+                      color: "var(--blue-deep)",
                       lineHeight: 1.3,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
                     }}
                   >
+                    {item.brand ? `${item.brand} ` : ""}
                     {item.name}
                     {(item.quantity ?? 1) > 1 ? ` ×${item.quantity}` : ""}
                   </div>
-                  <div style={{ marginTop: 6 }}>
+                  <div style={{ marginTop: 4 }}>
                     <SrcTag src={item.src} articleId={item.articleId} />
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: "var(--blue-deep)",
-                    }}
-                  >
-                    {formatUsd(item.assemblyCents * (item.quantity ?? 1))}
                   </div>
                 </div>
                 <button
@@ -215,8 +199,9 @@ export default function BuildCart({
                     border: "none",
                     background: "transparent",
                     cursor: "pointer",
-                    padding: 4,
+                    padding: 5,
                     color: "var(--ink-300)",
+                    display: "flex",
                   }}
                 >
                   <X size={16} />
@@ -227,11 +212,25 @@ export default function BuildCart({
         </ul>
       )}
 
-      <div style={{ marginTop: "auto", paddingTop: 20 }}>
+      <div style={{ marginTop: "auto", paddingTop: 16 }}>
+        {/* Price stays hidden until the Price step (handoff). */}
+        <p
+          style={{
+            margin: "0 0 14px",
+            fontFamily: "var(--font-body)",
+            fontSize: 12.5,
+            color: "var(--ink-500)",
+            lineHeight: 1.5,
+          }}
+        >
+          Your full, itemized price appears on the next step — before any
+          account.
+        </p>
         <button
           type="button"
           onClick={onCta}
           disabled={ctaDisabled}
+          className="quote-tap"
           style={{
             width: "100%",
             height: 52,
