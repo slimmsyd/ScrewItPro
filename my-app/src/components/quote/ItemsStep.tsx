@@ -87,6 +87,13 @@ export default function ItemsStep() {
     router.push(QUOTE_PRICE_PATH);
   };
 
+  /** Toggle a catalog product into / out of the build cart (handoff). */
+  const toggleCatalogProduct = (p: Parameters<typeof catalogToQuoteItem>[0]) => {
+    const existing = draft.items.find((i) => i.articleId === p.articleId);
+    if (existing) removeItem(existing.id);
+    else addItem(catalogToQuoteItem(p));
+  };
+
   return (
     <QuoteShell
       step={1}
@@ -229,7 +236,14 @@ export default function ItemsStep() {
         </div>
 
         {draft.entryMode === "buy" && (
-          <BuyMode addedIds={draft.items.map((i) => i.articleId).filter(Boolean) as string[]} onAdd={addItem} />
+          <BuyMode
+            addedIds={
+              draft.items
+                .map((i) => i.articleId)
+                .filter(Boolean) as string[]
+            }
+            onToggle={toggleCatalogProduct}
+          />
         )}
         {draft.entryMode === "home" && <HomeMode onAdd={addItem} />}
         {draft.entryMode === "store" && <StoreMode onAdd={addItem} />}
@@ -239,10 +253,11 @@ export default function ItemsStep() {
 }
 
 function BuyMode({
-  onAdd,
+  onToggle,
   addedIds,
 }: {
-  onAdd: (item: QuoteItem) => void;
+  /** Toggle product in/out of build (whole card or CTA). */
+  onToggle: (p: Parameters<typeof catalogToQuoteItem>[0]) => void;
   addedIds: string[];
 }) {
   const [query, setQuery] = useState("https://www.ikea.com/");
@@ -330,12 +345,10 @@ function BuyMode({
         <span>
           {results.length} product{results.length === 1 ? "" : "s"}
         </span>
-        {/* Visual Filter control; retailer chips above already filter results */}
         <button
           type="button"
           aria-label="Filter products"
           onClick={() => {
-            /* retailer chips are the filter; focus search for more refinement */
             document.getElementById("product-search")?.focus();
           }}
           style={{
@@ -359,23 +372,55 @@ function BuyMode({
         </button>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div
+        style={{ display: "flex", flexDirection: "column", gap: 12 }}
+        role="list"
+        aria-label="Product results"
+      >
         {results.map((p) => {
-          const added = addedIds.includes(p.articleId);
+          const selected = addedIds.includes(p.articleId);
+          const toggle = () => onToggle(p);
           return (
             <div
               key={p.id}
+              role="button"
+              tabIndex={0}
+              aria-pressed={selected}
+              aria-label={
+                selected
+                  ? `${p.name}, added to build. Activate to remove.`
+                  : `${p.name}. Activate to add to build.`
+              }
+              onClick={toggle}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  toggle();
+                }
+              }}
+              className={`quote-tap quote-product-card${selected ? " is-selected" : ""}`}
               style={{
                 display: "flex",
-                gap: 14,
+                gap: 16,
                 alignItems: "center",
-                padding: 14,
-                borderRadius: 12,
-                border: "1px solid var(--border-default)",
-                background: "#fff",
+                padding: 16,
+                borderRadius: 11,
+                border: `1.5px solid ${
+                  selected ? "var(--blue-electric)" : "var(--border-default)"
+                }`,
+                /* Handoff: selected outline glow 0 0 0 3px rgba(29,110,254,.1) */
+                boxShadow: selected
+                  ? "0 0 0 3px rgba(29,110,254,.1)"
+                  : "0 0 0 0 transparent",
+                background: selected ? "var(--blue-50)" : "#fff",
+                cursor: "pointer",
+                transition:
+                  "border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease",
+                outline: "none",
               }}
             >
               <div
+                aria-hidden
                 style={{
                   width: 56,
                   height: 56,
@@ -383,71 +428,87 @@ function BuyMode({
                   background:
                     "repeating-linear-gradient(45deg, var(--blue-50), var(--blue-50) 8px, var(--blue-100) 8px, var(--blue-100) 16px)",
                   flex: "0 0 auto",
+                  border: "1px solid var(--border-default)",
                 }}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   style={{
-                    fontSize: 11.5,
-                    fontWeight: 700,
-                    letterSpacing: "0.04em",
-                    color: "var(--ink-300)",
-                    textTransform: "uppercase",
+                    fontFamily: "var(--font-body)",
+                    fontSize: 16,
+                    fontWeight: 800,
+                    color: "var(--blue-deep)",
+                    letterSpacing: "-0.01em",
                   }}
                 >
                   {p.brand} - {p.articleId}
                 </div>
                 <div
                   style={{
-                    fontSize: 14.5,
-                    fontWeight: 600,
-                    color: "var(--ink-900)",
-                    marginTop: 2,
+                    fontFamily: "var(--font-body)",
+                    fontSize: 13.5,
+                    color: "var(--ink-500)",
+                    margin: "3px 0 8px",
+                    lineHeight: 1.4,
                   }}
                 >
                   {p.name}
                 </div>
                 <div
                   style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontFamily: "var(--font-body)",
                     fontSize: 13.5,
                     fontWeight: 700,
-                    color: "var(--blue-deep)",
-                    marginTop: 4,
+                    color: "var(--ink-900)",
                   }}
                 >
-                  Assembly {formatUsd(p.assemblyCents)}
+                  <span style={{ color: "var(--ink-500)", fontWeight: 600 }}>
+                    Assembly
+                  </span>{" "}
+                  {formatUsd(p.assemblyCents)}
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  if (!added) onAdd(catalogToQuoteItem(p));
+                tabIndex={-1}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggle();
                 }}
-                disabled={added}
+                className="quote-tap"
                 style={{
-                  height: 40,
-                  padding: "0 14px",
-                  borderRadius: 9,
-                  border: added
-                    ? "1px solid var(--status-success)"
-                    : "1px solid var(--blue-electric)",
-                  background: added ? "var(--status-success-bg)" : "var(--blue-electric)",
-                  color: added ? "var(--status-success)" : "#fff",
+                  flex: "0 0 auto",
+                  height: 44,
+                  padding: "0 20px",
+                  borderRadius: 999,
+                  border: `1.5px solid ${
+                    selected ? "var(--blue-electric)" : "var(--border-default)"
+                  }`,
+                  background: selected ? "var(--blue-electric)" : "#fff",
+                  color: selected ? "#fff" : "var(--blue-deep)",
                   fontWeight: 700,
-                  fontSize: 13,
-                  cursor: added ? "default" : "pointer",
+                  fontSize: 14,
+                  fontFamily: "var(--font-body)",
+                  cursor: "pointer",
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 6,
+                  gap: 8,
                   whiteSpace: "nowrap",
+                  transition:
+                    "background 0.18s ease, border-color 0.18s ease, color 0.18s ease",
                 }}
               >
-                {added ? (
+                {selected ? (
                   <>
-                    <Check size={14} /> Added
+                    <Check size={17} color="#fff" strokeWidth={2.5} /> Added
                   </>
                 ) : (
-                  "Add to build"
+                  <>
+                    <Plus size={17} color="var(--blue-electric)" /> Add to build
+                  </>
                 )}
               </button>
             </div>

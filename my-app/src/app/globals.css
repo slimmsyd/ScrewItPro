@@ -1080,6 +1080,16 @@ header[id] {
   box-shadow: 0 0 0 4px rgba(29, 110, 254, 0.12) !important;
 }
 
+/* Product result cards (What / buy mode) — keyboard focus + selected outline */
+.quote-product-card:focus-visible {
+  border-color: var(--blue-electric) !important;
+  box-shadow: 0 0 0 3px rgba(29, 110, 254, 0.18) !important;
+}
+
+.quote-product-card.is-selected:focus-visible {
+  box-shadow: 0 0 0 3px rgba(29, 110, 254, 0.22) !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .quote-eq-bar {
     animation: none !important;

@@ -106,7 +106,8 @@ export function searchCatalog(
 
 export function catalogToQuoteItem(p: CatalogProduct): QuoteItem {
   return {
-    id: `item-${p.id}-${Date.now()}`,
+    /** Stable id so re-clicking the same product can toggle it off. */
+    id: `hub-${p.id}`,
     brand: p.brand,
     name: p.name,
     icon: p.icon,
