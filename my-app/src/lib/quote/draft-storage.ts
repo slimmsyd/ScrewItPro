@@ -4,7 +4,11 @@ import { EMPTY_DRAFT } from "@/lib/quote/types";
 
 export const QUOTE_DRAFT_KEY = "screwitpro_quote_draft_v1";
 
-/** Seed draft from marketing hero before navigating to /quote (no React context). */
+/**
+ * Seed draft from marketing hero before navigating to /quote (no React context).
+ * Prefills both stops as a customer pickup → delivery route (editable on Where).
+ * User can still switch to "ship to hub" on the Where step.
+ */
 export function seedQuoteDraftFromHero(
   pickup: ResolvedPlace,
   deliver: ResolvedPlace

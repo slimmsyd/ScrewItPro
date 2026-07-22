@@ -55,8 +55,9 @@ export type QuoteTotals = {
 export const EMPTY_DRAFT: QuoteDraft = {
   pickupAddress: null,
   deliveryAddress: null,
-  shipToHub: true,
-  pickupMode: "ship",
+  shipToHub: false,
+  /** Default to editable dual addresses; user can switch to ship-to-hub. */
+  pickupMode: "pickup",
   entryMode: "buy",
   items: [],
 };

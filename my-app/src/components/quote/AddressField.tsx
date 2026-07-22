@@ -197,18 +197,28 @@ export default function AddressField({
       <div
         style={{
           minHeight: 52,
-          borderRadius: 12,
+          borderRadius: 8,
           background: disabled ? "var(--gray-50)" : "#fff",
           display: "flex",
           alignItems: "center",
           gap: 11,
           padding: "0 15px",
-          border: `1.5px solid ${active ? "var(--blue-electric)" : "var(--border-default)"}`,
-          boxShadow: active ? "0 0 0 4px rgba(29,110,254,.12)" : "none",
+          border: `1.5px solid ${
+            active || filled ? "var(--blue-electric)" : "var(--border-default)"
+          }`,
+          boxShadow:
+            active || filled ? "0 0 0 4px rgba(29,110,254,.12)" : "none",
           opacity: disabled ? 0.75 : 1,
+          transition: "border-color 0.15s ease, box-shadow 0.15s ease",
         }}
       >
-        <Icon size={18} color={filled ? "var(--blue-electric)" : "var(--ink-300)"} />
+        <Icon
+          size={18}
+          color={
+            filled || active ? "var(--blue-electric)" : "var(--ink-300)"
+          }
+          style={{ flex: "0 0 auto" }}
+        />
         <input
           type="text"
           value={text}
@@ -226,6 +236,7 @@ export default function AddressField({
           aria-expanded={open && suggestions.length > 0}
           aria-controls={listId}
           aria-autocomplete="list"
+          autoComplete="off"
           style={{
             flex: 1,
             minWidth: 0,
@@ -235,7 +246,7 @@ export default function AddressField({
             fontFamily: "var(--font-body)",
             fontSize: 15,
             fontWeight: filled ? 600 : 500,
-            color: filled ? "var(--ink-900)" : "var(--ink-900)",
+            color: "var(--ink-900)",
           }}
         />
         {loading && (
