@@ -18,10 +18,17 @@ const nestedGlass: CSSProperties = {
   border: "1px solid rgba(255, 255, 255, 0.85)",
 };
 
-export default function ConfirmationPanel({ order }: { order: MockOrder }) {
+export default function ConfirmationPanel({
+  order,
+  isDemo = false,
+}: {
+  order: MockOrder;
+  /** True when continued past soft-gate without Stripe deposit. */
+  isDemo?: boolean;
+}) {
   const primary = order.items[0];
   const totalQty = order.items.reduce((n, i) => n + i.quantity, 0);
-  const trackHref = `/orders/${order.id}/track`;
+  const trackHref = `/orders/${order.id}/track${isDemo ? "?demo=1" : ""}`;
 
   return (
     <div
@@ -31,6 +38,7 @@ export default function ConfirmationPanel({ order }: { order: MockOrder }) {
         minHeight: "100%",
         position: "relative",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         padding: "40px 20px 56px",
@@ -39,6 +47,32 @@ export default function ConfirmationPanel({ order }: { order: MockOrder }) {
         overflow: "hidden",
       }}
     >
+      {isDemo && (
+        <div
+          role="status"
+          style={{
+            position: "relative",
+            zIndex: 2,
+            width: "100%",
+            maxWidth: 540,
+            marginBottom: 14,
+            padding: "10px 14px",
+            borderRadius: 12,
+            background: "rgba(255, 248, 230, 0.95)",
+            border: "1px solid rgba(185, 106, 0, 0.25)",
+            fontFamily: "var(--font-body)",
+            fontSize: 13,
+            lineHeight: 1.45,
+            color: "var(--ink-700)",
+            textAlign: "left",
+            boxSizing: "border-box",
+          }}
+        >
+          <strong style={{ color: "var(--status-warning)" }}>Demo path.</strong>{" "}
+          No deposit was charged. Stripe keys still need to be wired before
+          real Book my build checkout goes live.
+        </div>
+      )}
       {/* Soft glow orbs */}
       <div
         aria-hidden

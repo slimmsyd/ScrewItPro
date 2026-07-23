@@ -16,13 +16,20 @@ import PaymentAside from "@/components/quote/PaymentAside";
 import ScreenTransition from "@/components/quote/ScreenTransition";
 import { useQuote } from "@/lib/quote/context";
 import { formatUsd } from "@/lib/quote/pricing";
-import { JOIN_PATH, QUOTE_ITEMS_PATH } from "@/lib/site";
+import { QUOTE_ITEMS_PATH } from "@/lib/site";
 import { useIsMobile } from "@/hooks/useIsMobile";
+
+/** Demo post-book confirmation when Stripe deposit checkout is not configured. */
+const DEMO_CONFIRMATION_PATH = "/orders/SIP-4471?demo=1";
 
 /**
  * Price step — handoff locked layout:
  * full-bleed gray-50 main, white payment rail 360px,
  * badge-check eyebrow, breakdown card, 30% deposit aside.
+ *
+ * Stripe: when keys are live, Book my build opens Checkout. When not ready,
+ * soft-gate flags that deposit payment still needs wiring and offers
+ * Continue so the full post-book UI flow can be tested without Stripe.
  */
 export default function PriceStep() {
   const router = useRouter();
@@ -31,6 +38,11 @@ export default function PriceStep() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [softGate, setSoftGate] = useState(false);
+
+  const continueWithoutStripe = () => {
+    setSoftGate(false);
+    router.push(DEMO_CONFIRMATION_PATH);
+  };
 
   useEffect(() => {
     if (hydrated && !canProceedFromItems) {
@@ -411,36 +423,49 @@ export default function PriceStep() {
                 margin: "0 0 10px",
               }}
             >
-              Payments go live soon
+              Stripe deposit not wired yet
             </h2>
             <p
               style={{
-                margin: "0 0 20px",
+                margin: "0 0 12px",
                 color: "var(--ink-500)",
                 lineHeight: 1.5,
                 fontSize: 15,
               }}
             >
-              Your quote is saved on this device. Join the waitlist and
-              we&apos;ll notify you the moment deposit checkout opens in
-              Houston.
+              Real &quot;Book my build&quot; charges a 30% deposit once Stripe
+              keys are configured. That step is still open for production.
+            </p>
+            <p
+              style={{
+                margin: "0 0 20px",
+                color: "var(--ink-700)",
+                lineHeight: 1.5,
+                fontSize: 14.5,
+                fontWeight: 600,
+              }}
+            >
+              You can still continue into the confirmation and order tracker
+              with demo data so the full customer flow is testable now.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <Link
-                href={JOIN_PATH}
+              <button
+                type="button"
+                onClick={continueWithoutStripe}
                 style={{
                   height: 48,
                   borderRadius: 9,
+                  border: "none",
                   background: "var(--blue-electric)",
                   color: "#fff",
                   fontWeight: 700,
-                  display: "grid",
-                  placeItems: "center",
-                  textDecoration: "none",
+                  fontSize: 15,
+                  cursor: "pointer",
+                  fontFamily: "var(--font-body)",
                 }}
               >
-                Join the waitlist
-              </Link>
+                Continue to confirmation →
+              </button>
               <button
                 type="button"
                 onClick={() => setSoftGate(false)}
@@ -452,6 +477,7 @@ export default function PriceStep() {
                   fontWeight: 600,
                   cursor: "pointer",
                   color: "var(--ink-700)",
+                  fontFamily: "var(--font-body)",
                 }}
               >
                 Keep editing quote

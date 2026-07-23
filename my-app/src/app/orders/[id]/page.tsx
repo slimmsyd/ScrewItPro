@@ -18,19 +18,23 @@ export async function generateMetadata({
 /**
  * Step 5 — post-book confirmation ("You're booked!").
  * Design: /orders/SIP-4471
+ * ?demo=1 — continued from quote soft-gate without Stripe deposit.
  */
 export default async function OrderConfirmationPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ demo?: string }>;
 }) {
   const { id } = await params;
+  const { demo } = await searchParams;
   const order = getMockOrder(id);
   if (!order) notFound();
 
   return (
     <OrdersShell>
-      <ConfirmationPanel order={order} />
+      <ConfirmationPanel order={order} isDemo={demo === "1"} />
     </OrdersShell>
   );
 }
