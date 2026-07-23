@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import OrdersShell from "@/components/orders/OrdersShell";
+import CustomerAppShell from "@/components/portal/CustomerAppShell";
 import TrackOrderView from "@/components/orders/TrackOrderView";
 import { getMockOrder } from "@/lib/orders";
 
@@ -29,8 +29,8 @@ export default async function OrderTrackPage({
   if (!order) notFound();
 
   return (
-    <OrdersShell>
+    <CustomerAppShell fullBleed>
       <TrackOrderView baseOrder={order} />
-    </OrdersShell>
+    </CustomerAppShell>
   );
 }

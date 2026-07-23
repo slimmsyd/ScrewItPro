@@ -1,16 +1,16 @@
 "use client";
 
 import type { ReactNode } from "react";
-import OrdersShell from "@/components/orders/OrdersShell";
+import CustomerAppShell from "@/components/portal/CustomerAppShell";
 
 /**
  * Shared signed-in chrome for account portal shells (Jobs, Account).
- * Reuses post-book OrdersShell so avatar menu stays consistent.
+ * Bridges to CustomerAppShell (customer domain — no marketing nav).
  */
 export default function AccountPageShell({
   children,
 }: {
   children: ReactNode;
 }) {
-  return <OrdersShell ctaLabel="Get another quote">{children}</OrdersShell>;
+  return <CustomerAppShell>{children}</CustomerAppShell>;
 }

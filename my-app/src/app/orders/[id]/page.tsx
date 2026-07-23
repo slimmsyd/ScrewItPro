@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import OrdersShell from "@/components/orders/OrdersShell";
+import ConfirmationShell from "@/components/portal/ConfirmationShell";
 import ConfirmationPanel from "@/components/orders/ConfirmationPanel";
 import { getMockOrder } from "@/lib/orders";
 
@@ -33,8 +33,8 @@ export default async function OrderConfirmationPage({
   if (!order) notFound();
 
   return (
-    <OrdersShell>
+    <ConfirmationShell>
       <ConfirmationPanel order={order} isDemo={demo === "1"} />
-    </OrdersShell>
+    </ConfirmationShell>
   );
 }
