@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Archive } from "lucide-react";
 
 /**
@@ -17,6 +17,12 @@ export default function OrderItemThumb({
   size?: number;
 }) {
   const [failed, setFailed] = useState(false);
+
+  // New URL (snapshot hydrates after mount) must reset prior load failure.
+  useEffect(() => {
+    setFailed(false);
+  }, [imageUrl]);
+
   const show = Boolean(imageUrl) && !failed;
 
   if (show && imageUrl) {

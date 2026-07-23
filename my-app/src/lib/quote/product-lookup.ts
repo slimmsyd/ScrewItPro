@@ -174,6 +174,7 @@ export async function lookupProduct(url: string): Promise<LookupOutcome> {
   }
 
   const retailer = inferRetailer(new URL(fetched.finalUrl).hostname);
+  const absoluteImage = absoluteImageUrl(image, fetched.finalUrl);
 
   return {
     ok: true,
@@ -181,12 +182,27 @@ export async function lookupProduct(url: string): Promise<LookupOutcome> {
       name,
       brand,
       description,
-      image,
+      image: absoluteImage,
       priceCents,
       sourceUrl: fetched.finalUrl,
       retailer,
     },
   };
+}
+
+/** Protocol-relative and page-relative og:image → absolute URL for <img>. */
+function absoluteImageUrl(
+  image: string | undefined,
+  pageUrl: string
+): string | undefined {
+  if (!image?.trim()) return undefined;
+  const t = image.trim();
+  try {
+    return new URL(t, pageUrl).href;
+  } catch {
+    if (t.startsWith("//")) return `https:${t}`;
+    return t;
+  }
 }
 
 const RETAILER_ICONS: Record<Retailer, string> = {
@@ -205,6 +221,7 @@ export function lookupResultToQuoteItem(result: LookupResult): QuoteItem {
     src: "hub",
     quantity: 1,
     taskDetails: result.description,
+    // Kept as photoDataUrl historically; value is usually an absolute CDN URL.
     photoDataUrl: result.image,
   };
 }

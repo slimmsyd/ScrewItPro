@@ -7,11 +7,19 @@ import type { MockOrder } from "./types";
  *
  * Lookup is case-insensitive on the public display id.
  */
+/**
+ * Demo product image (stable Unsplash furniture photo — not IKEA CDN).
+ * Real bookings override this via booked snapshot / quote draft imageUrl.
+ */
+const DEMO_ITEM_IMAGE =
+  "https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&w=200&q=80";
+
 const baseItems: MockOrder["items"] = [
   {
     name: "HEMNES 8-drawer dresser",
     quantity: 1,
     fulfillmentLabel: "Ship to hub",
+    imageUrl: DEMO_ITEM_IMAGE,
   },
 ];
 
@@ -43,6 +51,7 @@ const MOCK_ORDERS: Record<string, MockOrder> = {
         name: "HEMNES dresser",
         quantity: 1,
         fulfillmentLabel: "Ship to hub",
+        imageUrl: DEMO_ITEM_IMAGE,
       },
     ],
     depositCents: 2970,

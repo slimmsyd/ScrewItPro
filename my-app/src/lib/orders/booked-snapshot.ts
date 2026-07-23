@@ -10,6 +10,8 @@ import type { MockOrder, MockOrderItem } from "./types";
  * that here once so confirmation/tracker never re-fetch IKEA.
  */
 export const BOOKED_SNAPSHOT_KEY = "screwitpro_booked_snapshot_v1";
+/** Same-tab listeners (storage events do not fire in the tab that wrote). */
+export const BOOKED_SNAPSHOT_EVENT = "screwitpro:booked-snapshot";
 
 export type BookedSnapshotItem = {
   name: string;
@@ -39,9 +41,22 @@ function fulfillmentLabelForItem(
   return "Ship to hub";
 }
 
+/** Normalize relative / protocol-relative retailer URLs to absolute https. */
+export function normalizeImageUrl(url: string | undefined | null): string | undefined {
+  if (!url) return undefined;
+  const t = url.trim();
+  if (!t) return undefined;
+  if (t.startsWith("//")) return `https:${t}`;
+  if (t.startsWith("http://") || t.startsWith("https://") || t.startsWith("data:")) {
+    return t;
+  }
+  // Relative path without a page base — unusable for <img>; drop it.
+  if (t.startsWith("/")) return undefined;
+  return t;
+}
+
 function itemImageUrl(item: QuoteItem): string | undefined {
-  const url = item.photoDataUrl?.trim();
-  return url ? url : undefined;
+  return normalizeImageUrl(item.photoDataUrl);
 }
 
 export function quoteItemsToSnapshotItems(
@@ -80,6 +95,10 @@ export function saveBookedSnapshot(input: {
   if (typeof window !== "undefined") {
     try {
       sessionStorage.setItem(BOOKED_SNAPSHOT_KEY, JSON.stringify(snap));
+      // Notify same-tab subscribers (useDisplayOrder) — StorageEvent is cross-tab only.
+      window.dispatchEvent(
+        new CustomEvent(BOOKED_SNAPSHOT_EVENT, { detail: { orderId: snap.orderId } })
+      );
     } catch {
       /* quota / private mode — screens fall back to mock fixtures */
     }
@@ -106,10 +125,10 @@ export function applySnapshotToOrder(
   snap: BookedSnapshot | null
 ): MockOrder {
   if (!snap) return base;
-  // Only apply when snapshot targets this order (or demo SIP ids).
+  // Only apply when snapshot targets this order (demo SIP-4471 is the soft-gate target).
   const snapId = snap.orderId.trim().toUpperCase();
   const baseId = base.id.trim().toUpperCase();
-  if (snapId !== baseId && snapId !== "SIP-4471") return base;
+  if (snapId !== baseId) return base;
 
   const items: MockOrderItem[] =
     snap.items.length > 0
@@ -117,7 +136,7 @@ export function applySnapshotToOrder(
           name: i.name,
           quantity: i.quantity,
           fulfillmentLabel: i.fulfillmentLabel,
-          imageUrl: i.imageUrl,
+          imageUrl: normalizeImageUrl(i.imageUrl) ?? undefined,
         }))
       : base.items;
 
@@ -129,4 +148,35 @@ export function applySnapshotToOrder(
     balanceCents: snap.balanceCents || base.balanceCents,
     deliveryLine: snap.deliveryLine || base.deliveryLine,
   };
+}
+
+/**
+ * Prefer booked snapshot; if missing, synthesize from live quote draft so
+ * mid-session tracker/confirmation still show cart images (IKEA paste etc.).
+ */
+export function resolveDisplayOrder(
+  base: MockOrder,
+  draft?: QuoteDraft | null
+): MockOrder {
+  const snap = loadBookedSnapshot();
+  if (snap && snap.orderId.trim().toUpperCase() === base.id.trim().toUpperCase()) {
+    return applySnapshotToOrder(base, snap);
+  }
+
+  // Draft fallback for demo order id only (soft-gate lands on SIP-4471).
+  if (draft && draft.items.length > 0 && base.id.trim().toUpperCase() === "SIP-4471") {
+    const synthetic: BookedSnapshot = {
+      orderId: base.id,
+      items: quoteItemsToSnapshotItems(draft),
+      depositCents: base.depositCents,
+      balanceCents: base.balanceCents,
+      deliveryLine:
+        draft.deliveryAddress?.formattedAddress?.split(",")[0]?.trim() ||
+        base.deliveryLine,
+      createdAt: new Date().toISOString(),
+    };
+    return applySnapshotToOrder(base, synthetic);
+  }
+
+  return base;
 }

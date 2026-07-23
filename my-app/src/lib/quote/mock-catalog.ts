@@ -9,7 +9,25 @@ export type CatalogProduct = {
   icon: string;
   assemblyCents: number;
   retailers: string[];
+  /** Optional product photo so catalog picks flow image into order summary. */
+  imageUrl?: string;
 };
+
+/** Stable demo photos (Unsplash) — catalog path previously had zero images. */
+const DEMO_PHOTOS = {
+  dresser:
+    "https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&w=200&q=80",
+  wardrobe:
+    "https://images.unsplash.com/photo-1558997519-83ea9252edf8?auto=format&fit=crop&w=200&q=80",
+  shelf:
+    "https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&w=200&q=80",
+  desk:
+    "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&w=200&q=80",
+  bed:
+    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=200&q=80",
+  chair:
+    "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?auto=format&fit=crop&w=200&q=80",
+} as const;
 
 export const RETAILER_CHIPS = [
   "IKEA",
@@ -36,6 +54,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     icon: "archive",
     assemblyCents: 5900,
     retailers: ["IKEA"],
+    imageUrl: DEMO_PHOTOS.dresser,
   },
   {
     id: "ikea-pax",
@@ -45,6 +64,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     icon: "door-open",
     assemblyCents: 12900,
     retailers: ["IKEA"],
+    imageUrl: DEMO_PHOTOS.wardrobe,
   },
   {
     id: "ikea-kallax",
@@ -54,6 +74,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     icon: "library",
     assemblyCents: 3900,
     retailers: ["IKEA", "Wayfair"],
+    imageUrl: DEMO_PHOTOS.shelf,
   },
   {
     id: "wayfair-desk",
@@ -63,6 +84,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     icon: "table",
     assemblyCents: DEFAULT_ASSEMBLY_CENTS,
     retailers: ["Wayfair", "Amazon"],
+    imageUrl: DEMO_PHOTOS.desk,
   },
   {
     id: "target-bed",
@@ -72,6 +94,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     icon: "bed-double",
     assemblyCents: 6900,
     retailers: ["Target", "Walmart"],
+    imageUrl: DEMO_PHOTOS.bed,
   },
   {
     id: "amazon-chair",
@@ -81,6 +104,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     icon: "armchair",
     assemblyCents: 3500,
     retailers: ["Amazon", "Walmart"],
+    imageUrl: DEMO_PHOTOS.chair,
   },
 ];
 
@@ -115,5 +139,6 @@ export function catalogToQuoteItem(p: CatalogProduct): QuoteItem {
     src: "hub",
     articleId: p.articleId,
     quantity: 1,
+    photoDataUrl: p.imageUrl,
   };
 }
