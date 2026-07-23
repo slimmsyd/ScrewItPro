@@ -7,6 +7,11 @@ import type { ReactNode } from "react";
 import QuoteStepper, {
   type QuoteStepIndex,
 } from "@/components/quote/QuoteStepper";
+import QuoteAccountMenu, {
+  QuoteAccountMenuSkeleton,
+} from "@/components/quote/QuoteAccountMenu";
+import { useMember } from "@/components/providers/MemberProvider";
+import { useLocale } from "@/components/providers/LocaleProvider";
 import { ASSETS, JOIN_PATH } from "@/lib/site";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
@@ -30,6 +35,52 @@ export default function QuoteShell({
 }) {
   const router = useRouter();
   const mobile = useIsMobile();
+  const { t } = useLocale();
+  // Same session source as homepage TopUtilityBar — do not invent parallel auth.
+  const { status, user, signOut } = useMember();
+  const sessionLoading = status === "loading";
+  const signedIn =
+    (status === "signed_in" || status === "waitlisted") && user != null;
+  // During session fetch, use outline Save so we never flash solid+Sign in for logged-in users.
+  const saveExitOutline = signedIn || sessionLoading;
+
+  const saveExitButton = (
+    <button
+      type="button"
+      onClick={() => router.push("/")}
+      style={
+        saveExitOutline
+          ? {
+              height: 36,
+              padding: "0 16px",
+              borderRadius: 999,
+              border: "1.5px solid var(--border-default)",
+              background: "#fff",
+              color: "var(--blue-deep)",
+              fontFamily: "var(--font-body)",
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }
+          : {
+              height: 36,
+              padding: "0 14px",
+              borderRadius: 999,
+              border: "none",
+              background: "var(--blue-electric)",
+              color: "#fff",
+              fontFamily: "var(--font-body)",
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }
+      }
+    >
+      Save & exit
+    </button>
+  );
 
   return (
     <div
@@ -108,41 +159,42 @@ export default function QuoteShell({
             marginLeft: "auto",
             display: "flex",
             alignItems: "center",
-            gap: mobile ? 10 : 16,
+            gap: mobile ? 10 : 12,
             flex: "0 0 auto",
           }}
         >
-          <Link
-            href={JOIN_PATH}
-            style={{
-              fontFamily: "var(--font-body)",
-              fontSize: 14,
-              fontWeight: 600,
-              color: "var(--ink-700)",
-              textDecoration: "none",
-            }}
-          >
-            Sign in
-          </Link>
-          <button
-            type="button"
-            onClick={() => router.push("/")}
-            style={{
-              height: 36,
-              padding: "0 14px",
-              borderRadius: 999,
-              border: "none",
-              background: "var(--blue-electric)",
-              color: "#fff",
-              fontFamily: "var(--font-body)",
-              fontWeight: 700,
-              fontSize: 13,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-            }}
-          >
-            Save & exit
-          </button>
+          {sessionLoading ? (
+            <>
+              {/* Loading chrome: same footprint as signed-in header — no "Sign in" flash */}
+              {saveExitButton}
+              <QuoteAccountMenuSkeleton />
+            </>
+          ) : signedIn && user ? (
+            <>
+              {/* Mock order: outline Save & exit, then avatar chip */}
+              {saveExitButton}
+              <QuoteAccountMenu
+                user={user}
+                onSignOut={() => void signOut()}
+              />
+            </>
+          ) : (
+            <>
+              <Link
+                href={`${JOIN_PATH}?mode=login`}
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "var(--ink-700)",
+                  textDecoration: "none",
+                }}
+              >
+                {t("common.signIn")}
+              </Link>
+              {saveExitButton}
+            </>
+          )}
         </div>
       </header>
 
