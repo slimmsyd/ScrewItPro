@@ -1,12 +1,14 @@
-import { Archive, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 import type { MockOrder } from "@/lib/orders";
 import { formatCents, itemCountLabel } from "@/lib/orders";
+import OrderItemThumb from "@/components/orders/OrderItemThumb";
 
 const SUPPORT_MAIL = "hello@screwitpros.com";
 
 export default function OrderSummaryAside({ order }: { order: MockOrder }) {
   const primary = order.items[0];
   const totalQty = order.items.reduce((n, i) => n + i.quantity, 0);
+  const primaryName = primary?.name ?? "Your build";
 
   return (
     <aside
@@ -47,20 +49,11 @@ export default function OrderSummaryAside({ order }: { order: MockOrder }) {
           marginBottom: 12,
         }}
       >
-        <div
-          aria-hidden
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 12,
-            background: "var(--blue-50)",
-            display: "grid",
-            placeItems: "center",
-            flex: "0 0 44px",
-          }}
-        >
-          <Archive size={20} color="var(--blue-electric)" strokeWidth={2} />
-        </div>
+        <OrderItemThumb
+          imageUrl={primary?.imageUrl}
+          name={primaryName}
+          size={44}
+        />
         <div style={{ minWidth: 0 }}>
           <div
             style={{
@@ -71,7 +64,7 @@ export default function OrderSummaryAside({ order }: { order: MockOrder }) {
               lineHeight: 1.3,
             }}
           >
-            {primary?.name ?? "Your build"}
+            {primaryName}
           </div>
           <div
             style={{
@@ -82,6 +75,7 @@ export default function OrderSummaryAside({ order }: { order: MockOrder }) {
             }}
           >
             {itemCountLabel(totalQty)}
+            {primary?.fulfillmentLabel ? ` · ${primary.fulfillmentLabel}` : ""}
           </div>
         </div>
       </div>

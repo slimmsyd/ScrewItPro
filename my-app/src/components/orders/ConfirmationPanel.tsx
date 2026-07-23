@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useRef, type CSSProperties } from "react";
-import { Archive, ArrowRight, Check, Package } from "lucide-react";
+import { ArrowRight, Check, Package } from "lucide-react";
 import type { MockOrder } from "@/lib/orders";
 import { formatCents, itemCountLabel } from "@/lib/orders";
 import { fireBookingConfetti } from "@/lib/confetti";
+import OrderItemThumb from "@/components/orders/OrderItemThumb";
+import { useDisplayOrder } from "@/components/orders/useDisplayOrder";
 
 /** Clean elevated card on a plain white canvas (no blue/green wash). */
 const panelCard: CSSProperties = {
@@ -27,9 +29,11 @@ export default function ConfirmationPanel({
   /** True when continued past soft-gate without Stripe deposit. */
   isDemo?: boolean;
 }) {
-  const primary = order.items[0];
-  const totalQty = order.items.reduce((n, i) => n + i.quantity, 0);
-  const trackHref = `/orders/${order.id}/track${isDemo ? "?demo=1" : ""}`;
+  // Overlay quote snapshot (names, $$, imageUrl from IKEA lookup) when present.
+  const display = useDisplayOrder(order);
+  const primary = display.items[0];
+  const totalQty = display.items.reduce((n, i) => n + i.quantity, 0);
+  const trackHref = `/orders/${display.id}/track${isDemo ? "?demo=1" : ""}`;
   const confettiFiredRef = useRef(false);
 
   // One-shot brand confetti when the booked screen mounts (same burst as waitlist success).
@@ -142,7 +146,7 @@ export default function ConfirmationPanel({
             color: "var(--ink-500)",
           }}
         >
-          Confirmation sent to {order.email}
+          Confirmation sent to {display.email}
         </p>
 
         {/* Order card */}
@@ -187,7 +191,7 @@ export default function ConfirmationPanel({
                   marginTop: 2,
                 }}
               >
-                #{order.id}
+                #{display.id}
               </div>
             </div>
             <span
@@ -230,20 +234,11 @@ export default function ConfirmationPanel({
               marginBottom: 14,
             }}
           >
-            <div
-              aria-hidden
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 10,
-                background: "var(--blue-50)",
-                display: "grid",
-                placeItems: "center",
-                flex: "0 0 40px",
-              }}
-            >
-              <Archive size={18} color="var(--blue-electric)" />
-            </div>
+            <OrderItemThumb
+              imageUrl={primary?.imageUrl}
+              name={primary?.name ?? "Your build"}
+              size={40}
+            />
             <div style={{ minWidth: 0 }}>
               <div
                 style={{
@@ -298,7 +293,7 @@ export default function ConfirmationPanel({
                 letterSpacing: "-0.02em",
               }}
             >
-              {formatCents(order.depositCents)}
+              {formatCents(display.depositCents)}
             </span>
           </div>
           <div
@@ -327,7 +322,7 @@ export default function ConfirmationPanel({
                 color: "var(--ink-700)",
               }}
             >
-              {formatCents(order.balanceCents)}
+              {formatCents(display.balanceCents)}
             </span>
           </div>
         </div>
@@ -381,7 +376,7 @@ export default function ConfirmationPanel({
                 marginTop: 2,
               }}
             >
-              {order.nextStep.title}
+              {display.nextStep.title}
             </div>
             <div
               style={{
@@ -391,7 +386,7 @@ export default function ConfirmationPanel({
                 marginTop: 2,
               }}
             >
-              {order.nextStep.body}
+              {display.nextStep.body}
             </div>
           </div>
         </div>

@@ -18,9 +18,11 @@ import { useQuote } from "@/lib/quote/context";
 import { formatUsd } from "@/lib/quote/pricing";
 import { QUOTE_ITEMS_PATH } from "@/lib/site";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { saveBookedSnapshot } from "@/lib/orders";
 
 /** Demo post-book confirmation when Stripe deposit checkout is not configured. */
-const DEMO_CONFIRMATION_PATH = "/orders/SIP-4471?demo=1";
+const DEMO_ORDER_ID = "SIP-4471";
+const DEMO_CONFIRMATION_PATH = `/orders/${DEMO_ORDER_ID}?demo=1`;
 
 /**
  * Price step — handoff locked layout:
@@ -30,6 +32,9 @@ const DEMO_CONFIRMATION_PATH = "/orders/SIP-4471?demo=1";
  * Stripe: when keys are live, Book my build opens Checkout. When not ready,
  * soft-gate flags that deposit payment still needs wiring and offers
  * Continue so the full post-book UI flow can be tested without Stripe.
+ *
+ * On continue, we snapshot quote line items (incl. IKEA image URLs) so
+ * confirmation + tracker Order Summary show the same product identity.
  */
 export default function PriceStep() {
   const router = useRouter();
@@ -40,6 +45,11 @@ export default function PriceStep() {
   const [softGate, setSoftGate] = useState(false);
 
   const continueWithoutStripe = () => {
+    saveBookedSnapshot({
+      orderId: DEMO_ORDER_ID,
+      draft,
+      totals,
+    });
     setSoftGate(false);
     router.push(DEMO_CONFIRMATION_PATH);
   };

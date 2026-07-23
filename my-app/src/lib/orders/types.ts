@@ -14,6 +14,11 @@ export type MockOrderItem = {
   quantity: number;
   /** e.g. "Ship to hub" | "Pickup" */
   fulfillmentLabel: string;
+  /**
+   * Product image when known — IKEA/Target CDN URL from paste-lookup,
+   * catalog asset, or future customer upload. Omit → icon fallback.
+   */
+  imageUrl?: string;
 };
 
 export type MockOrder = {
