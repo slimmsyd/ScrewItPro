@@ -1,8 +1,21 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Lock } from "lucide-react";
 import { formatUsd } from "@/lib/quote/pricing";
 import type { QuoteTotals } from "@/lib/quote/types";
+import { useMotionMode } from "@/hooks/useMotionMode";
+
+/** Matches computeDepositCents (30% of total) — single source for ring + label. */
+const DEPOSIT_PERCENT = 30;
+/** Full motion fill duration. */
+const FILL_MS = 1600;
+/** Still a one-shot reveal under prefers-reduced-motion (shorter, not infinite). */
+const FILL_MS_SOFT = 900;
+
+function easeOutCubic(t: number) {
+  return 1 - Math.pow(1 - t, 3);
+}
 
 export default function PaymentAside({
   totals,
@@ -19,6 +32,53 @@ export default function PaymentAside({
   onCta: () => void;
   subcaption?: string;
 }) {
+  const motion = useMotionMode();
+  /** Animated fill 0 → DEPOSIT_PERCENT when the Price rail mounts. */
+  const [fillPct, setFillPct] = useState(0);
+
+  useEffect(() => {
+    /**
+     * useMotionMode ladder:
+     *  - "static" = pre-hydration (do not snap to 30% — that killed the sweep)
+     *  - "full" / "soft" = client knows preference → run one-shot fill
+     *
+     * Previous bug: anything !== "full" immediately set 30% and returned.
+     * This Mac has OS Reduce Motion on → mode stayed "soft" → no animation ever.
+     */
+    if (motion === "static") return;
+
+    const duration = motion === "soft" ? FILL_MS_SOFT : FILL_MS;
+    let raf = 0;
+    let cancelled = false;
+    let start: number | null = null;
+
+    setFillPct(0);
+
+    const tick = (now: number) => {
+      if (cancelled) return;
+      if (start == null) start = now;
+      const t = Math.min(1, (now - start) / duration);
+      setFillPct(easeOutCubic(t) * DEPOSIT_PERCENT);
+      if (t < 1) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        setFillPct(DEPOSIT_PERCENT);
+      }
+    };
+
+    // Double-rAF: wait one frame so the 0% paint commits before sweeping.
+    raf = requestAnimationFrame(() => {
+      if (cancelled) return;
+      raf = requestAnimationFrame(tick);
+    });
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+    };
+  }, [motion]);
+
+  const displayPct = Math.round(fillPct);
   const rows = [
     { label: "Deposit", cents: totals.depositCents, emphasize: false },
     { label: "Balance on delivery", cents: totals.balanceCents, emphasize: false },
@@ -58,13 +118,13 @@ export default function PaymentAside({
 
       <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 22 }}>
         <div
-          aria-hidden
+          role="img"
+          aria-label={`${DEPOSIT_PERCENT} percent deposit due today`}
           style={{
             width: 58,
             height: 58,
             borderRadius: 999,
-            background:
-              "conic-gradient(var(--blue-electric) 0% 30%, var(--gray-100) 30% 100%)",
+            background: `conic-gradient(var(--blue-electric) 0% ${fillPct}%, var(--gray-100) ${fillPct}% 100%)`,
             display: "grid",
             placeItems: "center",
             flex: "0 0 auto",
@@ -82,9 +142,10 @@ export default function PaymentAside({
               fontSize: 12,
               fontWeight: 800,
               color: "var(--blue-deep)",
+              fontVariantNumeric: "tabular-nums",
             }}
           >
-            30%
+            {displayPct}%
           </div>
         </div>
         <div>
