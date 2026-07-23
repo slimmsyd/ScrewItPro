@@ -4,9 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import Container from "@/components/ui/Container";
 import MvpBadge from "@/components/home/MvpBadge";
-import QuoteAccountMenu, {
-  QuoteAccountMenuSkeleton,
-} from "@/components/quote/QuoteAccountMenu";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { useMember } from "@/components/providers/MemberProvider";
 import { JOIN_PATH, QUOTE_PATH } from "@/lib/site";
@@ -39,61 +36,15 @@ function UtilLink({
   );
 }
 
-function UtilButton({
-  onClick,
-  children,
-  emphasize,
-}: {
-  onClick: () => void;
-  children: React.ReactNode;
-  emphasize?: boolean;
-}) {
-  const [h, setH] = useState(false);
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      onMouseEnter={() => setH(true)}
-      onMouseLeave={() => setH(false)}
-      style={{
-        fontFamily: "var(--font-body)",
-        fontSize: 13,
-        fontWeight: 600,
-        color: emphasize
-          ? h
-            ? "var(--blue-electric)"
-            : "var(--blue-deep)"
-          : h
-            ? "var(--blue-deep)"
-            : "var(--ink-500)",
-        textDecoration: "none",
-        transition: "color 160ms",
-        background: "none",
-        border: "none",
-        padding: 0,
-        cursor: "pointer",
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
 /**
- * Desktop-only utility strip above the nav.
- * - Quote mode (develop): product announce + account (My Jobs / avatar menu), never waitlist share.
- * - Waitlist mode (main): invite/share copy when enrolled.
+ * Desktop utility strip above the nav — product announce only.
+ * Account / sign-in lives next to "Get a Free Quote" in the main Nav.
+ * Waitlist invite copy only when SITE is still waitlist mode.
  */
 export default function TopUtilityBar({ waitlist }: { waitlist: boolean }) {
   const { t } = useLocale();
-  const { status, user, signOut } = useMember();
-  const sessionLoading = status === "loading";
-  // In quote mode, a waitlist position must not revive invite-a-friend chrome.
+  const { status } = useMember();
   const waitlisted = waitlist && status === "waitlisted";
-  const signedIn =
-    !sessionLoading &&
-    user != null &&
-    (status === "signed_in" || status === "waitlisted");
 
   const onShare = () => {
     void shareWaitlistInvite({
@@ -102,11 +53,6 @@ export default function TopUtilityBar({ waitlist }: { waitlist: boolean }) {
       url: waitlistInviteUrl(),
     });
   };
-
-  const memberLabel =
-    waitlisted && user?.position
-      ? t("nav.youreInPosition", { position: user.position })
-      : t("nav.youreIn");
 
   return (
     <div
@@ -118,13 +64,12 @@ export default function TopUtilityBar({ waitlist }: { waitlist: boolean }) {
       <Container
         style={{
           position: "relative",
-          height: 42,
+          height: 38,
           display: "flex",
           alignItems: "center",
           justifyContent: "flex-end",
         }}
       >
-        {/* Center announcement — waitlist share only when site is waitlist mode */}
         <div
           style={{
             position: "absolute",
@@ -140,7 +85,14 @@ export default function TopUtilityBar({ waitlist }: { waitlist: boolean }) {
             pointerEvents: "none",
           }}
         >
-          <span style={{ pointerEvents: "auto", display: "inline-flex", alignItems: "center", gap: 10 }}>
+          <span
+            style={{
+              pointerEvents: "auto",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
             <MvpBadge />
             <span>
               {waitlist ? (
@@ -206,41 +158,9 @@ export default function TopUtilityBar({ waitlist }: { waitlist: boolean }) {
             zIndex: 1,
             display: "flex",
             alignItems: "center",
-            gap: 16,
+            gap: 22,
           }}
         >
-          {sessionLoading ? (
-            <QuoteAccountMenuSkeleton />
-          ) : signedIn && user ? (
-            waitlist && waitlisted ? (
-              <>
-                <span
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: "var(--blue-deep)",
-                  }}
-                  title={user.email}
-                >
-                  {memberLabel}
-                </span>
-                <UtilButton onClick={() => void signOut()}>
-                  {t("common.signOut")}
-                </UtilButton>
-              </>
-            ) : (
-              <>
-                <UtilLink href="/jobs">My Jobs</UtilLink>
-                <QuoteAccountMenu
-                  user={user}
-                  onSignOut={() => void signOut()}
-                />
-              </>
-            )
-          ) : (
-            <UtilLink href={`${JOIN_PATH}?mode=login`}>{t("nav.login")}</UtilLink>
-          )}
           <UtilLink href="#faq">{t("nav.contactUs")}</UtilLink>
         </nav>
       </Container>

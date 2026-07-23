@@ -11,18 +11,13 @@ import {
 } from "@/lib/member";
 
 /**
- * Mobile announcement strip - mirrors desktop TopUtilityBar:
- * quote mode never shows waitlist invite-a-friend; points to Get a Price.
+ * Mobile announcement strip — product announce only.
+ * Account control sits in the main nav next to quote / burger.
  */
 export default function AnnouncementBar({ waitlist }: { waitlist: boolean }) {
   const { t } = useLocale();
-  const { status, user } = useMember();
-  // Only honor waitlisted UX when the site is still in waitlist mode.
+  const { status } = useMember();
   const waitlisted = waitlist && status === "waitlisted";
-  const signedIn =
-    user != null &&
-    (status === "signed_in" || status === "waitlisted") &&
-    !waitlist;
 
   const onShare = () => {
     void shareWaitlistInvite({
@@ -90,31 +85,6 @@ export default function AnnouncementBar({ waitlist }: { waitlist: boolean }) {
               </Link>
             </>
           )
-        ) : signedIn ? (
-          <>
-            Signed in ·{" "}
-            <Link
-              href="/jobs"
-              style={{
-                color: "var(--blue-deep)",
-                fontWeight: 700,
-                textDecoration: "none",
-              }}
-            >
-              My Jobs
-            </Link>
-            {" · "}
-            <Link
-              href="/account"
-              style={{
-                color: "var(--blue-deep)",
-                fontWeight: 700,
-                textDecoration: "none",
-              }}
-            >
-              Account
-            </Link>
-          </>
         ) : (
           <>
             {t("util.announceServing")}
@@ -127,17 +97,6 @@ export default function AnnouncementBar({ waitlist }: { waitlist: boolean }) {
               }}
             >
               {t("util.bookToday")}
-            </Link>
-            {" · "}
-            <Link
-              href={`${JOIN_PATH}?mode=login`}
-              style={{
-                color: "var(--blue-deep)",
-                fontWeight: 700,
-                textDecoration: "none",
-              }}
-            >
-              {t("nav.login")}
             </Link>
           </>
         )}
