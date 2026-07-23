@@ -1,21 +1,22 @@
+"use client";
+
 import Link from "next/link";
-import type { CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { Archive, ArrowRight, Check, Package } from "lucide-react";
 import type { MockOrder } from "@/lib/orders";
 import { formatCents, itemCountLabel } from "@/lib/orders";
+import { fireBookingConfetti } from "@/lib/confetti";
 
-const glassCard: CSSProperties = {
-  background: "rgba(255, 255, 255, 0.65)",
-  border: "1px solid rgba(255, 255, 255, 0.9)",
-  backdropFilter: "blur(18px) saturate(160%)",
-  WebkitBackdropFilter: "blur(18px) saturate(160%)",
-  boxShadow:
-    "0 20px 44px -22px rgba(4, 32, 155, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
+/** Clean elevated card on a plain white canvas (no blue/green wash). */
+const panelCard: CSSProperties = {
+  background: "#fff",
+  border: "1px solid var(--border-default)",
+  boxShadow: "0 16px 40px -20px rgba(11, 16, 48, 0.18)",
 };
 
-const nestedGlass: CSSProperties = {
-  background: "rgba(255, 255, 255, 0.55)",
-  border: "1px solid rgba(255, 255, 255, 0.85)",
+const nestedCard: CSSProperties = {
+  background: "var(--gray-50)",
+  border: "1px solid var(--border-default)",
 };
 
 export default function ConfirmationPanel({
@@ -29,6 +30,14 @@ export default function ConfirmationPanel({
   const primary = order.items[0];
   const totalQty = order.items.reduce((n, i) => n + i.quantity, 0);
   const trackHref = `/orders/${order.id}/track${isDemo ? "?demo=1" : ""}`;
+  const confettiFiredRef = useRef(false);
+
+  // One-shot brand confetti when the booked screen mounts (same burst as waitlist success).
+  useEffect(() => {
+    if (confettiFiredRef.current) return;
+    confettiFiredRef.current = true;
+    void fireBookingConfetti();
+  }, []);
 
   return (
     <div
@@ -42,8 +51,7 @@ export default function ConfirmationPanel({
         alignItems: "center",
         justifyContent: "center",
         padding: "40px 20px 56px",
-        background:
-          "linear-gradient(170deg, #F3F7FF 0%, #E9F0FE 60%, #E1EAFC 100%)",
+        background: "#fff",
         overflow: "hidden",
       }}
     >
@@ -73,39 +81,10 @@ export default function ConfirmationPanel({
           real Book my build checkout goes live.
         </div>
       )}
-      {/* Soft glow orbs */}
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          top: -40,
-          right: "12%",
-          width: 220,
-          height: 220,
-          borderRadius: "50%",
-          background: "rgba(29, 110, 254, 0.20)",
-          filter: "blur(28px)",
-          pointerEvents: "none",
-        }}
-      />
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          bottom: -20,
-          left: "10%",
-          width: 200,
-          height: 200,
-          borderRadius: "50%",
-          background: "rgba(94, 203, 126, 0.16)",
-          filter: "blur(24px)",
-          pointerEvents: "none",
-        }}
-      />
 
       <div
         style={{
-          ...glassCard,
+          ...panelCard,
           position: "relative",
           width: "100%",
           maxWidth: 540,
@@ -115,18 +94,17 @@ export default function ConfirmationPanel({
           boxSizing: "border-box",
         }}
       >
-        {/* Success badge */}
+        {/* Success badge — green check only; no ambient green/blue glow wash */}
         <div
           style={{
             width: 84,
             height: 84,
             margin: "0 auto 18px",
             borderRadius: 999,
-            background: "rgba(255, 255, 255, 0.7)",
-            border: "1px solid rgba(255, 255, 255, 0.95)",
+            background: "var(--gray-50)",
+            border: "1px solid var(--border-default)",
             display: "grid",
             placeItems: "center",
-            boxShadow: "0 10px 26px rgba(22, 163, 74, 0.18)",
           }}
         >
           <div
@@ -137,7 +115,6 @@ export default function ConfirmationPanel({
               background: "var(--status-success)",
               display: "grid",
               placeItems: "center",
-              boxShadow: "0 10px 26px rgba(22, 163, 74, 0.4)",
             }}
           >
             <Check size={28} color="#fff" strokeWidth={2.8} />
@@ -171,12 +148,11 @@ export default function ConfirmationPanel({
         {/* Order card */}
         <div
           style={{
-            ...nestedGlass,
+            ...nestedCard,
             marginTop: 24,
             borderRadius: 18,
             padding: "18px 18px 16px",
             textAlign: "left",
-            boxShadow: "0 10px 28px -18px rgba(4, 32, 155, 0.22)",
           }}
         >
           <div
@@ -249,8 +225,8 @@ export default function ConfirmationPanel({
               gap: 12,
               padding: "12px 12px",
               borderRadius: 12,
-              background: "rgba(255, 255, 255, 0.55)",
-              border: "1px solid rgba(255, 255, 255, 0.8)",
+              background: "#fff",
+              border: "1px solid var(--border-default)",
               marginBottom: 14,
             }}
           >
@@ -359,7 +335,7 @@ export default function ConfirmationPanel({
         {/* Next step strip */}
         <div
           style={{
-            ...nestedGlass,
+            ...nestedCard,
             marginTop: 14,
             borderRadius: 14,
             padding: "14px 16px",
