@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import {
   Archive,
   Armchair,
@@ -34,9 +34,12 @@ const ICONS: Record<string, LucideIcon> = {
 
 function SrcTag({ src, articleId }: { src: ItemSource; articleId?: string }) {
   if (src === "hub") {
+    // Real paste-a-link lookups have no retailer article number - omit the
+    // tag rather than show a placeholder dash.
+    if (!articleId) return null;
     return (
       <span style={tagStyle}>
-        <Tag size={12} /> Art. #{articleId ?? "-"}
+        <Tag size={12} /> Art. #{articleId}
       </span>
     );
   }
@@ -51,6 +54,50 @@ function SrcTag({ src, articleId }: { src: ItemSource; articleId?: string }) {
     <span style={tagStyle}>
       <Store size={12} /> Store pickup
     </span>
+  );
+}
+
+/** Real product photo when we have one (paste-a-link lookups); falls back to the category icon tile otherwise. */
+function ItemThumb({ item }: { item: QuoteItem }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const showImage = Boolean(item.photoDataUrl) && !imgFailed;
+
+  if (showImage) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- external retailer CDN image, not a local/optimizable asset
+      <img
+        src={item.photoDataUrl}
+        alt={item.name}
+        onError={() => setImgFailed(true)}
+        style={{
+          width: 38,
+          height: 38,
+          borderRadius: 9,
+          objectFit: "cover",
+          background: "var(--gray-50)",
+          border: "1px solid var(--border-default)",
+          flex: "0 0 38px",
+        }}
+      />
+    );
+  }
+
+  const Icon = ICONS[item.icon] ?? PackageOpen;
+  return (
+    <div
+      style={{
+        width: 38,
+        height: 38,
+        borderRadius: 9,
+        background: "var(--gray-50)",
+        border: "1px solid var(--border-default)",
+        display: "grid",
+        placeItems: "center",
+        flex: "0 0 38px",
+      }}
+    >
+      <Icon size={18} color="var(--blue-steel)" />
+    </div>
   );
 }
 
@@ -149,7 +196,6 @@ export default function BuildCart({
           }}
         >
           {items.map((item) => {
-            const Icon = ICONS[item.icon] ?? PackageOpen;
             return (
               <li
                 key={item.id}
@@ -163,20 +209,7 @@ export default function BuildCart({
                   alignItems: "center",
                 }}
               >
-                <div
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 9,
-                    background: "var(--gray-50)",
-                    border: "1px solid var(--border-default)",
-                    display: "grid",
-                    placeItems: "center",
-                    flex: "0 0 38px",
-                  }}
-                >
-                  <Icon size={18} color="var(--blue-steel)" />
-                </div>
+                <ItemThumb item={item} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div
                     style={{
