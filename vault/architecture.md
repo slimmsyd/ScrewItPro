@@ -145,17 +145,71 @@ Browser
 
 - **Foundation:** `profiles` (role enum: customer | admin | technician | driver), waitlist, newsletter, subscription plans/subscriptions, point ledger + rewards (loyalty schema largely dormant in UI).
 - **Inquiries** table + API.
-- **Interim orders/payments** — status enum subset: `pending_payment` | `deposit_paid` | `cancelled`. Service-role writes.
+- **Interim pay columns on `orders`:** legacy `status` (`order_status_interim`: pending_payment | deposit_paid | cancelled) kept for checkout compatibility.
+- **Phase C1 spine (customer-first):** extended `orders` + `order_items` + `order_status_events` + transitions + `addresses` + `item_classes` + `app_settings` + `stripe_webhook_events`. See **Phase C** below.
 - **email_log** — template sends, idempotency guard.
 
-### Planned (not built — do not implement from vault alone)
+### Phase C — order persistence spine (customer dashboard first)
 
-Full platform in `docs/ARCHITECTURE-PLAN.md` and `docs/DATA_ARCHITECTURE.md`:
+**Goal:** My Jobs / confirmation / tracker / notifications eventually read real DB rows. **Not** building tech/driver ops UIs yet.
 
-- 14-state order lifecycle, assembly jobs, inbound scan, routes/stops, damage/refusal flows
-- Role route groups: `/customer`, `/admin`, `/tech`, `/driver` with middleware role gates
-- Custom Access Token Hook (`app_metadata.sip_role`)
-- Service layer under `src/server/*` (not present yet)
+| Slice | Deliverable | Status |
+|-------|-------------|--------|
+| **C0** | Vault freeze + ops→customer status map | this section |
+| **C1** | DB migrations (scaffold) | in progress |
+| **C2** | `GET /api/customer/jobs` + order detail | next |
+| **C3** | Draft/book writes items + order_number | planned |
+| **C4** | `transitionOrder` + tracker events | planned |
+| **C5** | Stripe webhook idempotency | planned |
+| **C6** | Portal cutover + notifications from events | planned |
+
+**Principles**
+
+1. **Extend** interim `orders` / `payments` — do not drop Stripe columns.
+2. Dual status during cutover: legacy `status` (pay scaffold) + `lifecycle_status` (ops enum).
+3. Customer UI keeps **7** `CustomerOrderStatus` labels; DB stores **ops** lifecycle; map at API edge (`map-ops-to-customer`).
+4. Service-role for status/money mutations; customer **SELECT own** RLS on orders/items/visible events.
+5. Mocks/snapshots allowed only as explicit demo fallback until C6.
+
+#### Ops → customer status map (frozen for C1–C4)
+
+| `lifecycle_status` (DB ops) | Customer UI (`CustomerOrderStatus`) |
+|-----------------------------|-------------------------------------|
+| `draft`, `pending_quote`, `quote_sent` | *(pre-book — not shown on My Jobs active list)* |
+| `awaiting_arrival` | `booked` |
+| *(optional future slot)* | `pickup_scheduled` |
+| `boxes_received` | `picked_up` |
+| `in_assembly` | `in_workshop` |
+| `assembly_completed`, `ready_for_delivery` | `assembled_inspected` |
+| `out_for_delivery` | `out_for_delivery` |
+| `delivered` | `delivered` |
+| `cancelled_no_payment`, `refunded_closed` | past / cancelled handling later |
+| `on_hold_damage_reported`, `refused_pending_resolution` | **deferred** (no customer mapping yet) |
+
+Legacy interim `status` mapping into lifecycle:
+
+| Interim `status` | → `lifecycle_status` | → `payment_status` |
+|------------------|----------------------|--------------------|
+| `pending_payment` | `draft` | `unpaid` |
+| `deposit_paid` | `awaiting_arrival` | `deposit_paid` |
+| `cancelled` | `cancelled_no_payment` | `unpaid` |
+
+#### Tables introduced in C1
+
+- `app_settings` — hub radius 40, deposit_percent 30  
+- `orders` extended — order_number, payment_status, lifecycle_status, contact_*, delivery_address_id  
+- `order_items`  
+- `order_status_transitions` + `order_status_events` (+ validate trigger)  
+- `item_classes` (seeded)  
+- `addresses`  
+- `stripe_webhook_events` (ledger empty until C5)  
+- Sequence for `SIP-#####` order numbers  
+
+Diagram: `docs/diagrams/phase-c-order-spine.html`
+
+### Planned later (not Phase C)
+
+Full platform extras in `docs/ARCHITECTURE-PLAN.md`: assembly jobs, inbound scan, routes/stops, damage/refusal, deep_link_tokens UI, tech/driver portals.
 
 When implementing those, update this file and `security.md` in the same change.
 
@@ -218,6 +272,7 @@ No project-wide test runner or CI pipeline is established in-repo as of this sna
 | 2026-07-30 | **Service radius locked to 40 mi** (`BUSINESS.geo.radiusM = 64_374`). Source of truth: `lib/seo/business.ts`. |
 | 2026-07-30 | Slice 1: delete mock catalog; BuyMode paste-only; AddressField fail-closed; soft-gate fails closed in production; no fixture-email fallback |
 | 2026-07-30 | Slice 2: `/customer/*` prefix + redirects; Vitest; middleware coarse gates; admin via profiles.role; checkout `{orderId}` only + `POST /api/quote/draft` |
+| 2026-07-30 | Phase C started: customer-first order spine; C0 map + C1 schema (extend interim orders) |
 | (prior) | Google Auth unified onto Supabase OAuth; legacy `sip_session` cleared in middleware |
 | (prior) | Interim orders/payments for deposit Checkout scaffold |
 | (prior) | Customer portal Phase 0 shell (church vs state) |

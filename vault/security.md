@@ -182,9 +182,27 @@ There is **no org_id multi-tenancy** yet. Do not invent cross-customer reads “
 | Checkout auth + no client money | **As-built** (draft + orderId) |
 | Custom Access Token Hook → `sip_role` | **Dashboard setup still required** — code reads claim when present, defaults customer |
 | profiles update recursion fix | **Migration shipped** — apply via SQL editor / `db push` |
-| Full order RLS matrix | Planned |
-| Deep-link tokens | Planned |
+| Order spine customer read RLS (own orders/items/visible events) | **C1 migration** — apply SQL |
+| Status/money mutations | **service-role only** (transition service in C4) |
+| Stripe webhook idempotency ledger table | **C1 table**; use in C5 |
+| Deep-link tokens | Planned (post C4) |
 | Rate limits | Planned |
+| Full tech/driver RLS | Planned (not Phase C) |
+
+### Order spine RLS (Phase C)
+
+| Table | authenticated customer | service role |
+|-------|------------------------|--------------|
+| `orders` | SELECT where `customer_id = auth.uid()` | full (draft, checkout, transitions) |
+| `order_items` | SELECT via parent order ownership | full |
+| `order_status_events` | SELECT where `customer_visible` and owns order | full insert via transitions |
+| `addresses` | SELECT/INSERT/UPDATE own `user_id` | full |
+| `item_classes` | SELECT active | full |
+| `app_settings` | SELECT (public config keys only if exposed later) | full |
+| `stripe_webhook_events` | none | full |
+| `order_status_transitions` | SELECT (read legal edges) | full |
+
+**Never** let the client set `lifecycle_status`, `payment_status`, or money columns directly.
 
 ### Bootstrap first admin
 
@@ -209,6 +227,7 @@ Record funky authz/authn bugs here so we do not repeat them.
 | 2026-07-30 | Stripe soft-gate offered "Continue to confirmation" in all envs | `DEMO_BOOKING_ENABLED = NODE_ENV !== "production"`; production terminal modal only |
 | 2026-07-30 | Checkout trusted client `totalCents` / missing auth / IDOR on orderId | Auth first; draft API server-prices; checkout only `{ orderId }` + ownership + pending_payment |
 | 2026-07-30 | Admin leads gated by `?key=` secret in URL/HTML | Deleted; `requireAdmin()` from profiles.role |
+| 2026-07-30 | Phase C1 order spine tables + customer SELECT RLS | Migrations under `20260730*_phase_c1_*` |
 
 ---
 
