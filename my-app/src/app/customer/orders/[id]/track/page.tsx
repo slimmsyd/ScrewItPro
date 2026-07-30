@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import CustomerAppShell from "@/components/portal/CustomerAppShell";
 import TrackOrderView from "@/components/orders/TrackOrderView";
 import { getMockOrder } from "@/lib/orders";
+import { resolvePortalOrder } from "@/lib/orders/resolve-portal-order";
 
 export async function generateMetadata({
   params,
@@ -10,14 +11,14 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const order = getMockOrder(id);
-  if (!order) return { title: "Track order" };
-  return { title: `Track #${order.id}` };
+  const mock = getMockOrder(id);
+  if (mock) return { title: `Track #${mock.id}` };
+  return { title: `Track #${id}` };
 }
 
 /**
  * Step 6 — customer order tracker (7-status timeline).
- * Order Summary reads booked snapshot (IKEA imageUrl) when present.
+ * Resolves fixture mock OR real customer job (same as confirmation).
  */
 export default async function OrderTrackPage({
   params,
@@ -25,7 +26,7 @@ export default async function OrderTrackPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const order = getMockOrder(id);
+  const order = await resolvePortalOrder(id);
   if (!order) notFound();
 
   return (
