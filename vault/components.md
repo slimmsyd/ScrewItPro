@@ -70,7 +70,11 @@
 | Name | Path | Kind | Use when |
 |------|------|------|----------|
 | **QuoteStepper** | `quote/QuoteStepper.tsx` | Nav | Step indicator for quote wizard |
-| **ItemsStep** | `quote/ItemsStep.tsx` | Step | Item selection / catalog / paste-link |
+| **ItemsStep** | `quote/ItemsStep.tsx` | Step | Orchestrates entry mode + mode panels (keep thin) |
+| **BuyMode** | `quote/items/BuyMode.tsx` | Step panel | Buy-new: paste-link lookup + catalog toggle |
+| **HomeMode** | `quote/items/HomeMode.tsx` | Step panel | Boxed-at-home item form + voice notes |
+| **StoreMode** | `quote/items/StoreMode.tsx` | Step panel | Store pickup order form |
+| **items/shared** | `quote/items/shared.tsx` | Shared | FieldLabel, inputStyle, stepperBtn for items panels |
 | **WhereStep** | `quote/WhereStep.tsx` | Step | Address / service area |
 | **PriceStep** | `quote/PriceStep.tsx` | Step | Pricing + deposit presentation |
 | **AddressField** | `quote/AddressField.tsx` | Field | Address entry with places behavior |
@@ -81,6 +85,17 @@
 | **ScreenTransition** | `quote/ScreenTransition.tsx` | Motion | Step transitions |
 
 Supporting domain logic: `my-app/src/lib/quote/*` (not components — do not duplicate pricing math in UI).
+
+## Join / waitlist (`join/`)
+
+| Name | Path | Kind | Use when |
+|------|------|------|----------|
+| **JoinPage** | `app/join/page.tsx` | Page | Thin Suspense shell only |
+| **JoinForm** | `join/JoinForm.tsx` | Form | Signup / login / success / share flow |
+| **joinUi** | `join/joinUi.tsx` | Shared | GoogleMark, PasswordField, field styles |
+| **joinHelpers** | `join/joinHelpers.ts` | Helpers | Error maps, waitlist enroll, readiness |
+
+---
 
 ---
 
@@ -175,12 +190,16 @@ Also: `home/index.ts` re-exports — use when already established.
 
 Not yet in `ui/` — create carefully if needed, then catalog:
 
-- Text input / select / checkbox / radio (many forms inline today)
+- Text input / select / checkbox / radio (many forms inline today; join uses `join/joinUi` PasswordField)
 - Modal / dialog primitive (quote may use custom dialogs)
 - Table primitive (admin leads may be page-local)
 - Toast / snackbar system
 
 When you add any of these, they become the single source — no second series.
+
+### Size guardrail
+
+Prefer **no single source file over ~1,000 lines** (components/pages). Split by mode/panel/helpers when approaching the limit. Token CSS in `globals.css` may stay longer as design-system surface.
 
 ---
 
@@ -189,3 +208,4 @@ When you add any of these, they become the single source — no second series.
 | Date | Change |
 |------|--------|
 | 2026-07-30 | Initial catalog from codebase inventory |
+| 2026-07-30 | Split ItemsStep → quote/items/*; join page → JoinForm + joinUi + helpers |

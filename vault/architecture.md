@@ -211,6 +211,7 @@ No project-wide test runner or CI pipeline is established in-repo as of this sna
 | Date | Decision |
 |------|----------|
 | 2026-07-30 | Vault initialized; as-built architecture documented |
+| 2026-07-30 | Soft 1k-line file cap for components/pages; ItemsStep + join page split into panels/helpers |
 | (prior) | Google Auth unified onto Supabase OAuth; legacy `sip_session` cleared in middleware |
 | (prior) | Interim orders/payments for deposit Checkout scaffold |
 | (prior) | Customer portal Phase 0 shell (church vs state) |
