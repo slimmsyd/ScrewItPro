@@ -1152,6 +1152,38 @@ header[id] {
   }
 }
 
+/* Refer & Earn — copy button sits on the gradient, needs a light ring */
+.ref-copy-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.45);
+}
+
+/* My Jobs — keyboard focus rings on segment toggle + row CTAs */
+.jobs-segment-btn:focus-visible,
+.jobs-row-cta:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(29, 110, 254, 0.18);
+}
+
+/* Notification preference switches — keyboard focus ring on the track */
+.notif-toggle:focus-visible {
+  outline: none;
+}
+
+.notif-toggle:focus-visible .notif-track {
+  box-shadow: 0 0 0 3px rgba(29, 110, 254, 0.18);
+}
+
+.notif-knob {
+  transition: left 0.16s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notif-knob {
+    transition: none;
+  }
+}
+
 /* Tracker: stack summary under timeline on small screens */
 @media (max-width: 900px) {
   .order-track-aside {

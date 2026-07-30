@@ -3,30 +3,19 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import AccountPageShell from "@/components/account/AccountPageShell";
-import AccountTabsView from "@/components/portal/account/AccountTabsView";
+import NotificationsView from "@/components/portal/NotificationsView";
 import { useMember } from "@/components/providers/MemberProvider";
 import { JOIN_PATH } from "@/lib/site";
 
-/**
- * Account silo — centered Profile / Addresses / Payment tabs.
- * Design: design_handoff_portal Account view. Password 2-step deferred.
- */
-export default function AccountPage() {
+/** Signed-in gate for the Notifications silo — mirrors Account. */
+export default function NotificationsPageClient() {
   const { status, user } = useMember();
 
   if (status === "loading") {
     return (
       <AccountPageShell>
         <div style={centerWrap}>
-          <p
-            style={{
-              color: "var(--ink-500)",
-              fontFamily: "var(--font-body)",
-              margin: 0,
-            }}
-          >
-            Loading account…
-          </p>
+          <p style={bodyStyle}>Loading notifications…</p>
         </div>
       </AccountPageShell>
     );
@@ -36,8 +25,10 @@ export default function AccountPage() {
     return (
       <AccountPageShell>
         <div style={centerWrap}>
-          <h1 style={h1Style}>Account</h1>
-          <p style={bodyStyle}>Sign in to view your profile and preferences.</p>
+          <h1 style={h1Style}>Notifications</h1>
+          <p style={bodyStyle}>
+            Sign in to manage your notification preferences.
+          </p>
           <Link href={`${JOIN_PATH}?mode=login`} style={primaryBtnStyle}>
             Sign in
           </Link>
@@ -48,7 +39,7 @@ export default function AccountPage() {
 
   return (
     <AccountPageShell>
-      <AccountTabsView user={user} />
+      <NotificationsView />
     </AccountPageShell>
   );
 }
@@ -90,7 +81,6 @@ const primaryBtnStyle: CSSProperties = {
   fontFamily: "var(--font-body)",
   fontWeight: 700,
   fontSize: 15,
+  letterSpacing: "-0.01em",
   textDecoration: "none",
-  border: "none",
-  boxShadow: "0 8px 20px -8px rgba(4, 32, 155, 0.5)",
 };

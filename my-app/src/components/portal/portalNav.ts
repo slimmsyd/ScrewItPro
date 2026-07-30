@@ -41,6 +41,18 @@ export const PORTAL_NAV_SHIPPED: PortalNavItem[] = [
     label: "Account",
     icon: "User",
   },
+  {
+    key: "notifications",
+    href: "/notifications",
+    label: "Notifications",
+    icon: "Bell",
+  },
+  {
+    key: "referrals",
+    href: "/referrals",
+    label: "Refer & Earn",
+    icon: "Gift",
+  },
 ];
 
 /** Home for portal logo until /dashboard ships. */

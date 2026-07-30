@@ -14,8 +14,19 @@ export {
 export { formatCents, itemCountLabel } from "./format";
 export { getMockOrder, listMockOrderIds } from "./mock-order";
 export {
+  listPortalJobs,
+  listActiveJobs,
+  listPastJobs,
+  primaryActiveJob,
+  nextStepForStatus,
+  portalTrackHref,
+  jobTotalCents,
+  type PortalNextStep,
+} from "./portal-jobs";
+export {
   applySnapshotToOrder,
   loadBookedSnapshot,
+  clearBookedSnapshot,
   quoteItemsToSnapshotItems,
   saveBookedSnapshot,
   resolveDisplayOrder,

@@ -119,6 +119,19 @@ export function loadBookedSnapshot(): BookedSnapshot | null {
   }
 }
 
+/** Drop client booking snapshot so confirmation/tracker fall back to mock fixtures. */
+export function clearBookedSnapshot(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(BOOKED_SNAPSHOT_KEY);
+    window.dispatchEvent(
+      new CustomEvent(BOOKED_SNAPSHOT_EVENT, { detail: { orderId: null } })
+    );
+  } catch {
+    // ignore
+  }
+}
+
 /** Overlay snapshot line items (incl. images) onto a mock order shell. */
 export function applySnapshotToOrder(
   base: MockOrder,

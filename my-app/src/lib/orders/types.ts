@@ -36,4 +36,18 @@ export type MockOrder = {
     title: string;
     body: string;
   };
+  /**
+   * Human source line for list rows ("Ship to hub", "Store pickup · IKEA").
+   * Falls back to first item fulfillmentLabel when omitted.
+   */
+  sourceLabel?: string;
+  /** List row date line, e.g. "Booked Jul 21" / "Delivered Jun 14" */
+  bookedAtLabel?: string;
+  /**
+   * Full job price. Delivered fixtures zero out balanceCents, so
+   * deposit + balance no longer reconstructs it — set explicitly there.
+   */
+  totalCents?: number;
+  /** lucide-react icon for list-row tiles (design uses icons, not photos) */
+  iconName?: "Archive" | "BedDouble" | "Library" | "Package";
 };
