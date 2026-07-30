@@ -36,3 +36,9 @@ export {
   type BookedSnapshot,
   type BookedSnapshotItem,
 } from "./booked-snapshot";
+export {
+  mapLifecycleToCustomer,
+  isCustomerVisibleJob,
+  type OrderLifecycleStatus,
+  type PaymentStatus,
+} from "./map-ops-to-customer";
