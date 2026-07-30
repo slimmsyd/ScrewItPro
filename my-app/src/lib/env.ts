@@ -70,9 +70,9 @@ export const serverEnv = {
  return getEnv("N8N_CRM_WEBHOOK_URL", true);
  },
  /**
-  * Internal recipients for new-lead notifications (waitlist joins + inquiries).
+  * Internal recipients for ops pings: waitlist joins, inquiries, and new bookings.
   * Comma-separated — Resend accepts an array in `to`, so the ops list can
-  * change without a code deploy.
+  * change without a code deploy. Example: care@screwitpro.com
   * Falls back to the older INQUIRY_NOTIFY_EMAIL so existing envs keep working.
   * Optional: empty means no team notification is sent.
   */

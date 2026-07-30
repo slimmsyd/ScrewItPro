@@ -6,7 +6,7 @@ import Container from "@/components/ui/Container";
 import MvpBadge from "@/components/home/MvpBadge";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { useMember } from "@/components/providers/MemberProvider";
-import { JOIN_PATH } from "@/lib/site";
+import { JOIN_PATH, QUOTE_PATH } from "@/lib/site";
 import { shareWaitlistInvite, waitlistInviteUrl } from "@/lib/member";
 
 function UtilLink({
@@ -36,51 +36,15 @@ function UtilLink({
   );
 }
 
-function UtilButton({
-  onClick,
-  children,
-  emphasize,
-}: {
-  onClick: () => void;
-  children: React.ReactNode;
-  emphasize?: boolean;
-}) {
-  const [h, setH] = useState(false);
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      onMouseEnter={() => setH(true)}
-      onMouseLeave={() => setH(false)}
-      style={{
-        fontFamily: "var(--font-body)",
-        fontSize: 13,
-        fontWeight: 600,
-        color: emphasize
-          ? h
-            ? "var(--blue-electric)"
-            : "var(--blue-deep)"
-          : h
-            ? "var(--blue-deep)"
-            : "var(--ink-500)",
-        textDecoration: "none",
-        transition: "color 160ms",
-        background: "none",
-        border: "none",
-        padding: 0,
-        cursor: "pointer",
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
-/** Desktop-only utility strip above the nav (announcement + login/contact). */
+/**
+ * Desktop utility strip above the nav — product announce only.
+ * Account / sign-in lives next to "Get a Free Quote" in the main Nav.
+ * Waitlist invite copy only when SITE is still waitlist mode.
+ */
 export default function TopUtilityBar({ waitlist }: { waitlist: boolean }) {
   const { t } = useLocale();
-  const { status, user, signOut } = useMember();
-  const waitlisted = status === "waitlisted";
+  const { status } = useMember();
+  const waitlisted = waitlist && status === "waitlisted";
 
   const onShare = () => {
     void shareWaitlistInvite({
@@ -89,11 +53,6 @@ export default function TopUtilityBar({ waitlist }: { waitlist: boolean }) {
       url: waitlistInviteUrl(),
     });
   };
-
-  const memberLabel =
-    waitlisted && user?.position
-      ? t("nav.youreInPosition", { position: user.position })
-      : t("nav.youreIn");
 
   return (
     <div
@@ -123,48 +82,75 @@ export default function TopUtilityBar({ waitlist }: { waitlist: boolean }) {
             fontFamily: "var(--font-body)",
             fontSize: 13,
             color: "var(--ink-700)",
+            pointerEvents: "none",
           }}
         >
-          <MvpBadge />
-          <span>
-            {waitlisted
-              ? t("util.youreOnTheList")
-              : waitlist
-                ? t("util.announceWaitlist")
-                : t("util.announceServing")}
-            {!waitlisted && (
-              <Link
-                href={JOIN_PATH}
-                style={{
-                  color: "var(--blue-deep)",
-                  fontWeight: 700,
-                  textDecoration: "none",
-                }}
-              >
-                {waitlist ? t("util.joinEarly") : t("util.bookToday")}
-              </Link>
-            )}
-            {waitlisted && (
-              <button
-                type="button"
-                onClick={onShare}
-                style={{
-                  color: "var(--blue-deep)",
-                  fontWeight: 700,
-                  textDecoration: "none",
-                  background: "none",
-                  border: "none",
-                  padding: 0,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  fontSize: "inherit",
-                }}
-              >
-                {t("util.shareEarly")}
-              </button>
-            )}
+          <span
+            style={{
+              pointerEvents: "auto",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <MvpBadge />
+            <span>
+              {waitlist ? (
+                waitlisted ? (
+                  <>
+                    {t("util.youreOnTheList")}
+                    <button
+                      type="button"
+                      onClick={onShare}
+                      style={{
+                        color: "var(--blue-deep)",
+                        fontWeight: 700,
+                        textDecoration: "none",
+                        background: "none",
+                        border: "none",
+                        padding: 0,
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                        fontSize: "inherit",
+                      }}
+                    >
+                      {t("util.shareEarly")}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {t("util.announceWaitlist")}
+                    <Link
+                      href={JOIN_PATH}
+                      style={{
+                        color: "var(--blue-deep)",
+                        fontWeight: 700,
+                        textDecoration: "none",
+                      }}
+                    >
+                      {t("util.joinEarly")}
+                    </Link>
+                  </>
+                )
+              ) : (
+                <>
+                  {t("util.announceServing")}
+                  <Link
+                    href={QUOTE_PATH}
+                    style={{
+                      color: "var(--blue-deep)",
+                      fontWeight: 700,
+                      textDecoration: "none",
+                    }}
+                  >
+                    {t("util.bookToday")}
+                  </Link>
+                </>
+              )}
+            </span>
           </span>
         </div>
+
         <nav
           aria-label="Utility"
           style={{
@@ -175,26 +161,6 @@ export default function TopUtilityBar({ waitlist }: { waitlist: boolean }) {
             gap: 22,
           }}
         >
-          {waitlisted || status === "signed_in" ? (
-            <>
-              <span
-                style={{
-                  fontFamily: "var(--font-body)",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: "var(--blue-deep)",
-                }}
-                title={user?.email || undefined}
-              >
-                {waitlisted ? memberLabel : t("nav.youreIn")}
-              </span>
-              <UtilButton onClick={() => void signOut()}>
-                {t("common.signOut")}
-              </UtilButton>
-            </>
-          ) : (
-            <UtilLink href={`${JOIN_PATH}?mode=login`}>{t("nav.login")}</UtilLink>
-          )}
           <UtilLink href="#faq">{t("nav.contactUs")}</UtilLink>
         </nav>
       </Container>

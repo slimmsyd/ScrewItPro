@@ -12,14 +12,17 @@ import {
   type PrimaryCtaAction,
   type ShareResult,
 } from "@/lib/member";
-import { isWaitlist, JOIN_PATH } from "@/lib/site";
+import { isWaitlist, JOIN_PATH, QUOTE_PATH } from "@/lib/site";
 
 /**
  * Site-wide primary CTA (Join / Share / Quote / Finish joining)
- * driven by membership state.
+ * driven by membership state + SITE_MODE.
+ *
+ * In quote mode (develop / real site): always "Get a Free Quote" → /quote/where.
+ * Share / join waitlist CTAs only apply when SITE_MODE is waitlist.
  */
 export function usePrimaryCta(opts?: {
-  /** Open quote dialog instead of navigating when action is quote. */
+  /** Override quote navigation (default: /quote/where). */
   onQuote?: () => void;
 }) {
   const router = useRouter();
@@ -57,11 +60,11 @@ export function usePrimaryCta(opts?: {
 
     if (action === "quote") {
       if (onQuoteRef.current) onQuoteRef.current();
-      else router.push(JOIN_PATH);
+      else router.push(QUOTE_PATH);
       return;
     }
 
-    // join | finish_join
+    // join | finish_join (waitlist mode only)
     router.push(JOIN_PATH);
   }, [action, clearFeedbackSoon, router, t]);
 

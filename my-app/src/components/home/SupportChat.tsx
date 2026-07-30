@@ -6,19 +6,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
 import Button from "@/components/ui/Button";
 import ThinkingLoader from "@/components/ui/ThinkingLoader";
-import { ASSETS, JOIN_PATH } from "@/lib/site";
+import { ASSETS, JOIN_PATH, QUOTE_PATH } from "@/lib/site";
 import { useLocale } from "@/components/providers/LocaleProvider";
-
-const PRICES: Record<string, number> = {
-  Bed: 129,
-  Desk: 69,
-  Wardrobe: 129,
-  "Office setup": 99,
-  Cama: 129,
-  Escritorio: 69,
-  Armario: 129,
-  Oficina: 99,
-};
 
 const THINK_MS = { min: 900, max: 1600 } as const;
 function thinkDelay() {
@@ -147,7 +136,7 @@ export default function SupportChat() {
 
   // Map display option back to stable English keys for pricing/tier
   const locationKey = answers.locationKey as string | undefined;
-  const itemKey = answers.itemKey as string | undefined;
+
 
   const tier = locationKey
     ? locationKey === "Houston Metro"
@@ -225,7 +214,6 @@ export default function SupportChat() {
 
   const flow = buildFlow();
   const done = !thinking && step >= flow.length;
-  const estimate = itemKey ? PRICES[itemKey] : null;
 
   const pick = (opt: { label: string; key: string }) => {
     if (thinking) return;
@@ -284,17 +272,19 @@ export default function SupportChat() {
   let bottomCta: string | null;
   const city = answers.locationLabel || locationKey || "";
 
+  // No hardcoded prices — Chip must not contradict the quote builder rate card.
+  // Point people at Get a Price for real numbers.
   if (tier === "unserved") {
     bottomLine = t("chat.outsideArea");
-    bottomPrice = "-";
+    bottomPrice = "—";
     bottomCta = done ? t("chat.joinWaitlist") : null;
   } else if (tier === "expanding") {
     bottomLine = `${answers.itemLabel || "-"} ${answers.pickupLabel ? `· ${answers.pickupLabel}` : ""} ${answers.timelineLabel ? `· ${answers.timelineLabel}` : ""} · ${t("chat.estAtLaunch", { city })}`;
-    bottomPrice = estimate ? `$${estimate}` : "-";
-    bottomCta = done ? t("chat.joinCityWaitlist", { city }) : null;
+    bottomPrice = "—";
+    bottomCta = done ? t("chat.getExactQuote") : null;
   } else {
     bottomLine = `${city ? city + " · " : ""}${answers.itemLabel || "-"} ${answers.pickupLabel ? `· ${answers.pickupLabel}` : ""} ${answers.timelineLabel ? `· ${answers.timelineLabel}` : ""}`;
-    bottomPrice = estimate ? `$${estimate}` : "-";
+    bottomPrice = "—";
     bottomCta = done ? t("chat.getExactQuote") : null;
   }
   if (thinking) bottomCta = null;
@@ -525,7 +515,11 @@ export default function SupportChat() {
                 <Button
                   variant="primary"
                   size="md"
-                  onClick={() => router.push(JOIN_PATH)}
+                  onClick={() =>
+                    router.push(
+                      tier === "unserved" ? JOIN_PATH : QUOTE_PATH
+                    )
+                  }
                   style={{ width: "100%", marginTop: 12 }}
                 >
                   {bottomCta}

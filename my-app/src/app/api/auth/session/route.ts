@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getWaitlistPosition } from "@/lib/waitlist";
+import {
+  roleFromAuthUser,
+  statusFromAuthUser,
+} from "@/lib/auth/roles";
 
 /**
  * GET /api/auth/session
@@ -8,6 +12,7 @@ import { getWaitlistPosition } from "@/lib/waitlist";
  *
  * Reads the real session rather than parsing the old unsigned sip_session
  * cookie, so this is now a trustworthy answer to "who is signed in".
+ * role/status come from app_metadata (Custom Access Token Hook when live).
  */
 export async function GET() {
   let supabase;
@@ -50,6 +55,8 @@ export async function GET() {
         "",
       provider: (user.app_metadata?.provider as string | undefined) ?? "email",
       position,
+      role: roleFromAuthUser(user),
+      status: statusFromAuthUser(user),
     },
   });
 }

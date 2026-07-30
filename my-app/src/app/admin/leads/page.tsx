@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
-import {
-  fetchInquiries,
-  fetchWaitlist,
-  isAdminDashboardConfigured,
-  isAdminKeyValid,
-} from "@/lib/admin/leads";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/auth/require-admin";
+import { fetchInquiries, fetchWaitlist } from "@/lib/admin/leads";
+import { CUSTOMER_HOME_PATH, JOIN_PATH } from "@/lib/site";
 
 /**
- * /admin/leads?key=... — interim internal view of captured leads (inquiries +
- * waitlist). Gated by ADMIN_DASHBOARD_TOKEN. Hardens under M1 role guards later.
+ * /admin/leads — internal view of captured leads.
+ * Gated by profiles.role = admin (requireAdmin). No URL secrets.
  */
 export const dynamic = "force-dynamic";
 
@@ -25,11 +24,28 @@ const wrap: React.CSSProperties = {
   color: "#0b1030",
 };
 
-function Notice({ title, body }: { title: string; body: string }) {
+function Notice({
+  title,
+  body,
+  href,
+  linkLabel,
+}: {
+  title: string;
+  body: string;
+  href?: string;
+  linkLabel?: string;
+}) {
   return (
     <div style={wrap}>
       <h1 style={{ fontSize: 22, marginBottom: 8 }}>{title}</h1>
       <p style={{ color: "#545b7a", fontSize: 15, lineHeight: 1.6 }}>{body}</p>
+      {href && linkLabel && (
+        <p style={{ marginTop: 16 }}>
+          <Link href={href} style={{ color: "#1d6efe", fontWeight: 600 }}>
+            {linkLabel}
+          </Link>
+        </p>
+      )}
     </div>
   );
 }
@@ -52,30 +68,30 @@ const td: React.CSSProperties = {
 };
 
 function fmt(dt: string): string {
-  // Stable, locale-independent formatting (avoids hydration drift).
   return dt?.replace("T", " ").slice(0, 16) ?? "";
 }
 
-export default async function AdminLeadsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ key?: string }>;
-}) {
-  if (!isAdminDashboardConfigured()) {
-    return (
-      <Notice
-        title="Leads view is not configured"
-        body="Set ADMIN_DASHBOARD_TOKEN in the environment, then open this page with ?key=<token>."
-      />
-    );
-  }
+export default async function AdminLeadsPage() {
+  const gate = await requireAdmin();
 
-  const { key } = await searchParams;
-  if (!isAdminKeyValid(key)) {
+  if (gate.ok === false) {
+    if (gate.reason === "unauthenticated") {
+      redirect(`${JOIN_PATH}?mode=login&return_to=${encodeURIComponent("/admin/leads")}`);
+    }
+    if (gate.reason === "not_configured") {
+      return (
+        <Notice
+          title="Auth not configured"
+          body="Supabase must be configured to gate the admin leads view."
+        />
+      );
+    }
     return (
       <Notice
-        title="Unauthorized"
-        body="Append ?key=<ADMIN_DASHBOARD_TOKEN> to the URL to view captured leads."
+        title="Forbidden"
+        body="Admin access requires profiles.role = 'admin'. Bootstrap the first admin in the Supabase SQL editor, then sign in again."
+        href={CUSTOMER_HOME_PATH}
+        linkLabel="Go to my portal"
       />
     );
   }
@@ -100,7 +116,8 @@ export default async function AdminLeadsPage({
     <div style={wrap}>
       <h1 style={{ fontSize: 24, marginBottom: 4 }}>Leads</h1>
       <p style={{ color: "#545b7a", fontSize: 14, marginBottom: 24 }}>
-        Internal view — captured inquiries and waitlist signups.
+        Internal view — signed in as {gate.email || "admin"}. Captured inquiries
+        and waitlist signups.
       </p>
 
       <section style={{ marginBottom: 40 }}>
@@ -115,12 +132,7 @@ export default async function AdminLeadsPage({
           <h2 style={{ fontSize: 18, margin: 0 }}>
             Inquiries ({inquiries.length})
           </h2>
-          <a
-            style={csvBtn}
-            href={`/api/admin/leads/export?type=inquiries&key=${encodeURIComponent(
-              key ?? ""
-            )}`}
-          >
+          <a style={csvBtn} href="/api/admin/leads/export?type=inquiries">
             Download CSV
           </a>
         </div>
@@ -174,12 +186,7 @@ export default async function AdminLeadsPage({
           <h2 style={{ fontSize: 18, margin: 0 }}>
             Waitlist ({waitlist.length})
           </h2>
-          <a
-            style={csvBtn}
-            href={`/api/admin/leads/export?type=waitlist&key=${encodeURIComponent(
-              key ?? ""
-            )}`}
-          >
+          <a style={csvBtn} href="/api/admin/leads/export?type=waitlist">
             Download CSV
           </a>
         </div>

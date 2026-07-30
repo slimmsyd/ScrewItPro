@@ -2,25 +2,26 @@ import { NextResponse } from "next/server";
 import {
   fetchInquiries,
   fetchWaitlist,
-  isAdminKeyValid,
   toCsv,
 } from "@/lib/admin/leads";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 /**
- * GET /api/admin/leads/export?key=...&type=inquiries|waitlist
- * Returns a CSV of captured leads. Gated by ADMIN_DASHBOARD_TOKEN (interim).
+ * GET /api/admin/leads/export?type=inquiries|waitlist
+ * CSV export — gated by requireAdmin() (session + profiles.role).
  */
 export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const key = url.searchParams.get("key");
-  const type = url.searchParams.get("type") ?? "inquiries";
-
-  if (!isAdminKeyValid(key)) {
+  const gate = await requireAdmin();
+  if (!gate.ok) {
+    const status = gate.reason === "unauthenticated" ? 401 : 403;
     return NextResponse.json(
-      { ok: false, error: "unauthorized" },
-      { status: 401 }
+      { ok: false, error: gate.reason === "unauthenticated" ? "unauthorized" : "forbidden" },
+      { status }
     );
   }
+
+  const url = new URL(request.url);
+  const type = url.searchParams.get("type") ?? "inquiries";
 
   let csv: string;
   let filename: string;

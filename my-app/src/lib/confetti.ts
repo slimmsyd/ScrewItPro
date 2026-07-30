@@ -31,7 +31,7 @@ async function loadConfetti(): Promise<ConfettiFn | null> {
 }
 
 /**
- * Fire a short celebration for waitlist join success.
+ * Fire a short brand celebration (waitlist join, booking confirmation, etc.).
  * Dynamic-imports canvas-confetti so the form bundle stays light until success.
  */
 export async function fireWaitlistConfetti(): Promise<void> {
@@ -76,3 +76,6 @@ export async function fireWaitlistConfetti(): Promise<void> {
     });
   }, 160);
 }
+
+/** Same dual-cannon burst — semantic alias for post-book "You're booked!". */
+export const fireBookingConfetti = fireWaitlistConfetti;

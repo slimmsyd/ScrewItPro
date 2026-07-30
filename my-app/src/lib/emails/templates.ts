@@ -29,7 +29,9 @@ export type EmailTemplateCode =
   | "inquiry-ack"
   | "new-lead-notice"
   | "verification"
-  | "welcome";
+  | "welcome"
+  | "booking-confirmation"
+  | "booking-team-notice";
 
 export type RenderedEmail = {
   code: EmailTemplateCode;
@@ -205,6 +207,93 @@ export function newLeadNotice(data: NewLeadData): RenderedEmail {
 }
 
 /* ------------------------------------------------------------------ */
+/* Internal new-booking notification (team-facing)                    */
+/* ------------------------------------------------------------------ */
+
+export type NewBookingNoticeData = {
+  customerName?: string | null;
+  customerEmail: string;
+  orderNumber: string;
+  itemSummary?: string | null;
+  deliveryLine?: string | null;
+  depositFormatted?: string | null;
+  paymentNote?: string | null;
+  /** Admin / track link for ops (optional). */
+  trackUrl?: string | null;
+  source?: string | null;
+};
+
+/**
+ * Ping care@ / TEAM_NOTIFY_EMAILS when a job is booked.
+ * Distinct template_code from booking-confirmation so email_log idempotency
+ * (once per order+code) does not suppress the team copy.
+ */
+export function newBookingNotice(data: NewBookingNoticeData): RenderedEmail {
+  const rows: Array<[string, string]> = [
+    ["Order", data.orderNumber],
+    ["Customer", data.customerName?.trim() || "Not provided"],
+    ["Email", data.customerEmail],
+    ["Build", data.itemSummary?.trim() || "Not provided"],
+    ["Delivery", data.deliveryLine?.trim() || "Not provided"],
+    ["Deposit", data.depositFormatted?.trim() || "Not shown"],
+    ["Payment", data.paymentNote?.trim() || "Not provided"],
+    ["Source", data.source?.trim() || "booking"],
+  ];
+
+  const table = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${brand.gray200};border-radius:10px;overflow:hidden;">
+    ${rows
+      .map(
+        ([k, v], i) => `<tr style="background:${i % 2 ? brand.gray50 : brand.white};">
+        <td style="padding:11px 14px;font-size:13px;font-weight:600;color:${brand.ink500};width:110px;vertical-align:top;">${escapeHtml(
+          k
+        )}</td>
+        <td style="padding:11px 14px;font-size:14px;color:${brand.ink900};">${escapeHtml(
+          v
+        )}</td>
+      </tr>`
+      )
+      .join("")}
+  </table>`;
+
+  const track = data.trackUrl?.trim()
+    ? button("Open customer track link", data.trackUrl.trim())
+    : "";
+
+  const body = `
+    ${heading("New booking 📦")}
+    ${paragraph("A customer just booked a ScrewIt Pros job.")}
+    ${table}
+    <div style="height:16px;"></div>
+    ${track}
+    ${paragraph(
+      `Reply to the customer at <a href="mailto:${escapeHtml(
+        data.customerEmail
+      )}" style="color:${brand.blueElectric};">${escapeHtml(
+        data.customerEmail
+      )}</a>.`
+    )}
+  `;
+
+  return {
+    code: "booking-team-notice",
+    subject: `New booking ${data.orderNumber}: ${
+      data.customerName?.trim() || data.customerEmail
+    }`,
+    html: renderLayout(body, {
+      preheader: `Order ${data.orderNumber} booked by ${data.customerEmail}`,
+    }),
+    text: [
+      "New booking",
+      "",
+      ...rows.map(([k, v]) => `${k}: ${v}`),
+      data.trackUrl?.trim() ? `Track: ${data.trackUrl.trim()}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  };
+}
+
+/* ------------------------------------------------------------------ */
 /* Email verification (stub — wired live in Sprint 1 auth work)       */
 /* ------------------------------------------------------------------ */
 
@@ -263,6 +352,141 @@ export function welcome(data: WelcomeData = {}): RenderedEmail {
 }
 
 /* ------------------------------------------------------------------ */
+/* Booking confirmation (customer — soft-gate or paid book)           */
+/* ------------------------------------------------------------------ */
+
+export type BookingConfirmationData = {
+  customerName?: string | null;
+  orderNumber: string;
+  trackUrl: string;
+  jobsUrl: string;
+  deliveryLine?: string | null;
+  itemSummary?: string | null;
+  depositFormatted?: string | null;
+  /** Soft-gate vs real deposit note */
+  paymentNote?: string | null;
+  hubHint?: string | null;
+};
+
+/** Default hub copy when none provided. */
+export const BOOKING_HUB_HINT_DEFAULT =
+  "Ship or drop your items to our Houston hub — we'll assemble, QC, and white-glove deliver.";
+
+/**
+ * Code default for booking-confirmation.
+ * Prefer DB email_templates when present (see render-booking-confirmation).
+ */
+export function bookingConfirmation(
+  data: BookingConfirmationData
+): RenderedEmail {
+  const name = data.customerName?.trim();
+  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi there,";
+  const orderNumber = escapeHtml(data.orderNumber);
+  const itemLine = data.itemSummary?.trim()
+    ? paragraph(
+        `Build: <strong style="color:${brand.blueDeep};">${escapeHtml(
+          data.itemSummary.trim()
+        )}</strong>`
+      )
+    : "";
+  const delivery = data.deliveryLine?.trim()
+    ? paragraph(`Delivery: ${escapeHtml(data.deliveryLine.trim())}`)
+    : "";
+  const deposit = data.depositFormatted?.trim()
+    ? paragraph(
+        `Deposit (shown on quote): <strong>${escapeHtml(
+          data.depositFormatted.trim()
+        )}</strong>`
+      )
+    : "";
+  const paymentNote = data.paymentNote?.trim()
+    ? paragraph(
+        `<em style="color:${brand.ink500};">${escapeHtml(
+          data.paymentNote.trim()
+        )}</em>`
+      )
+    : "";
+  const hub = paragraph(
+    escapeHtml(data.hubHint?.trim() || BOOKING_HUB_HINT_DEFAULT)
+  );
+
+  const body = `
+    ${heading("You're booked! 🎉")}
+    ${paragraph(greeting)}
+    ${paragraph(
+      `Your ScrewIt Pros job is confirmed. Order number: <strong style="color:${brand.blueDeep};">${orderNumber}</strong>.`
+    )}
+    ${itemLine}
+    ${delivery}
+    ${deposit}
+    ${paymentNote}
+    ${hub}
+    ${button("Track your order", data.trackUrl)}
+    ${paragraph(
+      `Or open <a href="${escapeHtml(data.jobsUrl)}" style="color:${brand.blueElectric};">My Jobs</a> anytime.`
+    )}
+  `;
+
+  return {
+    code: "booking-confirmation",
+    subject: `You're booked! Order ${data.orderNumber}`,
+    html: renderLayout(body, {
+      preheader: `Order ${data.orderNumber} is on the calendar.`,
+    }),
+    text: [
+      "You're booked!",
+      "",
+      name ? `Hi ${name},` : "Hi there,",
+      "",
+      `Your ScrewIt Pros job is confirmed. Order number: ${data.orderNumber}.`,
+      data.itemSummary?.trim() ? `Build: ${data.itemSummary.trim()}` : "",
+      data.deliveryLine?.trim() ? `Delivery: ${data.deliveryLine.trim()}` : "",
+      data.depositFormatted?.trim()
+        ? `Deposit (shown on quote): ${data.depositFormatted.trim()}`
+        : "",
+      data.paymentNote?.trim() || "",
+      data.hubHint?.trim() || BOOKING_HUB_HINT_DEFAULT,
+      "",
+      `Track: ${data.trackUrl}`,
+      `My Jobs: ${data.jobsUrl}`,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  };
+}
+
+/** Default mustache strings for email_templates seed (inner body HTML). */
+export const BOOKING_CONFIRMATION_SEED = {
+  subject: "You're booked! Order {{orderNumber}}",
+  htmlBody: [
+    "<h1 style=\"margin:0 0 16px;font-size:22px;line-height:1.3;font-weight:700;color:#04209b;\">You're booked! 🎉</h1>",
+    "<p style=\"margin:0 0 14px;font-size:15px;line-height:1.6;color:#2a3050;\">Hi {{customerName}},</p>",
+    "<p style=\"margin:0 0 14px;font-size:15px;line-height:1.6;color:#2a3050;\">Your ScrewIt Pros job is confirmed. Order number: <strong style=\"color:#04209b;\">{{orderNumber}}</strong>.</p>",
+    "<p style=\"margin:0 0 14px;font-size:15px;line-height:1.6;color:#2a3050;\">Build: <strong style=\"color:#04209b;\">{{itemSummary}}</strong></p>",
+    "<p style=\"margin:0 0 14px;font-size:15px;line-height:1.6;color:#2a3050;\">Delivery: {{deliveryLine}}</p>",
+    "<p style=\"margin:0 0 14px;font-size:15px;line-height:1.6;color:#2a3050;\">Deposit (shown on quote): <strong>{{depositFormatted}}</strong></p>",
+    "<p style=\"margin:0 0 14px;font-size:15px;line-height:1.6;color:#545b7a;\"><em>{{paymentNote}}</em></p>",
+    "<p style=\"margin:0 0 14px;font-size:15px;line-height:1.6;color:#2a3050;\">{{hubHint}}</p>",
+    "<p style=\"margin:0 0 14px;font-size:15px;line-height:1.6;color:#2a3050;\"><a href=\"{{trackUrl}}\" style=\"color:#1d6efe;\">Track your order</a> · <a href=\"{{jobsUrl}}\" style=\"color:#1d6efe;\">My Jobs</a></p>",
+  ].join("\n"),
+  textBody: [
+    "You're booked!",
+    "",
+    "Hi {{customerName}},",
+    "",
+    "Your ScrewIt Pros job is confirmed. Order number: {{orderNumber}}.",
+    "Build: {{itemSummary}}",
+    "Delivery: {{deliveryLine}}",
+    "Deposit (shown on quote): {{depositFormatted}}",
+    "{{paymentNote}}",
+    "{{hubHint}}",
+    "",
+    "Track: {{trackUrl}}",
+    "My Jobs: {{jobsUrl}}",
+  ].join("\n"),
+} as const;
+
+/* ------------------------------------------------------------------ */
 /* Preview registry — powers /dev/emails                              */
 /* ------------------------------------------------------------------ */
 
@@ -302,6 +526,35 @@ const previewSamples: ReadonlyArray<{
   {
     label: "Welcome",
     render: () => welcome({ name: "Jordan" }),
+  },
+  {
+    label: "Booking confirmation",
+    render: () =>
+      bookingConfirmation({
+        customerName: "Jordan",
+        orderNumber: "SIP-10042",
+        trackUrl: "https://screwitpros.com/customer/orders/SIP-10042/track",
+        jobsUrl: "https://screwitpros.com/customer/jobs",
+        deliveryLine: "Yale St, 77008",
+        itemSummary: "HEMNES dresser · 1 item",
+        depositFormatted: "$74.70",
+        paymentNote: "No deposit was charged (demo book path).",
+      }),
+  },
+  {
+    label: "New booking notice (internal)",
+    render: () =>
+      newBookingNotice({
+        customerName: "Jordan Rivera",
+        customerEmail: "jordan@example.com",
+        orderNumber: "SIP-10042",
+        itemSummary: "HEMNES dresser · 1 item",
+        deliveryLine: "Yale St, 77008",
+        depositFormatted: "$74.70",
+        paymentNote: "No deposit was charged (demo book path).",
+        trackUrl: "https://screwitpros.com/customer/orders/SIP-10042/track",
+        source: "book-demo",
+      }),
   },
 ];
 

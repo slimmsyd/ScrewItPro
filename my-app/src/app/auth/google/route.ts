@@ -14,8 +14,14 @@ import { getAppOrigin } from "@/lib/auth/origin";
  * URI (NOT this app's): https://<project>.supabase.co/auth/v1/callback
  */
 export async function GET(request: Request) {
-  const { origin: requestOrigin } = new URL(request.url);
+  const url = new URL(request.url);
+  const { origin: requestOrigin } = url;
   const origin = getAppOrigin(requestOrigin);
+  const returnTo = url.searchParams.get("return_to");
+  const callback =
+    returnTo && returnTo.startsWith("/")
+      ? `${origin}/auth/callback?return_to=${encodeURIComponent(returnTo)}`
+      : `${origin}/auth/callback`;
 
   let supabase;
   try {
@@ -27,7 +33,7 @@ export async function GET(request: Request) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${origin}/auth/callback`,
+      redirectTo: callback,
       queryParams: { prompt: "select_account" },
     },
   });

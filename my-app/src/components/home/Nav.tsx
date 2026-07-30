@@ -6,9 +6,13 @@ import { useEffect, useState } from "react";
 import { Check, ChevronDown, Globe, Search } from "lucide-react";
 import Container from "@/components/ui/Container";
 import TopUtilityBar from "@/components/home/TopUtilityBar";
+import QuoteAccountMenu, {
+  QuoteAccountMenuSkeleton,
+} from "@/components/quote/QuoteAccountMenu";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { ASSETS } from "@/lib/site";
+import { ASSETS, JOIN_PATH } from "@/lib/site";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { useMember } from "@/components/providers/MemberProvider";
 import { locales, type Locale } from "@/i18n/config";
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
@@ -355,6 +359,12 @@ export default function Nav({
 }) {
   const mobile = useIsMobile();
   const { t } = useLocale();
+  const { status, user, signOut } = useMember();
+  const sessionLoading = status === "loading";
+  const signedIn =
+    !sessionLoading &&
+    user != null &&
+    (status === "signed_in" || status === "waitlisted");
   const solid = scrolled || menuOpen;
   const [logoRotation, setLogoRotation] = useState(0);
   const [entered, setEntered] = useState(false);
@@ -478,9 +488,51 @@ export default function Nav({
                 }
                 onClick={onQuote}
               />
+              {/* Account sits with the primary CTA — not in the utility tagline strip */}
+              {sessionLoading ? (
+                <QuoteAccountMenuSkeleton />
+              ) : signedIn && user ? (
+                <QuoteAccountMenu
+                  user={user}
+                  onSignOut={() => void signOut()}
+                />
+              ) : (
+                <Link
+                  href={`${JOIN_PATH}?mode=login`}
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: "var(--ink-700)",
+                    textDecoration: "none",
+                    padding: "0 4px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {t("nav.login")}
+                </Link>
+              )}
             </div>
           ) : (
-            <Burger open={menuOpen} onClick={onToggleMenu} />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                marginLeft: "auto",
+                flexShrink: 0,
+              }}
+            >
+              {sessionLoading ? (
+                <QuoteAccountMenuSkeleton />
+              ) : signedIn && user ? (
+                <QuoteAccountMenu
+                  user={user}
+                  onSignOut={() => void signOut()}
+                />
+              ) : null}
+              <Burger open={menuOpen} onClick={onToggleMenu} />
+            </div>
           )}
         </Container>
       </nav>

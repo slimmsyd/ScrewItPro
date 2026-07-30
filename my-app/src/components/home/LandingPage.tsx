@@ -17,11 +17,11 @@ import ServiceArea from "@/components/home/ServiceArea";
 import FAQ from "@/components/home/FAQ";
 import Credibility from "@/components/home/Credibility";
 import Footer from "@/components/home/Footer";
-import QuoteDialog from "@/components/home/QuoteDialog";
 import SupportChat from "@/components/home/SupportChat";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { usePrimaryCta } from "@/hooks/usePrimaryCta";
-import { isWaitlist } from "@/lib/site";
+import { isWaitlist, QUOTE_PATH } from "@/lib/site";
+import { useRouter } from "next/navigation";
 
 /**
  * Full marketing landing page - V2 design.
@@ -32,14 +32,14 @@ import { isWaitlist } from "@/lib/site";
  */
 export default function LandingPage() {
   const mobile = useIsMobile();
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [quoteOpen, setQuoteOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [exiting, setExiting] = useState(false);
   const primaryCta = usePrimaryCta({
-    onQuote: () => setQuoteOpen(true),
+    onQuote: () => router.push(QUOTE_PATH),
   });
 
   useEffect(() => {
@@ -201,13 +201,6 @@ export default function LandingPage() {
           waitlist={isWaitlist}
         />
       )}
-
-      <QuoteDialog
-        key={quoteOpen ? "quote-open" : "quote-closed"}
-        open={quoteOpen}
-        onClose={() => setQuoteOpen(false)}
-        waitlist={isWaitlist}
-      />
 
       {/* Chip concierge */}
       <SupportChat />

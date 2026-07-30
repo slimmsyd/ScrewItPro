@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Phase C — Order Spine Architecture</title>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "base",
+      themeVariables: {
+        primaryColor: "#a5d8ff",
+        primaryTextColor: "#1e1e1e",
+        primaryBorderColor: "#4a9eed",
+        lineColor: "#495057",
+        secondaryColor: "#b2f2bb",
+        tertiaryColor: "#fff3bf",
+        fontFamily: "ui-sans-serif, system-ui, sans-serif",
+      },
+      flowchart: { curve: "basis", htmlLabels: true, padding: 16 },
+    });
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1e1e1e;
+      --muted: #545b7a;
+      --bg: #f8f9fa;
+      --card: #fff;
+      --blue: #04209b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    header {
+      padding: 28px 24px 12px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.6rem;
+      color: var(--blue);
+      letter-spacing: -0.02em;
+    }
+    p.lead { margin: 0; color: var(--muted); max-width: 70ch; }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+      font-size: 0.9rem;
+    }
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--card);
+      border-radius: 999px;
+      border: 1px solid #e9edf6;
+    }
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 8px 16px 48px;
+      display: grid;
+      gap: 24px;
+    }
+    section {
+      background: var(--card);
+      border: 1px solid #e9edf6;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(4, 32, 155, 0.06);
+    }
+    section h2 {
+      margin: 0 0 12px;
+      font-size: 1.1rem;
+      color: var(--blue);
+    }
+    .mermaid {
+      display: flex;
+      justify-content: center;
+      overflow-x: auto;
+    }
+    .notes {
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+    .notes ul { margin: 8px 0 0; padding-left: 1.2rem; }
+    .notes li { margin: 4px 0; }
+    code {
+      font-size: 0.88em;
+      background: #f4f6fb;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ScrewIt Phase C — Order Spine Architecture</h1>
+    <p class="lead">
+      Current demo path (left-to-right) vs planned customer-dashboard-first spine.
+      Test surfaces: <code>/customer/jobs</code>, confirmation/tracker, notifications.
+    </p>
+    <div class="legend">
+      <span><i class="swatch" style="background:#a5d8ff"></i> Customer UI</span>
+      <span><i class="swatch" style="background:#d0bfff"></i> API / logic</span>
+      <span><i class="swatch" style="background:#c3fae8"></i> Database</span>
+      <span><i class="swatch" style="background:#ffc9c9"></i> Demo / gap</span>
+      <span><i class="swatch" style="background:#b2f2bb"></i> Target / done path</span>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <h2>1) TODAY — interim pay shell + mock portal data</h2>
+      <pre class="mermaid">
+flowchart LR
+  Q[Quote UI public] --> D[sessionStorage draft]
+  D --> API["POST /api/quote/draft<br/>thin order shell"]
+  API --> S{Stripe ready?}
+  S -->|yes| CH["Checkout orderId"]
+  S -->|no dev| SG[Soft-gate demo]
+  CH --> SNAP[booked snapshot]
+  SG --> SNAP
+  SNAP --> CT[Confirm + Tracker]
+  MOCK[mock-order fixtures SIP-*] --> JOBS[My Jobs fixtures]
+  MOCK --> NOTIF[Notifications hardcoded]
+  SNAP --> CT
+  style Q fill:#a5d8ff
+  style D fill:#a5d8ff
+  style API fill:#d0bfff
+  style S fill:#fff3bf
+  style CH fill:#b2f2bb
+  style SG fill:#ffc9c9
+  style SNAP fill:#ffd8a8
+  style MOCK fill:#ffc9c9
+  style CT fill:#a5d8ff
+  style JOBS fill:#a5d8ff
+  style NOTIF fill:#a5d8ff
+      </pre>
+      <div class="notes">
+        <strong>Gap:</strong> Postgres only has interim pay-state <code>orders</code> (3 statuses).
+        Portal list/timeline mostly fixtures + sessionStorage — not a system of record.
+      </div>
+    </section>
+
+    <section>
+      <h2>2) PHASE C — scaffold DB first, then prove on My Jobs</h2>
+      <pre class="mermaid">
+flowchart TB
+  C0[C0 Vault freeze<br/>spec + status map] --> C1
+  C1[C1 DB scaffold FIRST<br/>enums · orders++ · items<br/>events · settings · RLS]
+  C1 --> DB[(Postgres spine<br/>orders + items + events)]
+  DB --> C2[C2 Read APIs<br/>GET /customer/jobs]
+  DB --> C3[C3 Write path<br/>draft/book → items]
+  C2 --> MJ[My Jobs real list]
+  C3 --> TR[Confirm + Tracker from DB]
+  MJ --> C4
+  TR --> C4
+  C4[C4 Transitions<br/>legal status machine] --> C5
+  C5[C5 Webhook ledger<br/>Stripe idempotency] --> C6
+  C4 --> C6
+  C6[C6 Cutover + Notifications<br/>from customer_visible events]
+  MAP[Mapper: ops status DB → 7 customer UI statuses]
+  C2 -.-> MAP
+  C4 -.-> MAP
+  style C0 fill:#fff3bf
+  style C1 fill:#c3fae8,stroke:#22c55e,stroke-width:3px
+  style DB fill:#c3fae8
+  style C2 fill:#d0bfff
+  style C3 fill:#d0bfff
+  style MJ fill:#a5d8ff
+  style TR fill:#a5d8ff
+  style C4 fill:#d0bfff
+  style C5 fill:#ffd8a8
+  style C6 fill:#b2f2bb
+  style MAP fill:#fff3bf
+      </pre>
+    </section>
+
+    <section>
+      <h2>3) Customer walkthrough after spine (target)</h2>
+      <pre class="mermaid">
+flowchart LR
+  A[Signed-in customer] --> B[Quote public]
+  B --> C[Book / draft API]
+  C --> D[(orders + order_items)]
+  D --> E[My Jobs lists THEIR jobs]
+  D --> F[Track order timeline]
+  D --> G[Notifications from events]
+  style A fill:#a5d8ff
+  style B fill:#a5d8ff
+  style C fill:#d0bfff
+  style D fill:#c3fae8
+  style E fill:#b2f2bb
+  style F fill:#b2f2bb
+  style G fill:#b2f2bb
+      </pre>
+      <div class="notes">
+        <ul>
+          <li><strong>Start implementation:</strong> C0 docs → <strong>C1 migrations</strong> → C2 My Jobs read proof.</li>
+          <li><strong>Not in Phase C:</strong> tech scan, driver routes, damage/RMA portals.</li>
+          <li><strong>Principle:</strong> extend interim <code>orders</code>; do not replace Stripe scaffold.</li>
+          <li><strong>Also on disk:</strong> <code>phase-c-order-spine.excalidraw</code> for Excalidraw apps (drag onto excalidraw.com if needed).</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

@@ -65,6 +65,12 @@ export async function POST(request: Request) {
         const session = event.data.object as Stripe.Checkout.Session;
         const orderId = session.metadata?.order_id;
         if (orderId) {
+          // TODO(C3/C5): also set lifecycle_status: awaiting_arrival and
+          // payment_status: deposit_paid so My Jobs shows the paid book without
+          // soft-gate. Prefer a shared markOrderBookedAfterDeposit(orderId).
+          // Soft-gate demo path already writes awaiting_arrival via book-demo.
+          // TODO(email): call sendBookingConfirmationEmail with paymentNote
+          // "Your 30% deposit was received." (same helper as book-demo).
           await supabase
             .from("orders")
             .update({

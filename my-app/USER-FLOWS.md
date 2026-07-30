@@ -393,7 +393,13 @@ Wrong-role deep links route to a shared 403 screen with a "Go to my portal" CTA.
 
 ---
 
-## 7. Help & Inquiry Flow (no chatbot — Decision #15, #16)
+## 7. Help & Inquiry Flow
+
+> **Superseded note (2026-07-30):** `docs/ARCHITECTURE-PLAN.md` Decision #1
+> states Chip AI chatbot **is** in MVP and **overrides** older Decisions #15/#16
+> ("no chatbot"). Chip ships as a marketing shell (`SupportChat`) and must not
+> invent prices — real quotes go through `/quote`. The inquiry funnel below still
+> applies for human handoff / contact / escalations.
 
 All three help sources funnel into one admin inbox.
 
