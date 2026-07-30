@@ -30,7 +30,8 @@ export type EmailTemplateCode =
   | "new-lead-notice"
   | "verification"
   | "welcome"
-  | "booking-confirmation";
+  | "booking-confirmation"
+  | "booking-team-notice";
 
 export type RenderedEmail = {
   code: EmailTemplateCode;
@@ -202,6 +203,93 @@ export function newLeadNotice(data: NewLeadData): RenderedEmail {
     }`,
     html: renderLayout(body, { preheader: `New inquiry from ${data.email}` }),
     text: rows.map(([k, v]) => `${k}: ${v}`).join("\n"),
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Internal new-booking notification (team-facing)                    */
+/* ------------------------------------------------------------------ */
+
+export type NewBookingNoticeData = {
+  customerName?: string | null;
+  customerEmail: string;
+  orderNumber: string;
+  itemSummary?: string | null;
+  deliveryLine?: string | null;
+  depositFormatted?: string | null;
+  paymentNote?: string | null;
+  /** Admin / track link for ops (optional). */
+  trackUrl?: string | null;
+  source?: string | null;
+};
+
+/**
+ * Ping care@ / TEAM_NOTIFY_EMAILS when a job is booked.
+ * Distinct template_code from booking-confirmation so email_log idempotency
+ * (once per order+code) does not suppress the team copy.
+ */
+export function newBookingNotice(data: NewBookingNoticeData): RenderedEmail {
+  const rows: Array<[string, string]> = [
+    ["Order", data.orderNumber],
+    ["Customer", data.customerName?.trim() || "Not provided"],
+    ["Email", data.customerEmail],
+    ["Build", data.itemSummary?.trim() || "Not provided"],
+    ["Delivery", data.deliveryLine?.trim() || "Not provided"],
+    ["Deposit", data.depositFormatted?.trim() || "Not shown"],
+    ["Payment", data.paymentNote?.trim() || "Not provided"],
+    ["Source", data.source?.trim() || "booking"],
+  ];
+
+  const table = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${brand.gray200};border-radius:10px;overflow:hidden;">
+    ${rows
+      .map(
+        ([k, v], i) => `<tr style="background:${i % 2 ? brand.gray50 : brand.white};">
+        <td style="padding:11px 14px;font-size:13px;font-weight:600;color:${brand.ink500};width:110px;vertical-align:top;">${escapeHtml(
+          k
+        )}</td>
+        <td style="padding:11px 14px;font-size:14px;color:${brand.ink900};">${escapeHtml(
+          v
+        )}</td>
+      </tr>`
+      )
+      .join("")}
+  </table>`;
+
+  const track = data.trackUrl?.trim()
+    ? button("Open customer track link", data.trackUrl.trim())
+    : "";
+
+  const body = `
+    ${heading("New booking 📦")}
+    ${paragraph("A customer just booked a ScrewIt Pros job.")}
+    ${table}
+    <div style="height:16px;"></div>
+    ${track}
+    ${paragraph(
+      `Reply to the customer at <a href="mailto:${escapeHtml(
+        data.customerEmail
+      )}" style="color:${brand.blueElectric};">${escapeHtml(
+        data.customerEmail
+      )}</a>.`
+    )}
+  `;
+
+  return {
+    code: "booking-team-notice",
+    subject: `New booking ${data.orderNumber}: ${
+      data.customerName?.trim() || data.customerEmail
+    }`,
+    html: renderLayout(body, {
+      preheader: `Order ${data.orderNumber} booked by ${data.customerEmail}`,
+    }),
+    text: [
+      "New booking",
+      "",
+      ...rows.map(([k, v]) => `${k}: ${v}`),
+      data.trackUrl?.trim() ? `Track: ${data.trackUrl.trim()}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n"),
   };
 }
 
@@ -451,6 +539,21 @@ const previewSamples: ReadonlyArray<{
         itemSummary: "HEMNES dresser · 1 item",
         depositFormatted: "$74.70",
         paymentNote: "No deposit was charged (demo book path).",
+      }),
+  },
+  {
+    label: "New booking notice (internal)",
+    render: () =>
+      newBookingNotice({
+        customerName: "Jordan Rivera",
+        customerEmail: "jordan@example.com",
+        orderNumber: "SIP-10042",
+        itemSummary: "HEMNES dresser · 1 item",
+        deliveryLine: "Yale St, 77008",
+        depositFormatted: "$74.70",
+        paymentNote: "No deposit was charged (demo book path).",
+        trackUrl: "https://screwitpros.com/customer/orders/SIP-10042/track",
+        source: "book-demo",
       }),
   },
 ];

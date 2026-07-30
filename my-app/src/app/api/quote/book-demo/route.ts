@@ -92,6 +92,7 @@ export async function POST(request: Request) {
         ? `${input.items[0]!.name} · 1 item`
         : `${input.items[0]?.name ?? "Your build"} · ${input.items.length} items`;
 
+    // Customer "You're booked" + care@ TEAM_NOTIFY_EMAILS booking-team-notice
     await sendBookingConfirmationEmail({
       to: user.email ?? "",
       orderId: result.orderId,
@@ -102,6 +103,7 @@ export async function POST(request: Request) {
       depositCents: result.depositCents,
       paymentNote:
         "No deposit was charged (demo book path — Stripe not required for this test).",
+      source: "book-demo",
     });
 
     return NextResponse.json(
