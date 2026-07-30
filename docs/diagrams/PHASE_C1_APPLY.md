@@ -33,7 +33,8 @@ npx supabase migration up
 
 Checkout still writes legacy `status` (`pending_payment` | …).  
 New columns get defaults (`lifecycle_status=draft`, `payment_status=unpaid`) and triggers fill `order_number`.  
-**C3** will write items + set lifecycle on book; **C2** will read them for My Jobs.
+**C2** reads jobs for My Jobs. **C2.5** soft-gate writes real `SIP-*` jobs (non-prod).  
+To empty the order tables and restart numbers: `my-app/supabase/scripts/reset_orders_clean.sql`.
 
 ## Diagram
 

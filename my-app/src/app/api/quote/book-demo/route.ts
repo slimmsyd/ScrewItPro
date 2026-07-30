@@ -6,6 +6,7 @@ import {
   createSoftGateBooking,
   SoftGateBookingError,
 } from "@/lib/orders/create-soft-gate-booking";
+import { sendBookingConfirmationEmail } from "@/lib/emails/send-booking-confirmation";
 
 /**
  * POST /api/quote/book-demo
@@ -77,6 +78,30 @@ export async function POST(request: Request) {
       items: input.items,
       pickupMode: input.pickupMode ?? null,
       deliveryLine: input.deliveryLine,
+    });
+
+    // Booking email — never fails the book response
+    const firstName =
+      typeof user.user_metadata?.full_name === "string"
+        ? user.user_metadata.full_name.split(" ")[0]
+        : typeof user.user_metadata?.name === "string"
+          ? user.user_metadata.name.split(" ")[0]
+          : null;
+    const itemSummary =
+      input.items.length === 1
+        ? `${input.items[0]!.name} · 1 item`
+        : `${input.items[0]?.name ?? "Your build"} · ${input.items.length} items`;
+
+    await sendBookingConfirmationEmail({
+      to: user.email ?? "",
+      orderId: result.orderId,
+      orderNumber: result.orderNumber,
+      customerName: firstName,
+      deliveryLine: input.deliveryLine ?? null,
+      itemSummary,
+      depositCents: result.depositCents,
+      paymentNote:
+        "No deposit was charged (demo book path — Stripe not required for this test).",
     });
 
     return NextResponse.json(

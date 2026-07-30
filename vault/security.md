@@ -75,6 +75,7 @@ Writes go through Next.js API + `createAdminClient()`. RLS enabled; anon/authent
 | `inquiries` | Contact form via API |
 | interim `orders` / `payments` | Checkout + webhook server paths |
 | `email_log` | Send pipeline only |
+| `email_templates` | **Service role only** (no authenticated policies). Mutations via admin API + `requireAdmin` |
 
 ### Roles (schema present, portal gates incomplete)
 

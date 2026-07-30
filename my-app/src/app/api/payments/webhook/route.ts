@@ -69,6 +69,8 @@ export async function POST(request: Request) {
           // payment_status: deposit_paid so My Jobs shows the paid book without
           // soft-gate. Prefer a shared markOrderBookedAfterDeposit(orderId).
           // Soft-gate demo path already writes awaiting_arrival via book-demo.
+          // TODO(email): call sendBookingConfirmationEmail with paymentNote
+          // "Your 30% deposit was received." (same helper as book-demo).
           await supabase
             .from("orders")
             .update({

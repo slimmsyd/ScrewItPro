@@ -242,6 +242,19 @@ When implementing those, update this file and `security.md` in the same change.
 | Supabase | `lib/supabase/{client,server,admin,middleware}` | `NEXT_PUBLIC_SUPABASE_*`, `SUPABASE_SERVICE_ROLE_KEY` |
 | Stripe | `lib/stripe.ts`, `lib/payments.ts` | Publishable + secret + webhook secret |
 | Resend | `lib/resend.ts`, `lib/emails/*` | `RESEND_API_KEY`, from address |
+
+### Booking email cycle (as-built)
+
+| Step | Detail |
+|------|--------|
+| Trigger (now) | After `POST /api/quote/book-demo` success → `sendBookingConfirmationEmail` |
+| Template code | `booking-confirmation` (stable; `email_log.template_code`) |
+| Resolve | Active row in `email_templates` (mustache `{{vars}}`) **or** code default in `templates.ts` |
+| Layout | Brand chrome always from `layout.renderLayout` (not admin-editable in v1) |
+| Dispatch | `dispatchEmail` → Resend or outbox; never fails book API |
+| Idempotency | Skip if `email_log` already has **sent** for `(booking-confirmation, order_id)` |
+| Admin edit | `GET/PATCH /api/admin/email-templates/[code]` via `requireAdmin`; or Supabase Table Editor |
+| Later | Stripe webhook reuses same send helper after deposit |
 | DeepSeek | `lib/deepseek.ts` | `DEEPSEEK_API_KEY` (+ model/base URL) |
 | Google Maps | `lib/google.ts`, `lib/places.ts` | Maps keys |
 | Google Auth | Supabase provider (app routes only start/callback) | Supabase dashboard redirect URLs |
