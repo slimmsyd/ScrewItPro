@@ -2,23 +2,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isInquiryBackendReady } from "@/lib/inquiries";
 
 /**
- * Interim admin lead access for the internal /admin/leads view.
+ * Admin lead data for /admin/leads.
+ * Access is gated by requireAdmin() (profiles.role = admin) — not a URL token.
  *
- * Security is a simple shared token (ADMIN_DASHBOARD_TOKEN) passed as ?key=.
- * This is deliberately minimal — it hardens under M1 role guards + Supabase
- * auth later. Until ADMIN_DASHBOARD_TOKEN is set, the view is disabled.
+ * Bootstrap first admin (SQL editor):
+ *   update public.profiles set role = 'admin' where email = 'you@example.com';
  */
-
-export function isAdminDashboardConfigured(): boolean {
-  return Boolean(process.env.ADMIN_DASHBOARD_TOKEN?.trim());
-}
-
-/** Constant-ish token check. Returns true only when configured AND matching. */
-export function isAdminKeyValid(key: string | null | undefined): boolean {
-  const expected = process.env.ADMIN_DASHBOARD_TOKEN?.trim();
-  if (!expected) return false;
-  return typeof key === "string" && key === expected;
-}
 
 export type LeadRow = {
   id: string;

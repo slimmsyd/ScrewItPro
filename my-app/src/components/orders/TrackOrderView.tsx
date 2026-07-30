@@ -35,7 +35,7 @@ export default function TrackOrderView({ baseOrder }: { baseOrder: MockOrder }) 
         className="order-track-main"
       >
         <Link
-          href="/jobs"
+          href="/customer/jobs"
           style={{
             display: "inline-flex",
             alignItems: "center",

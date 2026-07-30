@@ -45,7 +45,7 @@
 | Browser | `lib/supabase/client.ts` | anon | Client components; RLS applies |
 | Server (user) | `lib/supabase/server.ts` | anon + cookies | RSC, route handlers with user session; RLS applies |
 | Admin | `lib/supabase/admin.ts` | **service role** | Server-only privileged writes; **bypasses RLS** |
-| Middleware | `lib/supabase/middleware.ts` | anon + cookies | Session refresh only |
+| Middleware | `lib/supabase/middleware.ts` | anon + cookies | Session refresh + **coarse route gates** (`/customer`, `/admin`, …). Always copy cookies onto redirects. |
 
 **Rule:** Never import `createAdminClient` (or `serverEnv` secrets) from a Client Component or any module that re-exports to the browser.
 
@@ -138,9 +138,11 @@ There is **no org_id multi-tenancy** yet. Do not invent cross-customer reads “
 | `POST /api/auth/signup` | Account creation; no secret leak |
 | `GET /api/auth/session` | Session read only |
 | `POST /api/inquiries` | Public write; service role |
-| `POST /api/payments/checkout` | Creates Checkout session; server Stripe secret |
+| `POST /api/quote/draft` | **Auth required**; server-prices items; inserts `pending_payment` order |
+| `POST /api/payments/checkout` | **Auth required**; body `{ orderId }` only; ownership + status checks; Stripe secret |
 | `POST /api/payments/webhook` | Must verify signature |
-| `GET /api/admin/leads/export` | **Sensitive** — must be admin-gated (verify current guards before expanding) |
+| `GET /api/admin/leads/export` | **requireAdmin()** — `profiles.role = admin` (no URL token) |
+| `/admin/leads` | Same requireAdmin; bootstrap first admin via SQL |
 | `GET /api/health` | Config booleans only — no secrets |
 | `POST /api/quote/lookup-product` | Server-side fetch; untrusted HTML |
 
@@ -171,16 +173,26 @@ There is **no org_id multi-tenancy** yet. Do not invent cross-customer reads “
 
 ---
 
-## Planned hardening (not fully implemented)
+## Planned hardening (partially done — Slice 2)
 
-From `docs/ARCHITECTURE-PLAN.md` — implement then **update this file**:
+| Item | Status |
+|------|--------|
+| Middleware prefix guards `/customer|/admin|/tech|/driver` | **As-built** (coarse UX; cookie-safe redirects) |
+| Admin leads without URL secrets | **As-built** (`requireAdmin`) |
+| Checkout auth + no client money | **As-built** (draft + orderId) |
+| Custom Access Token Hook → `sip_role` | **Dashboard setup still required** — code reads claim when present, defaults customer |
+| profiles update recursion fix | **Migration shipped** — apply via SQL editor / `db push` |
+| Full order RLS matrix | Planned |
+| Deep-link tokens | Planned |
+| Rate limits | Planned |
 
-1. Custom Access Token Hook → `app_metadata.sip_role` / `sip_status`
-2. Middleware prefix guards for `/admin|/tech|/driver|/customer`
-3. Full order RLS matrix (customer own orders; tech via assignment; driver via route)
-4. Deep-link tokens (sha256, purpose-bound, single-use) for quote approve / balance pay / damage resolve
-5. Storage signed URLs only (private buckets)
-6. Rate limits on public POST endpoints and chat
+### Bootstrap first admin
+
+```sql
+-- After user has signed up once:
+select set_config('app.allow_profile_privilege_update', 'true', true);
+update public.profiles set role = 'admin' where email = 'you@example.com';
+```
 
 ---
 
@@ -195,6 +207,8 @@ Record funky authz/authn bugs here so we do not repeat them.
 | 2026-07-30 | Confirmation showed fixture email `morgan@…` when snapshot omitted email | Pass member email into `saveBookedSnapshot`; never fall back to fixture `base.email` — use neutral "your email on file" |
 | 2026-07-30 | Places failure fell back to mock places with `inServiceArea: true` (incl. Woodlands/Katy edge fixtures) | Delete mocks; fail closed with actionable errors; radius locked to **40 mi** |
 | 2026-07-30 | Stripe soft-gate offered "Continue to confirmation" in all envs | `DEMO_BOOKING_ENABLED = NODE_ENV !== "production"`; production terminal modal only |
+| 2026-07-30 | Checkout trusted client `totalCents` / missing auth / IDOR on orderId | Auth first; draft API server-prices; checkout only `{ orderId }` + ownership + pending_payment |
+| 2026-07-30 | Admin leads gated by `?key=` secret in URL/HTML | Deleted; `requireAdmin()` from profiles.role |
 
 ---
 

@@ -1,4 +1,7 @@
 import { isWaitlist } from "@/lib/site";
+import type { SipRole, SipStatus } from "@/lib/auth/roles";
+
+export type { SipRole, SipStatus };
 
 /** Visitor membership relative to auth + waitlist enrollment. */
 export type MemberStatus =
@@ -13,6 +16,9 @@ export type MemberUser = {
   picture: string;
   provider: string;
   position: number | null;
+  /** From JWT app_metadata.sip_role (hook) or default customer. Not marketing status. */
+  role?: SipRole;
+  status?: SipStatus;
 };
 
 export type PrimaryCtaAction = "join" | "share" | "quote" | "finish_join";

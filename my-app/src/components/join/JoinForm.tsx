@@ -2,9 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ASSETS, PRIVACY_PATH, TERMS_PATH } from "@/lib/site";
+import {
+  ASSETS,
+  PRIVACY_PATH,
+  TERMS_PATH,
+  portalHomeFor,
+  safeReturnTo,
+} from "@/lib/site";
 import { signInWithProvider } from "@/lib/auth/oauth";
 import { createClient } from "@/lib/supabase/client";
 import { useLocale } from "@/components/providers/LocaleProvider";
@@ -35,6 +41,7 @@ import {
 
 export function JoinForm() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { t } = useLocale();
   const { status: memberStatus, user: memberUser, refresh: refreshMember } =
     useMember();
@@ -245,6 +252,12 @@ export function JoinForm() {
       if (user.email) setEmail(user.email);
       if (typeof wl.position === "number" && wl.position > 0) {
         setPos(wl.position);
+      }
+      await refreshMember();
+      const returnTo = searchParams.get("return_to");
+      if (returnTo) {
+        router.replace(safeReturnTo(returnTo, portalHomeFor("customer")));
+        return;
       }
       setPhase("done");
     } catch (e) {

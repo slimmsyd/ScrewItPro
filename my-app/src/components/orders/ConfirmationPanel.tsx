@@ -33,7 +33,7 @@ export default function ConfirmationPanel({
   const display = useDisplayOrder(order);
   const primary = display.items[0];
   const totalQty = display.items.reduce((n, i) => n + i.quantity, 0);
-  const trackHref = `/orders/${display.id}/track${isDemo ? "?demo=1" : ""}`;
+  const trackHref = `/customer/orders/${display.id}/track${isDemo ? "?demo=1" : ""}`;
   const confettiFiredRef = useRef(false);
 
   // One-shot brand confetti when the booked screen mounts (same burst as waitlist success).

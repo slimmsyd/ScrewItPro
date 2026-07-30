@@ -114,5 +114,5 @@ export function nextStepForStatus(
 
 /** Track URL for an order (keeps Phase 0–3 path; no /jobs/[id] yet). */
 export function portalTrackHref(orderId: string): string {
-  return `/orders/${encodeURIComponent(orderId)}/track`;
+  return `/customer/orders/${encodeURIComponent(orderId)}/track`;
 }

@@ -8,8 +8,13 @@ export type OAuthProvider = "google";
  */
 export async function signInWithProvider(provider: OAuthProvider) {
   if (provider === "google") {
-    // Server route reads GOOGLE_CLIENT_ID / SECRET from .env.local
-    window.location.assign("/auth/google");
+    // Forward return_to so post-login lands on the right portal path.
+    const params = new URLSearchParams(window.location.search);
+    const returnTo = params.get("return_to");
+    const q = returnTo
+      ? `?return_to=${encodeURIComponent(returnTo)}`
+      : "";
+    window.location.assign(`/auth/google${q}`);
     return;
   }
 

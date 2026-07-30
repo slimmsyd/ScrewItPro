@@ -130,7 +130,7 @@ export default function DemoResetClient() {
           <ul style={list}>
             {active.map((j) => (
               <li key={j.id}>
-                <Link href={`/orders/${j.id}/track`} style={link}>
+                <Link href={`/customer/orders/${j.id}/track`} style={link}>
                   {j.id}
                 </Link>{" "}
                 — {j.items[0]?.name ?? "Job"} · {j.status}
@@ -141,7 +141,7 @@ export default function DemoResetClient() {
           <ul style={list}>
             {past.map((j) => (
               <li key={j.id}>
-                <Link href={`/orders/${j.id}/track`} style={link}>
+                <Link href={`/customer/orders/${j.id}/track`} style={link}>
                   {j.id}
                 </Link>{" "}
                 — {j.items[0]?.name ?? "Job"} · delivered
@@ -163,29 +163,29 @@ export default function DemoResetClient() {
               — Where → Items → Price → soft-gate Continue
             </li>
             <li>
-              <Link href="/orders/SIP-4471?demo=1" style={link}>
+              <Link href="/customer/orders/SIP-4471?demo=1" style={link}>
                 Confirmation
               </Link>{" "}
               — confetti “You’re booked” (after book, or open direct)
             </li>
             <li>
-              <Link href="/orders/SIP-4471/track" style={link}>
+              <Link href="/customer/orders/SIP-4471/track" style={link}>
                 Track SIP-4471
               </Link>{" "}
               — portal sidebar (fresh book = Booked)
             </li>
             <li>
-              <Link href="/orders/SIP-WORK/track" style={link}>
+              <Link href="/customer/orders/SIP-WORK/track" style={link}>
                 Track SIP-WORK
               </Link>{" "}
               — workshop progress parity for “deeper in pipeline”
             </li>
             <li>
-              <Link href="/jobs" style={link}>
+              <Link href="/customer/jobs" style={link}>
                 My Jobs
               </Link>{" "}
               ·{" "}
-              <Link href="/account" style={link}>
+              <Link href="/customer/account" style={link}>
                 Account tabs
               </Link>{" "}
               — customer silo chrome

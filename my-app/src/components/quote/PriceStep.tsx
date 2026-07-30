@@ -16,14 +16,14 @@ import PaymentAside from "@/components/quote/PaymentAside";
 import ScreenTransition from "@/components/quote/ScreenTransition";
 import { useQuote } from "@/lib/quote/context";
 import { formatUsd } from "@/lib/quote/pricing";
-import { QUOTE_ITEMS_PATH } from "@/lib/site";
+import { JOIN_PATH, QUOTE_ITEMS_PATH, QUOTE_PRICE_PATH } from "@/lib/site";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { saveBookedSnapshot } from "@/lib/orders";
 import { useMember } from "@/components/providers/MemberProvider";
 
 /** Demo post-book confirmation when Stripe deposit checkout is not configured. */
 const DEMO_ORDER_ID = "SIP-4471";
-const DEMO_CONFIRMATION_PATH = `/orders/${DEMO_ORDER_ID}?demo=1`;
+const DEMO_CONFIRMATION_PATH = `/customer/orders/${DEMO_ORDER_ID}?demo=1`;
 
 /**
  * Soft-gate demo booking is local/preview only.
@@ -78,6 +78,7 @@ export default function PriceStep() {
     setBusy(true);
     setError(null);
     try {
+      // Soft-gate when Stripe isn't live (dev demo path)
       const readyRes = await fetch("/api/payments/checkout");
       const readyJson = (await readyRes.json()) as { ready?: boolean };
       if (!readyJson.ready) {
@@ -86,18 +87,48 @@ export default function PriceStep() {
         return;
       }
 
-      const description = draft.items
-        .map((i) => i.name)
-        .slice(0, 3)
-        .join(", ");
+      // Server-priced draft order (never send totalCents from the client)
+      const draftRes = await fetch("/api/quote/draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: draft.items.map((i) => ({
+            name: i.name,
+            quantity: i.quantity ?? 1,
+            src: i.src,
+            category: i.category,
+            assemblyCents: i.assemblyCents,
+          })),
+          pickupMode: draft.pickupMode,
+          deliveryLine:
+            draft.deliveryAddress?.formattedAddress ??
+            draft.deliveryAddress?.name,
+        }),
+      });
+      const draftJson = (await draftRes.json()) as {
+        ok?: boolean;
+        orderId?: string;
+        error?: string;
+        message?: string;
+      };
+
+      if (draftRes.status === 401 || draftJson.error === "unauthorized") {
+        const returnTo = encodeURIComponent(QUOTE_PRICE_PATH);
+        router.push(`${JOIN_PATH}?mode=login&return_to=${returnTo}`);
+        setBusy(false);
+        return;
+      }
+
+      if (!draftRes.ok || !draftJson.ok || !draftJson.orderId) {
+        setError(draftJson.message ?? "Could not create order draft.");
+        setBusy(false);
+        return;
+      }
 
       const res = await fetch("/api/payments/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          totalCents: totals.subtotalCents,
-          description: `ScrewIt build: ${description}`,
-        }),
+        body: JSON.stringify({ orderId: draftJson.orderId }),
       });
       const json = (await res.json()) as {
         ok?: boolean;
@@ -109,6 +140,9 @@ export default function PriceStep() {
       if (!res.ok || !json.ok || !json.url) {
         if (json.error === "stripe_not_configured") {
           setSoftGate(true);
+        } else if (json.error === "unauthorized") {
+          const returnTo = encodeURIComponent(QUOTE_PRICE_PATH);
+          router.push(`${JOIN_PATH}?mode=login&return_to=${returnTo}`);
         } else {
           setError(json.message ?? "Could not start checkout.");
         }
