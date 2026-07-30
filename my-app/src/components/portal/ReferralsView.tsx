@@ -1,67 +1,91 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   Check,
   Copy,
   Gift,
+  Loader2,
   Send,
   UserPlus,
   Wallet,
 } from "lucide-react";
+import type { ReferralsPayload } from "@/lib/referrals/types";
 
 /**
- * Refer & Earn — design_handoff_portal RefV2 (locked): gradient hero with
- * copyable link, 3-step how-it-works, credit ring + recent referrals.
- * Link/credits/referrals are demo fixtures until a referrals API lands.
+ * Refer & Earn Points — real per-user link + points balance.
+ * Fetches GET /api/customer/referrals (no dollar fixtures).
  */
 
-const REFERRAL_LINK = "screwitpros.com/r/MORGAN20";
-
-const STEPS = [
-  {
-    icon: Send,
-    title: "Share your link",
-    body: "Send it to a friend by text, email, or social.",
-  },
-  {
-    icon: UserPlus,
-    title: "They book a build",
-    body: "Your friend gets $20 off their first order.",
-  },
-  {
-    icon: Wallet,
-    title: "You earn $20",
-    body: "Credit lands in your account, auto-applied.",
-  },
-] as const;
-
-const RECENT_REFS = [
-  { name: "Jamie L.", value: "+$20", earned: true },
-  { name: "Priya S.", value: "Pending", earned: false },
-] as const;
+type LoadState =
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "ready"; data: ReferralsPayload };
 
 export default function ReferralsView() {
+  const [state, setState] = useState<LoadState>({ status: "loading" });
   const [copied, setCopied] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(
-    () => () => {
-      if (copyTimer.current) clearTimeout(copyTimer.current);
-    },
-    []
-  );
+  const load = useCallback(async () => {
+    setState({ status: "loading" });
+    try {
+      const res = await fetch("/api/customer/referrals", {
+        credentials: "same-origin",
+      });
+      const json = (await res.json()) as {
+        ok?: boolean;
+        message?: string;
+        error?: string;
+      } & Partial<ReferralsPayload>;
+      if (!res.ok || !json.ok || !json.code) {
+        setState({
+          status: "error",
+          message:
+            json.message ??
+            (json.error === "unauthorized"
+              ? "Sign in to view your referral link."
+              : "Could not load referrals."),
+        });
+        return;
+      }
+      setState({
+        status: "ready",
+        data: {
+          code: json.code,
+          path: json.path ?? `/r/${json.code}`,
+          pointsBalance: Number(json.pointsBalance ?? 0),
+          friendsJoined: Number(json.friendsJoined ?? 0),
+          recent: json.recent ?? [],
+          rewards: json.rewards ?? {
+            referrerPoints: 500,
+            refereePoints: 200,
+          },
+        },
+      });
+    } catch {
+      setState({
+        status: "error",
+        message: "Network error. Try again.",
+      });
+    }
+  }, []);
 
-  const onCopy = async () => {
-    const url = `https://${REFERRAL_LINK}`;
+  useEffect(() => {
+    void load();
+    return () => {
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+    };
+  }, [load]);
+
+  const onCopy = async (fullUrl: string) => {
     let ok = false;
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(fullUrl);
       ok = true;
     } catch {
-      // Clipboard API blocked (permissions/insecure context) — legacy fallback.
       const ta = document.createElement("textarea");
-      ta.value = url;
+      ta.value = fullUrl;
       ta.style.position = "fixed";
       ta.style.opacity = "0";
       document.body.appendChild(ta);
@@ -79,11 +103,84 @@ export default function ReferralsView() {
     copyTimer.current = setTimeout(() => setCopied(false), 2000);
   };
 
+  if (state.status === "loading") {
+    return (
+      <div className="screen-anim" style={{ width: "100%" }}>
+        <div style={{ marginBottom: 20 }}>
+          <h1 style={h1Style}>Refer &amp; Earn Points</h1>
+          <p style={subStyle}>Loading your link…</p>
+        </div>
+        <div style={{ display: "grid", placeItems: "center", padding: 48 }}>
+          <Loader2
+            size={28}
+            color="var(--blue-electric)"
+            className="animate-spin"
+            aria-label="Loading"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (state.status === "error") {
+    return (
+      <div className="screen-anim" style={{ width: "100%" }}>
+        <div style={{ marginBottom: 20 }}>
+          <h1 style={h1Style}>Refer &amp; Earn Points</h1>
+          <p style={subStyle}>{state.message}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => void load()}
+          className="quote-tap"
+          style={retryBtnStyle}
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+
+  const { data } = state;
+  const host =
+    typeof window !== "undefined" ? window.location.host : "screwitpros.com";
+  const displayLink = `${host}${data.path}`;
+  const fullUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${data.path}`
+      : `https://${displayLink}`;
+  const refPts = data.rewards.referrerPoints;
+  const friendPts = data.rewards.refereePoints;
+  const friends = data.friendsJoined;
+  // Ring: soft progress aesthetic (no fake cap) — full after first friend
+  const ringPct = friends <= 0 ? 0 : Math.min(100, 40 + friends * 20);
+
+  const steps = [
+    {
+      icon: Send,
+      title: "Share your link",
+      body: "Send it to a friend by text, email, or social.",
+    },
+    {
+      icon: UserPlus,
+      title: "They join ScrewIt",
+      body: `Your friend gets ${friendPts} points when they create an account.`,
+    },
+    {
+      icon: Wallet,
+      title: `You earn ${refPts} points`,
+      body: "Points land in your balance the moment they sign up.",
+    },
+  ] as const;
+
   return (
     <div className="screen-anim" style={{ width: "100%" }}>
       <div style={{ marginBottom: 20 }}>
-        <h1 style={h1Style}>Refer &amp; Earn</h1>
-        <p style={subStyle}>Give $20, get $20 toward your next build.</p>
+        <h1 style={h1Style}>Refer &amp; Earn Points</h1>
+        <p style={subStyle}>
+          Share your link — friends get {friendPts} pts, you get {refPts} pts
+          when they join.
+        </p>
       </div>
 
       <div style={{ maxWidth: 760, margin: "0 auto" }}>
@@ -92,16 +189,21 @@ export default function ReferralsView() {
             <div style={heroIconTileStyle}>
               <Gift size={28} color="#fff" aria-hidden />
             </div>
-            <div style={heroTitleStyle}>Give $20, get $20</div>
+            <div style={heroTitleStyle}>
+              Give {friendPts} pts, get {refPts} pts
+            </div>
             <p style={heroSubStyle}>
-              Everyone you refer gets $20 off their first assembly. You get
-              $20 in credit the moment they book.
+              Everyone you refer gets {friendPts} welcome points. You earn{" "}
+              {refPts} points the moment they sign up. (Redemption for dollars
+              comes later.)
             </p>
             <div style={linkRowStyle}>
-              <div style={linkBoxStyle}>{REFERRAL_LINK}</div>
+              <div style={linkBoxStyle} title={displayLink}>
+                {displayLink}
+              </div>
               <button
                 type="button"
-                onClick={onCopy}
+                onClick={() => void onCopy(fullUrl)}
                 className="ref-copy-btn"
                 style={copyBtnStyle}
               >
@@ -116,7 +218,7 @@ export default function ReferralsView() {
           </div>
 
           <div style={stepsGridStyle}>
-            {STEPS.map((step, i) => (
+            {steps.map((step, i) => (
               <div
                 key={step.title}
                 style={{
@@ -140,48 +242,82 @@ export default function ReferralsView() {
         </div>
 
         <div style={bottomGridStyle}>
-          <div style={{ ...cardStyle, display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={ringOuterStyle} aria-hidden>
-              <div style={ringInnerStyle}>2/3</div>
+          <div
+            style={{
+              ...cardStyle,
+              display: "flex",
+              alignItems: "center",
+              gap: 16,
+            }}
+          >
+            <div
+              style={{
+                ...ringOuterStyle,
+                background: `conic-gradient(var(--blue-electric) 0% ${ringPct}%, var(--gray-100) ${ringPct}% 100%)`,
+              }}
+              aria-hidden
+            >
+              <div style={ringInnerStyle}>
+                {friends > 0 ? String(friends) : "0"}
+              </div>
             </div>
             <div>
               <div style={{ ...capsStyle, marginBottom: 3 }}>
-                Credit balance
+                Points balance
               </div>
-              <div style={creditAmountStyle}>$40.00</div>
-              <div style={creditNoteStyle}>2 of 3 friends booked</div>
+              <div style={creditAmountStyle}>
+                {data.pointsBalance.toLocaleString()} pts
+              </div>
+              <div style={creditNoteStyle}>
+                {friends === 0
+                  ? "No friends joined yet — share your link"
+                  : `${friends} friend${friends === 1 ? "" : "s"} joined`}
+              </div>
             </div>
           </div>
 
           <div style={cardStyle}>
             <div style={{ ...capsStyle, marginBottom: 10 }}>Recent</div>
-            {RECENT_REFS.map((ref, i) => (
-              <div
-                key={ref.name}
+            {data.recent.length === 0 ? (
+              <p
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 11,
-                  padding: "7px 0",
-                  borderTop: i > 0 ? "1px solid var(--gray-100)" : "none",
+                  margin: 0,
+                  fontFamily: "var(--font-body)",
+                  fontSize: 13.5,
+                  color: "var(--ink-500)",
+                  lineHeight: 1.5,
                 }}
               >
-                <span style={refAvatarStyle}>{ref.name[0]}</span>
-                <span style={refNameStyle}>{ref.name}</span>
-                <span
+                When a friend signs up with your link, they&apos;ll show up
+                here with your points earned.
+              </p>
+            ) : (
+              data.recent.map((ref, i) => (
+                <div
+                  key={ref.id}
                   style={{
-                    fontFamily: "var(--font-body)",
-                    fontSize: 12.5,
-                    fontWeight: 700,
-                    color: ref.earned
-                      ? "var(--status-success)"
-                      : "var(--ink-300)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 11,
+                    padding: "7px 0",
+                    borderTop: i > 0 ? "1px solid var(--gray-100)" : "none",
                   }}
                 >
-                  {ref.value}
-                </span>
-              </div>
-            ))}
+                  <span style={refAvatarStyle}>{ref.name[0] ?? "?"}</span>
+                  <span style={refNameStyle}>{ref.name}</span>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: 12.5,
+                      fontWeight: 700,
+                      color: "var(--status-success)",
+                    }}
+                  >
+                    +{ref.points} pts
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -203,6 +339,19 @@ const subStyle: CSSProperties = {
   fontFamily: "var(--font-body)",
   fontSize: 14.5,
   color: "var(--ink-500)",
+};
+
+const retryBtnStyle: CSSProperties = {
+  height: 44,
+  padding: "0 18px",
+  borderRadius: 10,
+  border: "none",
+  background: "var(--blue-deep)",
+  color: "#fff",
+  fontFamily: "var(--font-body)",
+  fontWeight: 700,
+  fontSize: 14,
+  cursor: "pointer",
 };
 
 const cardStyle: CSSProperties = {
@@ -366,8 +515,6 @@ const ringOuterStyle: CSSProperties = {
   flex: "0 0 64px",
   display: "grid",
   placeItems: "center",
-  background:
-    "conic-gradient(var(--blue-electric) 0% 66%, var(--gray-100) 66% 100%)",
 };
 
 const ringInnerStyle: CSSProperties = {

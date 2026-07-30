@@ -125,7 +125,7 @@ These exist on the current branch; structure may still change. **Import — don�
 | **MyJobsView** | `portal/MyJobsView.tsx` | View | Jobs list / my jobs page |
 | **JobStatusPill** | `portal/JobStatusPill.tsx` | Domain | Job status pill (portal jobs) |
 | **NotificationsView** | `portal/NotificationsView.tsx` | View | Notifications list UI |
-| **ReferralsView** | `portal/ReferralsView.tsx` | View | Referrals page UI |
+| **ReferralsView** | `portal/ReferralsView.tsx` | View | Refer & Earn Points UI — real link/balance via `GET /api/customer/referrals` |
 | **AccountTabsView** | `portal/account/AccountTabsView.tsx` | View | Account tab shell |
 | **ProfilePanel** | `portal/account/ProfilePanel.tsx` | Panel | Profile fields |
 | **AddressesPanel** | `portal/account/AddressesPanel.tsx` | Panel | Saved addresses |
@@ -212,3 +212,4 @@ Prefer **no single source file over ~1,000 lines** (components/pages). Split by 
 | 2026-07-30 | Split ItemsStep → quote/items/*; join page → JoinForm + joinUi + helpers |
 | 2026-07-30 | Slice 1: delete OrdersShell + mock-catalog; BuyMode paste-only; retailers.ts |
 | 2026-07-30 | Slice 2: portal routes live under `/customer/*`; `/403` page |
+| 2026-07-30 | ReferralsView: real per-user opaque codes + points (no $ fixtures) |

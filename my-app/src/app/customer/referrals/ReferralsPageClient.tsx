@@ -15,7 +15,7 @@ export default function ReferralsPageClient() {
     return (
       <AccountPageShell>
         <div style={centerWrap}>
-          <p style={bodyStyle}>Loading referrals…</p>
+          <p style={bodyStyle}>Loading your referral link…</p>
         </div>
       </AccountPageShell>
     );
@@ -25,9 +25,9 @@ export default function ReferralsPageClient() {
     return (
       <AccountPageShell>
         <div style={centerWrap}>
-          <h1 style={h1Style}>Refer &amp; Earn</h1>
+          <h1 style={h1Style}>Refer &amp; Earn Points</h1>
           <p style={bodyStyle}>
-            Sign in to get your referral link and track your credits.
+            Sign in to get your referral link and track your points.
           </p>
           <Link href={`${JOIN_PATH}?mode=login`} style={primaryBtnStyle}>
             Sign in

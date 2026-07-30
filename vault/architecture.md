@@ -121,6 +121,7 @@ Browser
 | Checkout | `/checkout/success`, `/checkout/cancelled` | Stripe return URLs |
 | Orders | `/orders/[id]`, `/orders/[id]/track` | Confirmation + tracker UI |
 | Portal (customer) | `/customer/{jobs,account,notifications,referrals,orders/*}` | Shell under real URL prefix for middleware guards; old paths redirect |
+| Referral short link | `/r/[code]` | Sets `sip_ref` cookie → `/join?mode=signup`; opaque codes (`SIP…`) |
 | Admin | `/admin/leads` | Lead list + export API |
 | Legal | `/privacy`, `/terms` | Legal shells |
 | AEO | `/furniture-assembly-pickup-delivery-houston` | SEO/AEO landing |
@@ -152,7 +153,8 @@ Browser
 
 ### As-built (migrations under `my-app/supabase/migrations/`)
 
-- **Foundation:** `profiles` (role enum: customer | admin | technician | driver), waitlist, newsletter, subscription plans/subscriptions, point ledger + rewards (loyalty schema largely dormant in UI).
+- **Foundation:** `profiles` (role enum: customer | admin | technician | driver), waitlist, newsletter, subscription plans/subscriptions, point ledger + rewards.
+- **Referrals (points):** `profiles.referral_code` (opaque), `profiles.referred_by`, `referral_attributions`; claim on first signup via `claim_referral` + `apply_points`. UI: **Refer & Earn Points** (`lib/referrals/*`, `GET /api/customer/referrals`). Dollar conversion deferred (points stay unit of record). **Point amounts:** ops-editable via **Admin UI** when built (see **D-REFERRAL-POINTS** in `vault/decisions.md`); until then scaffold constants in SQL + `lib/referrals/config.ts`.
 - **Inquiries** table + API.
 - **Interim pay columns on `orders`:** legacy `status` (`order_status_interim`: pending_payment | deposit_paid | cancelled) kept for checkout compatibility.
 - **Phase C1 spine (customer-first):** extended `orders` + `order_items` + `order_status_events` + transitions + `addresses` + `item_classes` + `app_settings` + `stripe_webhook_events`. See **Phase C** below.
@@ -326,6 +328,8 @@ No project-wide test runner or CI pipeline is established in-repo as of this sna
 | 2026-07-30 | Slice 1: delete mock catalog; BuyMode paste-only; AddressField fail-closed; soft-gate fails closed in production; no fixture-email fallback |
 | 2026-07-30 | Slice 2: `/customer/*` prefix + redirects; Vitest; middleware coarse gates; admin via profiles.role; checkout `{orderId}` only + `POST /api/quote/draft` |
 | 2026-07-30 | Phase C started: customer-first order spine; C0 map + C1 schema (extend interim orders) |
+| 2026-07-30 | Refer & Earn Points: opaque codes, `/r/[code]`, claim on signup, points not dollars |
+| 2026-07-30 | **D-REFERRAL-POINTS:** ops admin edits referral point amounts in Admin UI (revisit when Admin ships) |
 | (prior) | Google Auth unified onto Supabase OAuth; legacy `sip_session` cleared in middleware |
 | (prior) | Interim orders/payments for deposit Checkout scaffold |
 | (prior) | Customer portal Phase 0 shell (church vs state) |

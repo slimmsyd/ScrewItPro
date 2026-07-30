@@ -73,9 +73,9 @@ export function JoinForm() {
   }, [phase, refreshMember]);
 
   useEffect(() => {
-    if (searchParams.get("mode") === "login") {
-      setMode("login");
-    }
+    const m = searchParams.get("mode");
+    if (m === "login") setMode("login");
+    if (m === "signup") setMode("signup");
   }, [searchParams]);
 
   // Already on the waitlist with a live session → skip form, show success + share.
@@ -164,13 +164,16 @@ export function JoinForm() {
     try {
       // Server creates Auth user already confirmed (no Supabase confirm email)
       // + waitlist row. Custom welcome email can be added later.
+      const ref = searchParams.get("ref");
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({
           email: email.trim(),
           password,
           name: name.trim() || null,
+          ref: ref && ref.length > 0 ? ref : null,
         }),
       });
       const data = (await res.json()) as {

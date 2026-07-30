@@ -41,6 +41,35 @@ Only the product owner (or an agent under their direct instruction) may edit thi
 
 ---
 
+## D-REFERRAL-POINTS — Referral point amounts (2026-07-30)
+
+**Locked product intent**
+
+| Rule | Detail |
+|------|--------|
+| Unit of record | **Points** (not dollars). Dollar conversion is a future redemption layer. |
+| Earn trigger (v1) | Friend’s **first signup** via opaque personal link (`/r/{code}`). Both sides earn. |
+| Who may change amounts | **Ops admin via Admin UI** — not hardcoded forever in app deploys. |
+| Until Admin UI ships | Scaffold amounts live in SQL `claim_referral` + `lib/referrals/config.ts` (**must stay in sync**). Eng-only edits. |
+
+### Deferred (revisit when Admin UI is built)
+
+1. Admin screen to set **referrer** and **referee** points (and optionally caps / earn trigger).  
+2. Prefer `app_settings` (or admin-owned config table) as single source of truth so claim RPC + portal copy read the same values.  
+3. Changing rates does **not** retroactively rewrite past `referral_attributions` / ledger rows unless ops explicitly chooses a migration tool.  
+4. Points → dollars conversion rates and redeem UX — separate decision after Admin + rewards catalog.
+
+### Forbidden until Admin UI decision is implemented
+
+- Assuming dollar store credit is the referral reward  
+- Building a second ad-hoc “credit balance” parallel to `points_balance` without an ADR
+
+### How to change this decision
+
+Product owner updates this section when Admin referral settings ship or earn trigger moves (e.g. first book / delivered).
+
+---
+
 ## Related vault files
 
 - `vault/architecture.md` — stack + surfaces (mirrors branch summary)  

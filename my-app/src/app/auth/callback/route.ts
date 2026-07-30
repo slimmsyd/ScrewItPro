@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAppOrigin } from "@/lib/auth/origin";
 import {
+  clearReferralCookieOptions,
+  parseReferralCookie,
+  REFERRAL_COOKIE,
+  tryClaimReferralFromCode,
+} from "@/lib/referrals";
+import {
   isWaitlistBackendReady,
   upsertWaitlistEntry,
   WaitlistConfigError,
@@ -121,6 +127,24 @@ export async function GET(request: Request) {
     }
   }
 
+  // Referral claim from sip_ref cookie (first signup only; claim is idempotent).
+  const cookieHeader = request.headers.get("cookie") ?? "";
+  const sipRefMatch = cookieHeader.match(
+    new RegExp(`(?:^|;\\s*)${REFERRAL_COOKIE}=([^;]*)`)
+  );
+  const refFromCookie = parseReferralCookie(
+    sipRefMatch?.[1] ? decodeURIComponent(sipRefMatch[1]) : null
+  );
+  const refFromQuery = parseReferralCookie(searchParams.get("ref"));
+  const refCode = refFromCookie ?? refFromQuery;
+  if (refCode && user.id) {
+    try {
+      await tryClaimReferralFromCode(user.id, refCode);
+    } catch (e) {
+      console.warn("[auth/callback] referral claim skipped", e);
+    }
+  }
+
   // Post-login routing (Slice 2.5): honor safe return_to, else role home.
   const returnToRaw = searchParams.get("return_to");
   const { safeReturnTo, portalHomeFor, JOIN_PATH } = await import("@/lib/site");
@@ -133,9 +157,25 @@ export async function GET(request: Request) {
 
   // Absolute path only
   if (dest.startsWith("http")) {
-    return NextResponse.redirect(`${origin}${JOIN_PATH}?joined=1`);
+    const res = NextResponse.redirect(`${origin}${JOIN_PATH}?joined=1`);
+    if (refCode) {
+      res.cookies.set(
+        REFERRAL_COOKIE,
+        "",
+        clearReferralCookieOptions(origin.startsWith("https"))
+      );
+    }
+    return res;
   }
-  return NextResponse.redirect(
+  const res = NextResponse.redirect(
     dest.startsWith("/") ? `${origin}${dest}` : `${origin}/${dest}`
   );
+  if (refCode) {
+    res.cookies.set(
+      REFERRAL_COOKIE,
+      "",
+      clearReferralCookieOptions(origin.startsWith("https"))
+    );
+  }
+  return res;
 }

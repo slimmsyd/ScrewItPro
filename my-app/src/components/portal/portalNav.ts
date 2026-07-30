@@ -58,7 +58,7 @@ export const PORTAL_NAV_SHIPPED: PortalNavItem[] = [
   {
     key: "referrals",
     href: CUSTOMER_REFERRALS_PATH,
-    label: "Refer & Earn",
+    label: "Refer & Earn Points",
     icon: "Gift",
   },
 ];

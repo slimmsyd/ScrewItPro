@@ -62,8 +62,9 @@ Typical pattern: `auth.uid() = id` or `auth.uid() = user_id`.
 
 | Area | Notes |
 |------|--------|
-| `profiles` | SELECT/UPDATE own row; cannot self-escalate `role`, `status`, `points_balance` via RLS WITH CHECK |
+| `profiles` | SELECT/UPDATE own row; pin trigger blocks client changes to `role`, `status`, `points_balance`, `referral_code`, `referred_by` |
 | subscriptions / point_ledger / reward_redemptions | SELECT own |
+| `referral_attributions` | SELECT own (as referrer or referee); no client writes |
 
 ### Service-role only (no useful client policies)
 
@@ -76,6 +77,8 @@ Writes go through Next.js API + `createAdminClient()`. RLS enabled; anon/authent
 | interim `orders` / `payments` | Checkout + webhook server paths |
 | `email_log` | Send pipeline only |
 | `email_templates` | **Service role only** (no authenticated policies). Mutations via admin API + `requireAdmin` |
+| Referral claim / code assign | `claim_referral`, `ensure_referral_code` RPCs (service_role); points only via `apply_points` |
+| `sip_ref` cookie | httpOnly, SameSite=Lax; set by `GET /r/[code]`; cleared after signup claim |
 
 ### Roles (schema present, portal gates incomplete)
 
@@ -230,6 +233,7 @@ Record funky authz/authn bugs here so we do not repeat them.
 | 2026-07-30 | Checkout trusted client `totalCents` / missing auth / IDOR on orderId | Auth first; draft API server-prices; checkout only `{ orderId }` + ownership + pending_payment |
 | 2026-07-30 | Admin leads gated by `?key=` secret in URL/HTML | Deleted; `requireAdmin()` from profiles.role |
 | 2026-07-30 | Phase C1 order spine tables + customer SELECT RLS | Migrations under `20260730*_phase_c1_*` |
+| 2026-07-30 | Referral points: client cannot set codes/points; claim via service-role RPC only | `sip_ref` httpOnly; pin trigger includes `referral_code`/`referred_by` |
 
 ---
 
