@@ -37,8 +37,18 @@ export const BUSINESS = {
     country: "US",
   },
 
-  /** Downtown Houston — service-area center. ~50mi covers Katy → The Woodlands. */
-  geo: { lat: 29.7604, lng: -95.3698, radiusM: 80_000 },
+  /**
+   * Downtown Houston — service-area center.
+   * Locked radius: 40 miles (decision D1 / vault, 2026-07-30).
+   * radiusM is the authoritative gate for isInHoustonMetro().
+   */
+  geo: {
+    lat: 29.7604,
+    lng: -95.3698,
+    /** 40 mi × 1609.344 m/mi */
+    radiusM: 64_374,
+    radiusMiles: 40,
+  },
 
   areaServedCities: [
     "Houston",

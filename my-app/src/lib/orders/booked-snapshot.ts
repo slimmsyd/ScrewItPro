@@ -153,9 +153,15 @@ export function applySnapshotToOrder(
         }))
       : base.items;
 
+  // Never fall back to fixture PII (e.g. morgan@email.com) when the snapshot
+  // omitted email — show a neutral label until Slice 2 forces signed-in book.
+  const email =
+    snap.email?.trim() ||
+    "your email on file";
+
   return {
     ...base,
-    email: snap.email?.trim() || base.email,
+    email,
     items,
     depositCents: snap.depositCents || base.depositCents,
     balanceCents: snap.balanceCents || base.balanceCents,

@@ -8,7 +8,7 @@
 
 ## Product
 
-**ScrewIt Pros** is a hub-based furniture assembly + white-glove delivery business (Houston, ~25 mi radius).
+**ScrewIt Pros** is a hub-based furniture assembly + white-glove delivery business (Houston, **40 mi** service radius from downtown hub — locked 2026-07-30 / plan D1).
 
 Flow: customer buys flat-pack → ships/sends to hub → staff receive / assemble / QC → white-glove delivery and in-home placement.
 
@@ -133,6 +133,9 @@ Browser
 6. **Orders UI may use snapshots/mocks** (`lib/orders/booked-snapshot`, `mock-order`) until the full lifecycle backend exists.
 7. **i18n** — public EN/ES dictionaries; portal surfaces may stay EN-first.
 8. **Env access** — always through `publicEnv` / `serverEnv` in `lib/env.ts`.
+9. **Service radius = 40 miles** from downtown Houston hub (`BUSINESS.geo`). Client must never invent `inServiceArea: true`.
+10. **BuyMode is paste-link only** — no mock product catalog. Retailer logo strip is advisory, never an allowlist for lookup.
+11. **Demo booking soft-gate** is local/preview only (`NODE_ENV !== "production"`). Production fails closed when Stripe is not configured.
 
 ---
 
@@ -212,6 +215,8 @@ No project-wide test runner or CI pipeline is established in-repo as of this sna
 |------|----------|
 | 2026-07-30 | Vault initialized; as-built architecture documented |
 | 2026-07-30 | Soft 1k-line file cap for components/pages; ItemsStep + join page split into panels/helpers |
+| 2026-07-30 | **Service radius locked to 40 mi** (`BUSINESS.geo.radiusM = 64_374`). Source of truth: `lib/seo/business.ts`. |
+| 2026-07-30 | Slice 1: delete mock catalog; BuyMode paste-only; AddressField fail-closed; soft-gate fails closed in production; no fixture-email fallback |
 | (prior) | Google Auth unified onto Supabase OAuth; legacy `sip_session` cleared in middleware |
 | (prior) | Interim orders/payments for deposit Checkout scaffold |
 | (prior) | Customer portal Phase 0 shell (church vs state) |

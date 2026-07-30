@@ -11,7 +11,7 @@
 2. **Validate at the boundary.** Every API route parses input with Zod (or equivalent); reject with stable machine codes.
 3. **Least privilege clients.** Browser uses anon + user session (RLS). Privileged writes use `createAdminClient()` only in server modules.
 4. **Don’t trust the client for identity or role.** Role and user id come from Supabase Auth session / server verification — never from request body alone.
-5. **Fail closed.** Missing config → 503 with clear machine code, not fake success (waitlist pattern).
+5. **Fail closed.** Missing config → 503 with clear machine code, not fake success (waitlist pattern). Same for Maps/Places and Stripe soft-gate in **production** — never invent a successful booking or `inServiceArea: true` on the client.
 
 ---
 
@@ -155,6 +155,19 @@ There is **no org_id multi-tenancy** yet. Do not invent cross-customer reads “
 - Committing `.env.local`, service keys, or webhook secrets
 - Logging Authorization headers, cookies, or full card/bank data
 - Using deep links / tokens without server-side hash + expiry + single-use (when that system lands)
+- **Client-side mock places** that hardcode `inServiceArea: true` (service-area bypass)
+- **Fixture PII fallbacks** on real customer screens (e.g. confirmation email → `morgan@…`)
+- **Client-invented product catalogs** competing with the real paste-link lookup path
+- **Demo booking continue** in production when Stripe is not configured
+- **Hardcoded prices in Chip/chat** that contradict the quote rate card
+
+---
+
+## Service area
+
+- Authoritative center + radius: `lib/seo/business.ts` → `BUSINESS.geo` (**40 miles** / `radiusM: 64_374`).
+- Gate: `isInHoustonMetro()` in `lib/places.ts` after Places `resolvePlace`.
+- Address UI (`AddressField`, `HeroAddressBar`) must fail closed if Maps is missing or predictions fail — no mock autocomplete.
 
 ---
 
@@ -179,6 +192,9 @@ Record funky authz/authn bugs here so we do not repeat them.
 |------|-------|------------|
 | (prior) | Google sign-in created no Supabase user (unsigned cookie) | Route Google through Supabase Auth; clear `sip_session` in middleware |
 | 2026-07-30 | Vault security baseline documented | — |
+| 2026-07-30 | Confirmation showed fixture email `morgan@…` when snapshot omitted email | Pass member email into `saveBookedSnapshot`; never fall back to fixture `base.email` — use neutral "your email on file" |
+| 2026-07-30 | Places failure fell back to mock places with `inServiceArea: true` (incl. Woodlands/Katy edge fixtures) | Delete mocks; fail closed with actionable errors; radius locked to **40 mi** |
+| 2026-07-30 | Stripe soft-gate offered "Continue to confirmation" in all envs | `DEMO_BOOKING_ENABLED = NODE_ENV !== "production"`; production terminal modal only |
 
 ---
 
