@@ -100,6 +100,7 @@ export default function PriceStep() {
         return;
       }
 
+      // Real order_number from DB (SIP-xxxxx) — not fixture SIP-4471 / ?demo=1
       saveBookedSnapshot({
         orderId: json.orderNumber,
         draft,
@@ -109,7 +110,7 @@ export default function PriceStep() {
       setSoftGate(false);
       setBusy(false);
       router.push(
-        `/customer/orders/${encodeURIComponent(json.orderNumber)}?demo=1`
+        `/customer/orders/${encodeURIComponent(json.orderNumber)}`
       );
     } catch {
       setError("Network error. Please try again.");

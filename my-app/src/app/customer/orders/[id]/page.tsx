@@ -19,6 +19,7 @@ export async function generateMetadata({
 /**
  * Step 5 — post-book confirmation ("You're booked!").
  * Resolves fixture mock OR real customer job (soft-gate / future Stripe book).
+ * Real DB orders use SIP-xxxxx with no ?demo=1. Query demo=1 is fixture-only.
  */
 export default async function OrderConfirmationPage({
   params,
@@ -28,11 +29,14 @@ export default async function OrderConfirmationPage({
   searchParams: Promise<{ demo?: string }>;
 }) {
   const { id } = await params;
-  const { demo } = await searchParams;
-  const isDemo = demo === "1";
+  // searchParams.demo kept for old fixture links; ignored for real SIP jobs
+  await searchParams;
 
   const order = await resolvePortalOrder(id);
   if (!order) notFound();
+
+  // Yellow "Demo path" banner only for design fixtures (SIP-4471 etc.), never real DB jobs.
+  const isDemo = getMockOrder(id) != null;
 
   return (
     <ConfirmationShell>
