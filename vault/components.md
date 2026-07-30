@@ -109,9 +109,10 @@ Supporting domain logic: `my-app/src/lib/quote/*` (not components — do not dup
 | **OrderStatusTag** | `orders/OrderStatusTag.tsx` | Domain | Order status chip (prefer this over free-form badges for order state) |
 | **OrderSummaryAside** | `orders/OrderSummaryAside.tsx` | Aside | Order money/items summary |
 | **OrderItemThumb** | `orders/OrderItemThumb.tsx` | Media | Product thumbnail in order UI |
+| **HubIntakePanel** | `orders/HubIntakePanel.tsx` | Domain | Post-book hub ship/drop instructions (content: `lib/orders/post-book-content.ts`) |
 | **useDisplayOrder** | `orders/useDisplayOrder.ts` | Hook | Resolve display order model |
 
-Supporting domain logic: `my-app/src/lib/orders/*`.
+Supporting domain logic: `my-app/src/lib/orders/*` (next-step copy: `post-book-content.ts`).
 
 ---
 

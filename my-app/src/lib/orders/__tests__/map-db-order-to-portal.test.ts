@@ -44,7 +44,7 @@ describe("mapDbOrderToPortal (Phase C2)", () => {
     expect(job!.items[0]?.fulfillmentLabel).toBe("Ship to hub");
     expect(job!.items[0]?.imageUrl).toBe("https://example.com/item.jpg");
     expect(job!.sourceLabel).toBe("Ship to hub");
-    expect(job!.nextStep.title).toMatch(/Ship/i);
+    expect(job!.nextStep.title).toMatch(/hub/i);
     expect(job!.bookedAtLabel).toMatch(/Booked/);
   });
 
