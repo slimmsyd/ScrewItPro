@@ -6,14 +6,16 @@ White-glove furniture assembly + hub logistics platform (Houston).
 
 ---
 
-## Branch policy (locked)
+## Branch policy (locked — see vault)
+
+**Source of truth:** [`vault/decisions.md`](./vault/decisions.md) → **D-BRANCH**.
 
 | Branch | Purpose |
 |--------|---------|
-| **`main`** | **Marketing site only** (public landing / waitlist-era production). Do **not** merge quote, portal, My Jobs, booking, or ops platform work here until an explicit product launch decision. |
-| **`develop`** | **Default integration branch** for all product engineering (quote, soft-gate book, My Jobs, emails, Phase C, etc.). Open PRs → `develop`. |
+| **`main`** | **Marketing only** (`SITE_MODE=waitlist`, Join — not quote portal). Do **not** merge product/quote/portal/booking here until the owner updates D-BRANCH. |
+| **`develop`** | **All product work.** Default PR base. Branch from here. |
 
-**Agents:** Always branch from and PR into **`develop`**, never **`main`**, unless the user explicitly asks for a marketing-only fix on `main`.
+**Agents:** Always PR → **`develop`**. Never PR product work → **`main`** unless the user explicitly overrides D-BRANCH in writing.
 
 ---
 
@@ -24,7 +26,8 @@ If a habit, component choice, security rule, or visual token conflicts with scat
 
 | File | Purpose |
 |------|---------|
-| [`vault/architecture.md`](./vault/architecture.md) | Tech stack, directory map, surfaces, locked design decisions, as-built vs planned |
+| [`vault/decisions.md`](./vault/decisions.md) | **Locked product/process decisions** (branch policy, etc.) — update only when owner says so |
+| [`vault/architecture.md`](./vault/architecture.md) | Tech stack, directory map, surfaces, as-built vs planned |
 | [`vault/security.md`](./vault/security.md) | Auth, Supabase client roles, RLS classes, data-handling, forbidden patterns |
 | [`vault/components.md`](./vault/components.md) | Catalog of UI primitives + domain shells — **check before creating components** |
 | [`vault/branding_and_design.md`](./vault/branding_and_design.md) | Live tokens (CSS), brand colors, typography, assets, motion, anti-patterns |

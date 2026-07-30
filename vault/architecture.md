@@ -6,9 +6,11 @@
 
 ### Git / deploy surfaces
 
+**Locked decision:** see **[`vault/decisions.md`](./decisions.md) — D-BRANCH** (do not override until the owner updates that file).
+
 | Branch | Role |
 |--------|------|
-| **`main`** | Marketing-only production. No product portal/quote/booking merges without an explicit launch call. |
+| **`main`** | Marketing-only production (`SITE_MODE=waitlist`). No product portal/quote/booking merges. |
 | **`develop`** | Product integration (quote, My Jobs, soft-gate, emails, Phase C). **Default PR target.** |
 
 ---
