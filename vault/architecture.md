@@ -155,13 +155,24 @@ Browser
 
 | Slice | Deliverable | Status |
 |-------|-------------|--------|
-| **C0** | Vault freeze + ops→customer status map | this section |
-| **C1** | DB migrations (scaffold) | in progress |
-| **C2** | `GET /api/customer/jobs` + order detail | next |
-| **C3** | Draft/book writes items + order_number | planned |
+| **C0** | Vault freeze + ops→customer status map | done |
+| **C1** | DB migrations (scaffold) | done (PR #31) |
+| **C2** | `GET /api/customer/jobs` + order detail + My Jobs wire-up | **as-built** |
+| **C3** | Draft/book writes items + order_number | planned (next) |
 | **C4** | `transitionOrder` + tracker events | planned |
 | **C5** | Stripe webhook idempotency | planned |
 | **C6** | Portal cutover + notifications from events | planned |
+
+#### C2 customer read APIs (as-built)
+
+| Route | Auth | Behavior |
+|-------|------|----------|
+| `GET /api/customer/jobs` | Session required (401) | List own orders via user client + RLS; map with `mapDbOrderToPortal`; omit pre-book/cancelled lifecycles |
+| `GET /api/customer/orders/[id]` | Session required | One job by `order_number` (SIP-…) or uuid; 404 if missing/not owned/not visible |
+| My Jobs UI | `/customer/jobs` | Fetches list API; empty state when no rows; fixtures only with `?demo=1` |
+
+**Helpers:** `lib/orders/map-db-order-to-portal.ts`, `lib/orders/customer-jobs.ts` (no service role).  
+**Not yet:** C3 book writes — empty My Jobs is correct until seed or C3.
 
 **Principles**
 

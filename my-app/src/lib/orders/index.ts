@@ -17,12 +17,20 @@ export {
   listPortalJobs,
   listActiveJobs,
   listPastJobs,
+  segmentActiveJobs,
+  segmentPastJobs,
   primaryActiveJob,
   nextStepForStatus,
   portalTrackHref,
   jobTotalCents,
   type PortalNextStep,
 } from "./portal-jobs";
+export {
+  mapDbOrderToPortal,
+  mapDbOrdersToPortal,
+  type DbOrderRow,
+  type DbOrderItemRow,
+} from "./map-db-order-to-portal";
 export {
   applySnapshotToOrder,
   loadBookedSnapshot,

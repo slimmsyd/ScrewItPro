@@ -3,7 +3,8 @@
 **Date:** 2026-07-30  
 **Repo:** `/Users/sydneysanders/Desktop/Code_Projects/ScrewItPro`  
 **Branch to start from:** `develop` @ `14d5196` (includes merged Phase C1)  
-**Next session goal:** Implement **Phase C2 only** — customer read APIs + wire **My Jobs** to real DB rows. Do **not** start C3+ unless user asks.
+**Status:** C2 **implemented** on branch `feat/phase-c2-customer-jobs-api` (2026-07-30).  
+**Next session goal:** Open PR / merge C2 when ready; then **C3** (book writes items) or **quote UI polish** — do not auto-start either unless user asks.
 
 ---
 
