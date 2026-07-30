@@ -1,7 +1,16 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import {
+  Bell,
+  ChevronDown,
+  CreditCard,
+  LayoutDashboard,
+  LogOut,
+  MapPin,
+  User,
+} from "lucide-react";
 import type { MemberUser } from "@/lib/member";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
@@ -64,24 +73,71 @@ export function QuoteAccountMenuSkeleton() {
   );
 }
 
+type MenuLink = {
+  kind: "link";
+  href: string;
+  label: string;
+  icon: typeof User;
+  /** Optional count badge (e.g. active jobs) — omit when unknown */
+  badge?: string;
+};
+
 /**
- * Signed-in account chip for the quote shell header.
- * Matches mock: deep-blue initials circle + chevron; menu = email + Sign out.
- * Uses existing MemberUser + signOut from MemberProvider — no new auth.
+ * Signed-in account chip + expanded dropdown (post-book handoff ProfileMenu).
+ * Destinations are siloed pages; this menu only navigates / signs out.
+ * Uses existing MemberUser + signOut — no parallel auth.
  */
 export default function QuoteAccountMenu({
   user,
   onSignOut,
+  /** Optional badge on My Jobs, e.g. "2 active" when we know job count */
+  jobsBadge,
 }: {
   user: MemberUser;
   onSignOut: () => void;
+  jobsBadge?: string;
 }) {
   const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
   const initials = memberInitials(user);
-  const label = user.name?.trim() || user.email;
+  const displayName = user.name?.trim() || user.email.split("@")[0] || "Account";
+  const hasPhoto = Boolean(user.picture?.trim());
+
+  const navItems: MenuLink[] = [
+    {
+      kind: "link",
+      href: "/jobs",
+      label: "My Jobs",
+      icon: LayoutDashboard,
+      badge: jobsBadge,
+    },
+    {
+      kind: "link",
+      href: "/account",
+      label: "Account",
+      icon: User,
+    },
+    {
+      kind: "link",
+      href: "/account#addresses",
+      label: "Addresses",
+      icon: MapPin,
+    },
+    {
+      kind: "link",
+      href: "/account#payment",
+      label: "Payment",
+      icon: CreditCard,
+    },
+    {
+      kind: "link",
+      href: "/account#notifications",
+      label: "Notifications",
+      icon: Bell,
+    },
+  ];
 
   useEffect(() => {
     if (!open) return;
@@ -99,19 +155,20 @@ export default function QuoteAccountMenu({
     };
   }, [open]);
 
+  const close = () => setOpen(false);
+
   return (
     <div
       ref={rootRef}
       style={{
         position: "relative",
         flex: "0 0 auto",
-        /* Air from Save & exit — keeps chip readable without reshaping it */
         marginLeft: 8,
       }}
     >
       <button
         type="button"
-        aria-label={`Account menu for ${label}`}
+        aria-label={`Account menu for ${displayName}`}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
@@ -121,39 +178,60 @@ export default function QuoteAccountMenu({
           alignItems: "center",
           gap: 8,
           height: 40,
-          /* A bit more width/character; blue circle size unchanged */
           padding: "0 12px 0 4px",
-          border: "1px solid var(--border-default)",
+          border: `1px solid ${open ? "var(--blue-electric)" : "var(--border-default)"}`,
           borderRadius: 999,
           background: "#fff",
           cursor: "pointer",
           fontFamily: "var(--font-body)",
+          boxShadow: open ? "0 0 0 3px rgba(29, 110, 254, 0.12)" : "none",
+          transition: "border-color 150ms, box-shadow 150ms",
         }}
       >
-        <span
-          aria-hidden
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: "50%",
-            background: "var(--blue-deep)",
-            color: "#fff",
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 12,
-            fontWeight: 700,
-            letterSpacing: "0.02em",
-            lineHeight: 1,
-          }}
-        >
-          {initials}
-        </span>
+        {hasPhoto ? (
+          // eslint-disable-next-line @next/next/no-img-element -- OAuth avatar URL, not a local asset
+          <img
+            src={user.picture}
+            alt=""
+            width={36}
+            height={36}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              objectFit: "cover",
+              flex: "0 0 36px",
+              background: "var(--blue-deep)",
+            }}
+          />
+        ) : (
+          <span
+            aria-hidden
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              background:
+                "linear-gradient(135deg, var(--blue-electric), var(--blue-deep))",
+              color: "#fff",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: "0.02em",
+              lineHeight: 1,
+              flex: "0 0 36px",
+            }}
+          >
+            {initials}
+          </span>
+        )}
         <ChevronDown
           size={16}
           color="var(--ink-500)"
           style={{
-            marginRight: 6,
+            marginRight: 2,
             transition: "transform 150ms",
             transform: open ? "rotate(180deg)" : "none",
           }}
@@ -166,54 +244,124 @@ export default function QuoteAccountMenu({
           role="menu"
           style={{
             position: "absolute",
-            top: "calc(100% + 8px)",
+            top: "calc(100% + 10px)",
             right: 0,
-            minWidth: 200,
+            width: 248,
             background: "#fff",
             border: "1px solid var(--border-default)",
             borderRadius: 12,
-            boxShadow: "0 12px 32px -12px rgba(4, 32, 155, 0.2)",
+            boxShadow: "0 18px 44px -16px rgba(4, 20, 90, 0.4)",
             padding: 8,
             zIndex: 50,
           }}
         >
+          {/* Identity header */}
           <div
             style={{
-              padding: "8px 10px 10px",
-              fontFamily: "var(--font-body)",
-              fontSize: 12.5,
-              fontWeight: 600,
-              color: "var(--ink-500)",
-              borderBottom: "1px solid var(--gray-100)",
-              marginBottom: 4,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              display: "flex",
+              alignItems: "center",
+              gap: 11,
+              padding: "10px 10px 12px",
             }}
-            title={user.email}
           >
-            {user.email}
+            {hasPhoto ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.picture}
+                alt=""
+                width={40}
+                height={40}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  flex: "0 0 40px",
+                }}
+              />
+            ) : (
+              <span
+                aria-hidden
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  background:
+                    "linear-gradient(135deg, var(--blue-electric), var(--blue-deep))",
+                  color: "#fff",
+                  display: "grid",
+                  placeItems: "center",
+                  fontFamily: "var(--font-body)",
+                  fontSize: 14,
+                  fontWeight: 800,
+                  flex: "0 0 40px",
+                }}
+              >
+                {initials}
+              </span>
+            )}
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "var(--blue-deep)",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {displayName}
+              </div>
+              <div
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: 12,
+                  color: "var(--ink-500)",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+                title={user.email}
+              >
+                {user.email}
+              </div>
+            </div>
           </div>
+
+          <div
+            style={{
+              height: 1,
+              background: "var(--gray-100)",
+              margin: "0 2px 6px",
+            }}
+          />
+
+          {navItems.map((item) => (
+            <MenuRowLink
+              key={item.href + item.label}
+              item={item}
+              onNavigate={close}
+            />
+          ))}
+
+          <div
+            style={{
+              height: 1,
+              background: "var(--gray-100)",
+              margin: "6px 2px",
+            }}
+          />
+
           <button
             type="button"
             role="menuitem"
             onClick={() => {
-              setOpen(false);
+              close();
               onSignOut();
             }}
-            style={{
-              width: "100%",
-              textAlign: "left",
-              padding: "10px 10px",
-              border: "none",
-              borderRadius: 8,
-              background: "transparent",
-              fontFamily: "var(--font-body)",
-              fontSize: 14,
-              fontWeight: 600,
-              color: "var(--ink-700)",
-              cursor: "pointer",
-            }}
+            style={rowButtonStyle}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = "var(--gray-50)";
             }}
@@ -221,10 +369,83 @@ export default function QuoteAccountMenu({
               e.currentTarget.style.background = "transparent";
             }}
           >
-            {t("common.signOut")}
+            <LogOut size={17} color="var(--ink-500)" strokeWidth={2} />
+            <span style={{ flex: 1, textAlign: "left" }}>
+              {t("common.signOut")}
+            </span>
           </button>
         </div>
       )}
     </div>
+  );
+}
+
+const rowButtonStyle: CSSProperties = {
+  width: "100%",
+  display: "flex",
+  alignItems: "center",
+  gap: 11,
+  padding: "9px 10px",
+  border: "none",
+  borderRadius: 8,
+  background: "transparent",
+  fontFamily: "var(--font-body)",
+  fontSize: 13.5,
+  fontWeight: 600,
+  color: "var(--ink-900)",
+  cursor: "pointer",
+};
+
+function MenuRowLink({
+  item,
+  onNavigate,
+}: {
+  item: MenuLink;
+  onNavigate: () => void;
+}) {
+  const Icon = item.icon;
+  return (
+    <Link
+      href={item.href}
+      role="menuitem"
+      onClick={onNavigate}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 11,
+        padding: "9px 10px",
+        borderRadius: 8,
+        textDecoration: "none",
+        fontFamily: "var(--font-body)",
+        fontSize: 13.5,
+        fontWeight: 600,
+        color: "var(--ink-900)",
+        transition: "background 120ms",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = "var(--gray-50)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = "transparent";
+      }}
+    >
+      <Icon size={17} color="var(--ink-500)" strokeWidth={2} />
+      <span style={{ flex: 1 }}>{item.label}</span>
+      {item.badge ? (
+        <span
+          style={{
+            fontFamily: "var(--font-body)",
+            fontSize: 11,
+            fontWeight: 700,
+            color: "var(--blue-deep)",
+            background: "var(--blue-50)",
+            borderRadius: 999,
+            padding: "1px 8px",
+          }}
+        >
+          {item.badge}
+        </span>
+      ) : null}
+    </Link>
   );
 }

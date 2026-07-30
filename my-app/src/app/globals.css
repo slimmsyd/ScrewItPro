@@ -1110,3 +1110,86 @@ header[id] {
   white-space: nowrap;
   border: 0;
 }
+
+/* Post-book order screens (confirmation + tracker) */
+@keyframes pulseDot {
+  0% {
+    box-shadow: 0 0 0 0 rgba(29, 110, 254, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(29, 110, 254, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(29, 110, 254, 0);
+  }
+}
+
+.pulse-dot {
+  animation: pulseDot 1.8s ease-out infinite;
+}
+
+@keyframes screenIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.screen-anim {
+  animation: screenIn 0.32s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-dot {
+    animation: none;
+  }
+  .screen-anim {
+    animation: none !important;
+  }
+}
+
+/* Refer & Earn — copy button sits on the gradient, needs a light ring */
+.ref-copy-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.45);
+}
+
+/* My Jobs — keyboard focus rings on segment toggle + row CTAs */
+.jobs-segment-btn:focus-visible,
+.jobs-row-cta:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(29, 110, 254, 0.18);
+}
+
+/* Notification preference switches — keyboard focus ring on the track */
+.notif-toggle:focus-visible {
+  outline: none;
+}
+
+.notif-toggle:focus-visible .notif-track {
+  box-shadow: 0 0 0 3px rgba(29, 110, 254, 0.18);
+}
+
+.notif-knob {
+  transition: left 0.16s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notif-knob {
+    transition: none;
+  }
+}
+
+/* Tracker: stack summary under timeline on small screens */
+@media (max-width: 900px) {
+  .order-track-aside {
+    display: none !important;
+  }
+  .order-track-main {
+    padding: 24px 16px 48px !important;
+  }
+}
