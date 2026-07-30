@@ -1,11 +1,16 @@
 import type { CustomerOrderStatus, MockOrder } from "./types";
 import { getMockOrder, listMockOrderIds } from "./mock-order";
 import { statusIndex } from "./status";
+import {
+  nextStepForStatus as nextStepFromPostBook,
+  type PortalNextStep,
+} from "./post-book-content";
 
 /**
  * Portal job catalog — list / segment / hero selection / next-step copy.
  * My Jobs (Phase C2) loads real rows via GET /api/customer/jobs.
  * Fixture helpers remain for ?demo=1 and dev tooling.
+ * Next-step copy: single source in post-book-content.ts.
  */
 
 /** Segment helpers that work on any job array (API or fixtures). */
@@ -59,67 +64,16 @@ export function jobTotalCents(order: MockOrder): number {
   return order.totalCents ?? order.depositCents + order.balanceCents;
 }
 
-export type PortalNextStep = {
-  title: string;
-  body: string;
-  cta: string;
-};
+export type { PortalNextStep };
 
 /**
- * Derive dashboard "Your next step" from status.
- * Do not trust mock nextStep alone for portal hero (fixture copy is quote-era).
+ * Derive "Your next step" from status.
+ * Canonical copy lives in post-book-content.ts (confirmation, email, track, jobs).
  */
 export function nextStepForStatus(
   status: CustomerOrderStatus
 ): PortalNextStep {
-  switch (status) {
-    case "booked":
-      return {
-        title: "Ship your items to our hub",
-        body: "Address & label are in your email. We take it from there.",
-        cta: "View shipping details",
-      };
-    case "pickup_scheduled":
-      return {
-        title: "Be ready for pickup",
-        body: "Have items accessible in the window we confirmed.",
-        cta: "View pickup window",
-      };
-    case "picked_up":
-      return {
-        title: "We're on the way to the workshop",
-        body: "No action needed — we'll update you when assembly starts.",
-        cta: "Track this order",
-      };
-    case "in_workshop":
-      return {
-        title: "Pick your delivery window",
-        body: "Almost built — choose when we bring it home.",
-        cta: "Choose window",
-      };
-    case "assembled_inspected":
-      return {
-        title: "Confirm delivery details",
-        body: "QC is done. Lock in your delivery window if you haven't.",
-        cta: "Choose window",
-      };
-    case "out_for_delivery":
-      return {
-        title: "Get ready for delivery",
-        body: "Your build is on the truck. Clear a path to the room.",
-        cta: "Track delivery",
-      };
-    case "delivered":
-      return {
-        title: "Enjoy your furniture",
-        body: "Need a tweak or photos? Message support anytime.",
-        cta: "View order",
-      };
-    default: {
-      const _exhaustive: never = status;
-      return _exhaustive;
-    }
-  }
+  return nextStepFromPostBook(status);
 }
 
 /** Track URL for an order (keeps Phase 0–3 path; no /jobs/[id] yet). */

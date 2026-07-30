@@ -14,6 +14,11 @@ import {
   paragraph,
   renderLayout,
 } from "./layout";
+import {
+  hubHintSummary,
+  hubIntakeEmailHtml,
+  hubIntakeEmailText,
+} from "@/lib/orders/post-book-content";
 
 /**
  * Stable identifier for a template, carried by the rendered email itself.
@@ -368,13 +373,13 @@ export type BookingConfirmationData = {
   hubHint?: string | null;
 };
 
-/** Default hub copy when none provided. */
-export const BOOKING_HUB_HINT_DEFAULT =
-  "Ship or drop your items to our Houston hub — we'll assemble, QC, and white-glove deliver.";
+/** Default hub copy when none provided (aligned with post-book-content). */
+export const BOOKING_HUB_HINT_DEFAULT = hubHintSummary();
 
 /**
  * Code default for booking-confirmation.
  * Prefer DB email_templates when present (see render-booking-confirmation).
+ * Next-step / hub block matches confirmation + track (post-book-content).
  */
 export function bookingConfirmation(
   data: BookingConfirmationData
@@ -406,9 +411,7 @@ export function bookingConfirmation(
         )}</em>`
       )
     : "";
-  const hub = paragraph(
-    escapeHtml(data.hubHint?.trim() || BOOKING_HUB_HINT_DEFAULT)
-  );
+  const hubBlock = hubIntakeEmailHtml(data.orderNumber);
 
   const body = `
     ${heading("You're booked! 🎉")}
@@ -420,7 +423,7 @@ export function bookingConfirmation(
     ${delivery}
     ${deposit}
     ${paymentNote}
-    ${hub}
+    ${hubBlock}
     ${button("Track your order", data.trackUrl)}
     ${paragraph(
       `Or open <a href="${escapeHtml(data.jobsUrl)}" style="color:${brand.blueElectric};">My Jobs</a> anytime.`
@@ -431,7 +434,7 @@ export function bookingConfirmation(
     code: "booking-confirmation",
     subject: `You're booked! Order ${data.orderNumber}`,
     html: renderLayout(body, {
-      preheader: `Order ${data.orderNumber} is on the calendar.`,
+      preheader: `Order ${data.orderNumber} — get your items to our hub next.`,
     }),
     text: [
       "You're booked!",
@@ -445,7 +448,8 @@ export function bookingConfirmation(
         ? `Deposit (shown on quote): ${data.depositFormatted.trim()}`
         : "",
       data.paymentNote?.trim() || "",
-      data.hubHint?.trim() || BOOKING_HUB_HINT_DEFAULT,
+      "",
+      hubIntakeEmailText(data.orderNumber),
       "",
       `Track: ${data.trackUrl}`,
       `My Jobs: ${data.jobsUrl}`,

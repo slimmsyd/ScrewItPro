@@ -28,7 +28,7 @@ export const ORDER_STATUS_META: Record<
 > = {
   booked: {
     label: "Booked",
-    description: "Deposit received. You're all set.",
+    description: "Job confirmed — get your items to our Houston hub next.",
     icon: "CheckCircle2",
   },
   pickup_scheduled: {

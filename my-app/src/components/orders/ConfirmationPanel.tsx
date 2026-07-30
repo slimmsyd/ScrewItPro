@@ -4,9 +4,14 @@ import Link from "next/link";
 import { useEffect, useRef, type CSSProperties } from "react";
 import { ArrowRight, Check, Package } from "lucide-react";
 import type { MockOrder } from "@/lib/orders";
-import { formatCents, itemCountLabel } from "@/lib/orders";
+import {
+  formatCents,
+  itemCountLabel,
+  nextStepForStatus,
+} from "@/lib/orders";
 import { fireBookingConfetti } from "@/lib/confetti";
 import OrderItemThumb from "@/components/orders/OrderItemThumb";
+import HubIntakePanel from "@/components/orders/HubIntakePanel";
 import { useDisplayOrder } from "@/components/orders/useDisplayOrder";
 
 /** Clean elevated card on a plain white canvas (no blue/green wash). */
@@ -33,6 +38,8 @@ export default function ConfirmationPanel({
   const display = useDisplayOrder(order);
   const primary = display.items[0];
   const totalQty = display.items.reduce((n, i) => n + i.quantity, 0);
+  // Canonical next-step (not stale fixture nextStep on MockOrder)
+  const nextStep = nextStepForStatus(display.status);
   // Real SIP-* ids never need ?demo=1; that query only marks fixture walkthroughs.
   const trackHref = `/customer/orders/${encodeURIComponent(display.id)}/track`;
   const confettiFiredRef = useRef(false);
@@ -377,7 +384,7 @@ export default function ConfirmationPanel({
                 marginTop: 2,
               }}
             >
-              {display.nextStep.title}
+              {nextStep.title}
             </div>
             <div
               style={{
@@ -387,9 +394,13 @@ export default function ConfirmationPanel({
                 marginTop: 2,
               }}
             >
-              {display.nextStep.body}
+              {nextStep.body}
             </div>
           </div>
+        </div>
+
+        <div style={{ marginTop: 16, width: "100%" }}>
+          <HubIntakePanel orderNumber={display.id} />
         </div>
 
         <Link

@@ -252,6 +252,17 @@ When implementing those, update this file and `security.md` in the same change.
 | Stripe | `lib/stripe.ts`, `lib/payments.ts` | Publishable + secret + webhook secret |
 | Resend | `lib/resend.ts`, `lib/emails/*` | `RESEND_API_KEY`, from address |
 
+### Post-book next-step content (as-built)
+
+| Source | Use |
+|--------|-----|
+| `lib/orders/post-book-content.ts` | **Single source** for hub intake lines, packing tips, and `nextStepForStatus` copy |
+| `HubIntakePanel` | Confirmation + track (`booked`) |
+| Booking email | Same hub block via `hubIntakeEmailHtml` / `hubIntakeEmailText` |
+| `ORDER_STATUS_META.booked` | Aligns with “get items to hub” |
+
+Edit hub street when ops locks an address — only change `HUB_INTAKE` in post-book-content.
+
 ### Booking email cycle (as-built)
 
 | Step | Detail |
