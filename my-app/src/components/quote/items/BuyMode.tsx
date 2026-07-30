@@ -1,21 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import {
-  Check,
-  Plus,
-  Search,
-  SlidersHorizontal,
-} from "lucide-react";
-import {
-  catalogToQuoteItem,
-  RETAILER_CHIPS,
-  searchCatalog,
-} from "@/lib/quote/mock-catalog";
+import { useState } from "react";
+import { Link2, Plus, Search } from "lucide-react";
+import { SUPPORTED_RETAILERS } from "@/lib/quote/retailers";
 import { formatUsd } from "@/lib/quote/pricing";
 import type { QuoteItem } from "@/lib/quote/types";
 
-/** A pasted product link vs. a plain search term — gates real lookup vs. the mock catalog. */
+/** A pasted product link vs. a plain search term — gates real lookup. */
 function looksLikeUrl(input: string): boolean {
   const trimmed = input.trim();
   if (!/^https?:\/\//i.test(trimmed)) return false;
@@ -27,30 +18,21 @@ function looksLikeUrl(input: string): boolean {
   }
 }
 
-export function BuyMode({
-  onToggle,
-  addedIds,
-  onAdd,
-}: {
-  /** Toggle product in/out of build (whole card or CTA). */
-  onToggle: (p: Parameters<typeof catalogToQuoteItem>[0]) => void;
-  addedIds: string[];
-  /** Add a real, looked-up product straight into the build. */
-  onAdd: (item: QuoteItem) => void;
-}) {
-  const [query, setQuery] = useState("https://www.ikea.com/");
-  const [retailer, setRetailer] = useState<string | null>(null);
+/**
+ * Buy-new entry mode: paste-a-link only (no mock catalog).
+ * Real product identity comes from POST /api/quote/lookup-product.
+ */
+export function BuyMode({ onAdd }: { onAdd: (item: QuoteItem) => void }) {
+  const [query, setQuery] = useState("");
   const [lookupBusy, setLookupBusy] = useState(false);
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [lookupItem, setLookupItem] = useState<QuoteItem | null>(null);
 
   const isUrlInput = looksLikeUrl(query);
-  const results = useMemo(
-    () => searchCatalog(query, retailer),
-    [query, retailer]
-  );
+  const showNonUrlHint = query.trim().length > 0 && !isUrlInput;
 
   const runLookup = async () => {
+    if (!looksLikeUrl(query)) return;
     setLookupBusy(true);
     setLookupError(null);
     setLookupItem(null);
@@ -70,14 +52,18 @@ export function BuyMode({
         const known: Record<string, string> = {
           invalid_input: "That doesn't look like a valid link.",
           invalid_url: "That doesn't look like a valid link.",
-          blocked_host: "That link isn't allowed. Paste a public product page URL.",
-          fetch_failed: "We couldn't load that page. Double-check the link and try again.",
+          blocked_host:
+            "That link isn't allowed. Paste a public product page URL.",
+          fetch_failed:
+            "We couldn't load that page. Double-check the link and try again.",
           parse_failed:
-            "We couldn't find product details on that page. Try a specific product page link, or search our catalog instead.",
+            "We couldn't find product details on that page. Try a specific product page link, or switch to “I own it, boxed at home.”",
           lookup_failed: "Something went wrong. Try again.",
         };
         setLookupError(
-          (json.error && known[json.error]) ?? json.message ?? "Could not look up that product."
+          (json.error && known[json.error]) ??
+            json.message ??
+            "Could not look up that product."
         );
         return;
       }
@@ -114,7 +100,7 @@ export function BuyMode({
       >
         <Search size={18} color="var(--blue-electric)" />
         <label htmlFor="product-search" className="sr-only">
-          Product link or name
+          Product link
         </label>
         <input
           id="product-search"
@@ -130,7 +116,7 @@ export function BuyMode({
               void runLookup();
             }
           }}
-          placeholder="Paste product link or search"
+          placeholder="Paste a product link"
           style={{
             flex: 1,
             border: "none",
@@ -167,228 +153,133 @@ export function BuyMode({
         )}
       </div>
 
-      {!isUrlInput && (
-        <>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
-        {RETAILER_CHIPS.map((r) => {
-          const on = retailer === r;
-          return (
-            <button
-              key={r}
-              type="button"
-              onClick={() => setRetailer(on ? null : r)}
-              style={{
-                height: 34,
-                padding: "0 14px",
-                borderRadius: 999,
-                border: `1px solid ${on ? "var(--blue-electric)" : "var(--border-default)"}`,
-                background: on ? "var(--blue-50)" : "#fff",
-                color: on ? "var(--blue-deep)" : "var(--ink-700)",
-                fontWeight: 600,
-                fontSize: 13,
-                cursor: "pointer",
-                fontFamily: "var(--font-body)",
-              }}
-            >
-              {r}
-            </button>
-          );
-        })}
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 12,
-          fontSize: 13.5,
-          color: "var(--ink-700)",
-          fontWeight: 600,
-          fontFamily: "var(--font-body)",
-        }}
-      >
-        <span>
-          {results.length} product{results.length === 1 ? "" : "s"}
-        </span>
-        <button
-          type="button"
-          aria-label="Filter products"
-          onClick={() => {
-            document.getElementById("product-search")?.focus();
-          }}
+      {/* Advisory logo strip — not a catalog, not a gate */}
+      <div style={{ marginBottom: 18 }}>
+        <p
           style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 7,
-            height: 34,
-            padding: "0 16px",
-            borderRadius: 999,
-            border: "1px solid var(--border-default)",
-            background: "#fff",
-            color: "var(--ink-700)",
+            margin: "0 0 10px",
+            fontSize: 13,
             fontWeight: 600,
-            fontSize: 13.5,
+            color: "var(--ink-500)",
             fontFamily: "var(--font-body)",
-            cursor: "pointer",
           }}
         >
-          <SlidersHorizontal size={16} color="var(--ink-500)" />
-          Filter
-        </button>
-      </div>
-
-      <div
-        style={{ display: "flex", flexDirection: "column", gap: 12 }}
-        role="list"
-        aria-label="Product results"
-      >
-        {results.map((p) => {
-          const selected = addedIds.includes(p.articleId);
-          const toggle = () => onToggle(p);
-          return (
+          Works with popular retailers… or any public product page
+        </p>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+            alignItems: "center",
+          }}
+        >
+          {SUPPORTED_RETAILERS.map((r) => (
             <div
-              key={p.id}
-              role="button"
-              tabIndex={0}
-              aria-pressed={selected}
-              aria-label={
-                selected
-                  ? `${p.name}, added to build. Activate to remove.`
-                  : `${p.name}. Activate to add to build.`
-              }
-              onClick={toggle}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  toggle();
-                }
-              }}
-              className={`quote-tap quote-product-card${selected ? " is-selected" : ""}`}
+              key={r.name}
+              title={r.name}
               style={{
-                display: "flex",
-                gap: 16,
-                alignItems: "center",
-                padding: 16,
-                borderRadius: 11,
-                /* Green = confirmation (added to build) */
-                border: `1.5px solid ${
-                  selected ? "var(--status-success)" : "var(--border-default)"
-                }`,
-                boxShadow: selected
-                  ? "0 0 0 3px rgba(14,138,95,.14)"
-                  : "0 0 0 0 transparent",
-                background: selected ? "var(--status-success-bg)" : "#fff",
-                cursor: "pointer",
-                transition:
-                  "border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease",
-                outline: "none",
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                background: r.tile,
+                border: "1px solid var(--border-default)",
+                display: "grid",
+                placeItems: "center",
+                padding: 6,
+                boxSizing: "border-box",
               }}
             >
-              <div
-                aria-hidden
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={r.logo}
+                alt={r.name}
                 style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 10,
-                  background:
-                    "repeating-linear-gradient(45deg, var(--blue-50), var(--blue-50) 8px, var(--blue-100) 8px, var(--blue-100) 16px)",
-                  flex: "0 0 auto",
-                  border: "1px solid var(--border-default)",
+                  maxWidth: "100%",
+                  maxHeight: "100%",
+                  objectFit: "contain",
                 }}
               />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontSize: 16,
-                    fontWeight: 800,
-                    color: "var(--blue-deep)",
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  {p.brand} - {p.articleId}
-                </div>
-                <div
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontSize: 13.5,
-                    color: "var(--ink-500)",
-                    margin: "3px 0 8px",
-                    lineHeight: 1.4,
-                  }}
-                >
-                  {p.name}
-                </div>
-                <div
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    fontFamily: "var(--font-body)",
-                    fontSize: 13.5,
-                    fontWeight: 700,
-                    color: "var(--ink-900)",
-                  }}
-                >
-                  <span style={{ color: "var(--ink-500)", fontWeight: 600 }}>
-                    Assembly
-                  </span>{" "}
-                  {formatUsd(p.assemblyCents)}
-                </div>
-              </div>
-              <button
-                type="button"
-                tabIndex={-1}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggle();
-                }}
-                className="quote-tap"
-                style={{
-                  flex: "0 0 auto",
-                  height: 44,
-                  padding: "0 20px",
-                  borderRadius: 999,
-                  border: selected
-                    ? "1.5px solid var(--status-success)"
-                    : "1.5px solid var(--blue-electric)",
-                  background: selected
-                    ? "var(--status-success-bg)"
-                    : "var(--blue-electric)",
-                  color: selected ? "var(--status-success)" : "#fff",
-                  fontWeight: 700,
-                  fontSize: 14,
-                  fontFamily: "var(--font-body)",
-                  cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  whiteSpace: "nowrap",
-                  transition:
-                    "background 0.18s ease, border-color 0.18s ease, color 0.18s ease",
-                }}
-              >
-                {selected ? (
-                  <>
-                    <Check
-                      size={17}
-                      color="var(--status-success)"
-                      strokeWidth={2.5}
-                    />{" "}
-                    Added
-                  </>
-                ) : (
-                  <>
-                    <Plus size={17} color="#fff" /> Add to build
-                  </>
-                )}
-              </button>
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
-        </>
+
+      {!query.trim() && (
+        <div
+          style={{
+            padding: 20,
+            borderRadius: 14,
+            border: "1.5px dashed var(--border-default)",
+            background: "var(--gray-50)",
+            display: "flex",
+            gap: 14,
+            alignItems: "flex-start",
+          }}
+        >
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              background: "var(--blue-50)",
+              display: "grid",
+              placeItems: "center",
+              flex: "0 0 auto",
+            }}
+          >
+            <Link2 size={18} color="var(--blue-electric)" />
+          </div>
+          <div>
+            <div
+              style={{
+                fontWeight: 700,
+                fontSize: 14.5,
+                color: "var(--blue-deep)",
+                marginBottom: 4,
+              }}
+            >
+              Paste a product page URL
+            </div>
+            <p
+              style={{
+                margin: 0,
+                fontSize: 13.5,
+                color: "var(--ink-500)",
+                lineHeight: 1.45,
+              }}
+            >
+              Copy the link from IKEA, Wayfair, Amazon, Target, or any public
+              product page. We&apos;ll pull the name, photo, and assembly estimate.
+              Already own it boxed? Choose{" "}
+              <strong style={{ color: "var(--ink-700)" }}>
+                I own it, boxed at home
+              </strong>{" "}
+              above.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {showNonUrlHint && (
+        <div
+          role="status"
+          style={{
+            padding: 14,
+            borderRadius: 10,
+            border: "1.5px solid var(--border-default)",
+            background: "var(--blue-50)",
+            color: "var(--ink-700)",
+            fontFamily: "var(--font-body)",
+            fontSize: 13.5,
+            lineHeight: 1.45,
+          }}
+        >
+          Paste a full product link starting with{" "}
+          <code style={{ fontSize: 12.5 }}>https://</code>. Searching a
+          catalog isn&apos;t available — if you already have the piece, switch to{" "}
+          <strong>I own it, boxed at home</strong>.
+        </div>
       )}
 
       {isUrlInput && lookupBusy && (
@@ -428,7 +319,7 @@ export function BuyMode({
   );
 }
 
-/** Single real-product card from a paste-a-link lookup — same visual language as the mock product cards above. */
+/** Single real-product card from a paste-a-link lookup. */
 function LookupResultCard({
   item,
   onAdd,
@@ -452,7 +343,7 @@ function LookupResultCard({
       }}
     >
       {showImage ? (
-        // eslint-disable-next-line @next/next/no-img-element -- external retailer CDN image, not a local/optimizable asset
+        // eslint-disable-next-line @next/next/no-img-element -- external retailer CDN image
         <img
           src={item.photoDataUrl}
           alt={item.name}
@@ -515,7 +406,9 @@ function LookupResultCard({
             color: "var(--ink-900)",
           }}
         >
-          <span style={{ color: "var(--ink-500)", fontWeight: 600 }}>Assembly</span>{" "}
+          <span style={{ color: "var(--ink-500)", fontWeight: 600 }}>
+            Assembly
+          </span>{" "}
           {formatUsd(item.assemblyCents)}
         </div>
       </div>
@@ -547,4 +440,3 @@ function LookupResultCard({
     </div>
   );
 }
-

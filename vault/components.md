@@ -52,7 +52,6 @@
 | **CustomerAppShell** | `portal/CustomerAppShell.tsx` | Portal shell | Customer “state” app pages (jobs, account, notifications) | Sidebar desktop; drawer mobile; progressive nav via `portalNav.ts` |
 | **ConfirmationShell** | `portal/ConfirmationShell.tsx` | Portal shell | Post-book confirmation framing | Church/state boundary helper |
 | **QuoteShell** | `quote/QuoteShell.tsx` | Flow shell | Quote journey steps | Step layout + aside patterns |
-| **OrdersShell** | `orders/OrdersShell.tsx` | Flow shell | Order confirmation / track pages | Shared orders chrome |
 | **AccountPageShell** | `account/AccountPageShell.tsx` | Page shell | Account page framing | May compose with portal shell |
 | **LegalPageShell** | `legal/LegalPageShell.tsx` | Page shell | Privacy / terms | Long-form legal layout |
 | **AeoShell** | `aeo/AeoShell.tsx` | Page shell | AEO/SEO content landings | Answer-engine optimized structure |
@@ -71,10 +70,11 @@
 |------|------|------|----------|
 | **QuoteStepper** | `quote/QuoteStepper.tsx` | Nav | Step indicator for quote wizard |
 | **ItemsStep** | `quote/ItemsStep.tsx` | Step | Orchestrates entry mode + mode panels (keep thin) |
-| **BuyMode** | `quote/items/BuyMode.tsx` | Step panel | Buy-new: paste-link lookup + catalog toggle |
+| **BuyMode** | `quote/items/BuyMode.tsx` | Step panel | Buy-new: **paste-link only** (no mock catalog); advisory retailer logos |
 | **HomeMode** | `quote/items/HomeMode.tsx` | Step panel | Boxed-at-home item form + voice notes |
-| **StoreMode** | `quote/items/StoreMode.tsx` | Step panel | Store pickup order form |
+| **StoreMode** | `quote/items/StoreMode.tsx` | Step panel | Store pickup order form (`COLLECTION_STORES`) |
 | **items/shared** | `quote/items/shared.tsx` | Shared | FieldLabel, inputStyle, stepperBtn for items panels |
+| **retailers** | `lib/quote/retailers.ts` | Config | `SUPPORTED_RETAILERS` (display only) + `COLLECTION_STORES` — never gate lookup |
 | **WhereStep** | `quote/WhereStep.tsx` | Step | Address / service area |
 | **PriceStep** | `quote/PriceStep.tsx` | Step | Pricing + deposit presentation |
 | **AddressField** | `quote/AddressField.tsx` | Field | Address entry with places behavior |
@@ -209,3 +209,4 @@ Prefer **no single source file over ~1,000 lines** (components/pages). Split by 
 |------|--------|
 | 2026-07-30 | Initial catalog from codebase inventory |
 | 2026-07-30 | Split ItemsStep → quote/items/*; join page → JoinForm + joinUi + helpers |
+| 2026-07-30 | Slice 1: delete OrdersShell + mock-catalog; BuyMode paste-only; retailers.ts |

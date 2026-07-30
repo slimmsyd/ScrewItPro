@@ -19,10 +19,18 @@ import { formatUsd } from "@/lib/quote/pricing";
 import { QUOTE_ITEMS_PATH } from "@/lib/site";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { saveBookedSnapshot } from "@/lib/orders";
+import { useMember } from "@/components/providers/MemberProvider";
 
 /** Demo post-book confirmation when Stripe deposit checkout is not configured. */
 const DEMO_ORDER_ID = "SIP-4471";
 const DEMO_CONFIRMATION_PATH = `/orders/${DEMO_ORDER_ID}?demo=1`;
+
+/**
+ * Soft-gate demo booking is local/preview only.
+ * Production must fail closed (vault/security.md) — no fabricated booking path.
+ * Build-time: NODE_ENV is inlined by Next; production bundles omit continue UI.
+ */
+const DEMO_BOOKING_ENABLED = process.env.NODE_ENV !== "production";
 
 /**
  * Price step — handoff locked layout:
@@ -30,8 +38,7 @@ const DEMO_CONFIRMATION_PATH = `/orders/${DEMO_ORDER_ID}?demo=1`;
  * badge-check eyebrow, breakdown card, 30% deposit aside.
  *
  * Stripe: when keys are live, Book my build opens Checkout. When not ready,
- * soft-gate flags that deposit payment still needs wiring and offers
- * Continue so the full post-book UI flow can be tested without Stripe.
+ * soft-gate: local/preview may continue with demo data; production is terminal.
  *
  * On continue, we snapshot quote line items (incl. IKEA image URLs) so
  * confirmation + tracker Order Summary show the same product identity.
@@ -40,15 +47,18 @@ export default function PriceStep() {
   const router = useRouter();
   const mobile = useIsMobile();
   const { draft, totals, canProceedFromItems, hydrated } = useQuote();
+  const { user: memberUser } = useMember();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [softGate, setSoftGate] = useState(false);
 
   const continueWithoutStripe = () => {
+    if (!DEMO_BOOKING_ENABLED) return;
     saveBookedSnapshot({
       orderId: DEMO_ORDER_ID,
       draft,
       totals,
+      email: memberUser?.email,
     });
     setSoftGate(false);
     router.push(DEMO_CONFIRMATION_PATH);
@@ -433,7 +443,9 @@ export default function PriceStep() {
                 margin: "0 0 10px",
               }}
             >
-              Stripe deposit not wired yet
+              {DEMO_BOOKING_ENABLED
+                ? "Stripe deposit not wired yet"
+                : "Booking isn't available yet"}
             </h2>
             <p
               style={{
@@ -443,9 +455,24 @@ export default function PriceStep() {
                 fontSize: 15,
               }}
             >
-              Real &quot;Book my build&quot; charges a 30% deposit once Stripe
-              keys are configured. That step is still open for production.
+              {DEMO_BOOKING_ENABLED
+                ? 'Real "Book my build" charges a 30% deposit once Stripe keys are configured.'
+                : "Online booking isn't open on production yet. Your quote is saved in this browser — check back soon, or contact us if you need help."}
             </p>
+            {DEMO_BOOKING_ENABLED && (
+              <p
+                style={{
+                  margin: "0 0 12px",
+                  color: "var(--ink-500)",
+                  lineHeight: 1.5,
+                  fontSize: 13.5,
+                  fontWeight: 600,
+                }}
+              >
+                Local / preview only — demo path continues without charging a
+                card.
+              </p>
+            )}
             <p
               style={{
                 margin: "0 0 20px",
@@ -455,27 +482,30 @@ export default function PriceStep() {
                 fontWeight: 600,
               }}
             >
-              You can still continue into the confirmation and order tracker
-              with demo data so the full customer flow is testable now.
+              {DEMO_BOOKING_ENABLED
+                ? "You can still continue into the confirmation and order tracker with demo data so the full customer flow is testable now."
+                : "We never create a fake booking in production when payments aren't configured."}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <button
-                type="button"
-                onClick={continueWithoutStripe}
-                style={{
-                  height: 48,
-                  borderRadius: 9,
-                  border: "none",
-                  background: "var(--blue-electric)",
-                  color: "#fff",
-                  fontWeight: 700,
-                  fontSize: 15,
-                  cursor: "pointer",
-                  fontFamily: "var(--font-body)",
-                }}
-              >
-                Continue to confirmation →
-              </button>
+              {DEMO_BOOKING_ENABLED && (
+                <button
+                  type="button"
+                  onClick={continueWithoutStripe}
+                  style={{
+                    height: 48,
+                    borderRadius: 9,
+                    border: "none",
+                    background: "var(--blue-electric)",
+                    color: "#fff",
+                    fontWeight: 700,
+                    fontSize: 15,
+                    cursor: "pointer",
+                    fontFamily: "var(--font-body)",
+                  }}
+                >
+                  Continue to confirmation →
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setSoftGate(false)}

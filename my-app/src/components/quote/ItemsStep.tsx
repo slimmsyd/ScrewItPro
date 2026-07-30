@@ -15,7 +15,6 @@ import { BuyMode } from "@/components/quote/items/BuyMode";
 import { HomeMode } from "@/components/quote/items/HomeMode";
 import { StoreMode } from "@/components/quote/items/StoreMode";
 import { useQuote } from "@/lib/quote/context";
-import { catalogToQuoteItem } from "@/lib/quote/mock-catalog";
 import type { EntryMode } from "@/lib/quote/types";
 import { QUOTE_PATH, QUOTE_PRICE_PATH } from "@/lib/site";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -29,7 +28,7 @@ const MODES: {
   {
     key: "buy",
     title: "I'm buying it new",
-    sub: "Paste a link or search",
+    sub: "Paste a product link",
     icon: ShoppingBag,
   },
   {
@@ -55,13 +54,6 @@ export default function ItemsStep() {
   const goPrice = () => {
     if (!canProceedFromItems) return;
     router.push(QUOTE_PRICE_PATH);
-  };
-
-  /** Toggle a catalog product into / out of the build cart (handoff). */
-  const toggleCatalogProduct = (p: Parameters<typeof catalogToQuoteItem>[0]) => {
-    const existing = draft.items.find((i) => i.articleId === p.articleId);
-    if (existing) removeItem(existing.id);
-    else addItem(catalogToQuoteItem(p));
   };
 
   return (
@@ -205,17 +197,7 @@ export default function ItemsStep() {
           })}
         </div>
 
-        {draft.entryMode === "buy" && (
-          <BuyMode
-            addedIds={
-              draft.items
-                .map((i) => i.articleId)
-                .filter(Boolean) as string[]
-            }
-            onToggle={toggleCatalogProduct}
-            onAdd={addItem}
-          />
-        )}
+        {draft.entryMode === "buy" && <BuyMode onAdd={addItem} />}
         {draft.entryMode === "home" && <HomeMode onAdd={addItem} />}
         {draft.entryMode === "store" && <StoreMode onAdd={addItem} />}
       </ScreenTransition>

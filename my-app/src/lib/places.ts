@@ -15,7 +15,7 @@ export const HOUSTON_CENTER = {
   lng: BUSINESS.geo.lng,
 } as const;
 
-/** ~50 miles - covers Katy, Sugar Land, The Woodlands, Pearland, etc. */
+/** Service radius from hub — see BUSINESS.geo (locked 40 mi). */
 export const HOUSTON_METRO_RADIUS_M = BUSINESS.geo.radiusM;
 
 export type PlaceSuggestion = {

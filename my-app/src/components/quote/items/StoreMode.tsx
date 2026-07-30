@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { STORE_CHIPS } from "@/lib/quote/mock-catalog";
+import { COLLECTION_STORES } from "@/lib/quote/retailers";
 import type { QuoteItem } from "@/lib/quote/types";
 import { FieldLabel, inputStyle } from "./shared";
 
@@ -37,7 +37,7 @@ export function StoreMode({ onAdd }: { onAdd: (item: QuoteItem) => void }) {
         Don&apos;t load your car. We collect it from the store.
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
-        {STORE_CHIPS.map((s) => {
+        {COLLECTION_STORES.map((s) => {
           const on = store === s;
           return (
             <button
