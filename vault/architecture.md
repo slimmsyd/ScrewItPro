@@ -158,7 +158,8 @@ Browser
 | **C0** | Vault freeze + ops→customer status map | done |
 | **C1** | DB migrations (scaffold) | done (PR #31) |
 | **C2** | `GET /api/customer/jobs` + order detail + My Jobs wire-up | **as-built** |
-| **C3** | Draft/book writes items + order_number | planned (next) |
+| **C2.5** | Soft-gate demo book write (no Stripe) → real job on My Jobs | **as-built** (non-prod) |
+| **C3** | Real Stripe book writes items + lifecycle on deposit | planned (next) |
 | **C4** | `transitionOrder` + tracker events | planned |
 | **C5** | Stripe webhook idempotency | planned |
 | **C6** | Portal cutover + notifications from events | planned |
@@ -172,7 +173,15 @@ Browser
 | My Jobs UI | `/customer/jobs` | Fetches list API; empty state when no rows; fixtures only with `?demo=1` |
 
 **Helpers:** `lib/orders/map-db-order-to-portal.ts`, `lib/orders/customer-jobs.ts` (no service role).  
-**Not yet:** C3 book writes — empty My Jobs is correct until seed or C3.
+
+#### C2.5 soft-gate booking write (as-built, non-prod)
+
+| Route | Auth | Behavior |
+|-------|------|----------|
+| `POST /api/quote/book-demo` | Session + `NODE_ENV !== production` | Service-role insert: order + `order_items`, `lifecycle_status=awaiting_arrival`, `payment_status=unpaid`, `metadata.demoBooking` |
+| Price soft-gate Continue | Same gate | Calls book-demo → confirmation with real `order_number` → My Jobs lists job |
+
+**Stripe deposit / webhook lifecycle:** still deferred (TODO on webhook). When wired, set `awaiting_arrival` + `payment_status=deposit_paid` on real pay — do not rely on soft-gate in production.
 
 **Principles**
 

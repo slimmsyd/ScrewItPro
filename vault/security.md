@@ -12,6 +12,7 @@
 3. **Least privilege clients.** Browser uses anon + user session (RLS). Privileged writes use `createAdminClient()` only in server modules.
 4. **Don’t trust the client for identity or role.** Role and user id come from Supabase Auth session / server verification — never from request body alone.
 5. **Fail closed.** Missing config → 503 with clear machine code, not fake success (waitlist pattern). Same for Maps/Places and Stripe soft-gate in **production** — never invent a successful booking or `inServiceArea: true` on the client.
+6. **Soft-gate demo book (C2.5):** `POST /api/quote/book-demo` may create a real owned order **only when `NODE_ENV !== "production"`**. Production returns 403 `demo_booking_disabled`. Writes use service role server-side; never claim Stripe deposit succeeded (`payment_status` stays unpaid + `metadata.demoBooking`).
 
 ---
 

@@ -19,18 +19,15 @@ import { formatUsd } from "@/lib/quote/pricing";
 import { JOIN_PATH, QUOTE_ITEMS_PATH, QUOTE_PRICE_PATH } from "@/lib/site";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { saveBookedSnapshot } from "@/lib/orders";
+import { isDemoBookingEnabled } from "@/lib/orders/demo-booking";
 import { useMember } from "@/components/providers/MemberProvider";
-
-/** Demo post-book confirmation when Stripe deposit checkout is not configured. */
-const DEMO_ORDER_ID = "SIP-4471";
-const DEMO_CONFIRMATION_PATH = `/customer/orders/${DEMO_ORDER_ID}?demo=1`;
 
 /**
  * Soft-gate demo booking is local/preview only.
  * Production must fail closed (vault/security.md) — no fabricated booking path.
  * Build-time: NODE_ENV is inlined by Next; production bundles omit continue UI.
  */
-const DEMO_BOOKING_ENABLED = process.env.NODE_ENV !== "production";
+const DEMO_BOOKING_ENABLED = isDemoBookingEnabled();
 
 /**
  * Price step — handoff locked layout:
@@ -52,16 +49,72 @@ export default function PriceStep() {
   const [error, setError] = useState<string | null>(null);
   const [softGate, setSoftGate] = useState(false);
 
-  const continueWithoutStripe = () => {
+  /**
+   * Soft-gate continue: write a real owned job (no Stripe charge), then
+   * confirmation + My Jobs use that order_number. Production never reaches here.
+   */
+  const continueWithoutStripe = async () => {
     if (!DEMO_BOOKING_ENABLED) return;
-    saveBookedSnapshot({
-      orderId: DEMO_ORDER_ID,
-      draft,
-      totals,
-      email: memberUser?.email,
-    });
-    setSoftGate(false);
-    router.push(DEMO_CONFIRMATION_PATH);
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/quote/book-demo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: draft.items.map((i) => ({
+            name: i.name,
+            quantity: i.quantity ?? 1,
+            src: i.src,
+            category: i.category,
+            assemblyCents: i.assemblyCents,
+          })),
+          pickupMode: draft.pickupMode,
+          deliveryLine:
+            draft.deliveryAddress?.formattedAddress ??
+            draft.deliveryAddress?.name,
+        }),
+      });
+      const json = (await res.json()) as {
+        ok?: boolean;
+        orderNumber?: string;
+        orderId?: string;
+        error?: string;
+        message?: string;
+      };
+
+      if (res.status === 401 || json.error === "unauthorized") {
+        const returnTo = encodeURIComponent(QUOTE_PRICE_PATH);
+        setSoftGate(false);
+        router.push(`${JOIN_PATH}?mode=login&return_to=${returnTo}`);
+        setBusy(false);
+        return;
+      }
+
+      if (!res.ok || !json.ok || !json.orderNumber) {
+        setError(
+          json.message ??
+            "Could not create demo booking. Check Supabase keys and try again."
+        );
+        setBusy(false);
+        return;
+      }
+
+      saveBookedSnapshot({
+        orderId: json.orderNumber,
+        draft,
+        totals,
+        email: memberUser?.email,
+      });
+      setSoftGate(false);
+      setBusy(false);
+      router.push(
+        `/customer/orders/${encodeURIComponent(json.orderNumber)}?demo=1`
+      );
+    } catch {
+      setError("Network error. Please try again.");
+      setBusy(false);
+    }
   };
 
   useEffect(() => {
@@ -517,14 +570,26 @@ export default function PriceStep() {
               }}
             >
               {DEMO_BOOKING_ENABLED
-                ? "You can still continue into the confirmation and order tracker with demo data so the full customer flow is testable now."
+                ? "Continue creates a real demo job on your account (no card charge) so confirmation and My Jobs work end-to-end."
                 : "We never create a fake booking in production when payments aren't configured."}
             </p>
+            {error && softGate && (
+              <p
+                style={{
+                  margin: "0 0 12px",
+                  color: "var(--alert, #DC2626)",
+                  fontSize: 14,
+                }}
+              >
+                {error}
+              </p>
+            )}
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {DEMO_BOOKING_ENABLED && (
                 <button
                   type="button"
-                  onClick={continueWithoutStripe}
+                  disabled={busy}
+                  onClick={() => void continueWithoutStripe()}
                   style={{
                     height: 48,
                     borderRadius: 9,
