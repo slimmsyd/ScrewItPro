@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type CSSProperties } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import {
   Archive,
   ArrowRight,
@@ -15,9 +16,11 @@ import {
   ORDER_STATUS_ORDER,
   formatCents,
   jobTotalCents,
-  listActiveJobs,
-  listPastJobs,
+  listActiveJobs as listFixtureActiveJobs,
+  listPastJobs as listFixturePastJobs,
   portalTrackHref,
+  segmentActiveJobs,
+  segmentPastJobs,
   statusIndex,
 } from "@/lib/orders";
 import JobStatusPill from "./JobStatusPill";
@@ -25,25 +28,95 @@ import JobStatusPill from "./JobStatusPill";
 /**
  * My Jobs — design_handoff_portal locked "rich rows" layout (V3):
  * Active/Past segmented toggle, one card row per job with inline
- * 7-step progress. Fixture-backed via the portal-jobs seam.
+ * 7-step progress.
+ *
+ * Phase C2: loads real rows from GET /api/customer/jobs.
+ * Fixtures only when ?demo=1 (design walkthrough).
  */
 
 const TILE_ICONS = { Archive, BedDouble, Library, Package } as const;
 
 type Segment = "active" | "past";
+type LoadState = "loading" | "ready" | "error";
 
 export default function MyJobsView() {
-  const [segment, setSegment] = useState<Segment>("active");
+  const searchParams = useSearchParams();
+  const demoMode = searchParams.get("demo") === "1";
 
-  const active = listActiveJobs();
-  const past = listPastJobs();
+  const [segment, setSegment] = useState<Segment>("active");
+  const [jobs, setJobs] = useState<MockOrder[]>([]);
+  const [loadState, setLoadState] = useState<LoadState>(
+    demoMode ? "ready" : "loading"
+  );
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const loadJobs = useCallback(async () => {
+    if (demoMode) {
+      setJobs([]);
+      setLoadState("ready");
+      setErrorMessage(null);
+      return;
+    }
+
+    setLoadState("loading");
+    setErrorMessage(null);
+
+    try {
+      const res = await fetch("/api/customer/jobs", {
+        method: "GET",
+        credentials: "same-origin",
+        headers: { Accept: "application/json" },
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        jobs?: MockOrder[];
+        error?: string;
+        message?: string;
+      };
+
+      if (res.status === 401) {
+        setJobs([]);
+        setLoadState("error");
+        setErrorMessage("Sign in to view your jobs.");
+        return;
+      }
+
+      if (!res.ok || !data.ok || !Array.isArray(data.jobs)) {
+        setJobs([]);
+        setLoadState("error");
+        setErrorMessage(
+          data.message ?? "Could not load jobs. Try again."
+        );
+        return;
+      }
+
+      setJobs(data.jobs);
+      setLoadState("ready");
+    } catch {
+      setJobs([]);
+      setLoadState("error");
+      setErrorMessage("Could not load jobs. Check your connection.");
+    }
+  }, [demoMode]);
+
+  useEffect(() => {
+    void loadJobs();
+  }, [loadJobs]);
+
+  const active = demoMode ? listFixtureActiveJobs() : segmentActiveJobs(jobs);
+  const past = demoMode ? listFixturePastJobs() : segmentPastJobs(jobs);
   const list = segment === "active" ? active : past;
 
   return (
     <div className="screen-anim" style={{ width: "100%" }}>
       <div style={{ marginBottom: 20 }}>
         <h1 style={h1Style}>My Jobs</h1>
-        <p style={subStyle}>Every build you&rsquo;ve booked with us.</p>
+        <p style={subStyle}>
+          Every build you&rsquo;ve booked with us.
+          {demoMode ? (
+            <span style={{ color: "var(--ink-300)" }}> (demo fixtures)</span>
+          ) : null}
+        </p>
       </div>
 
       <div style={segmentWrapStyle}>
@@ -73,20 +146,37 @@ export default function MyJobsView() {
         })}
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {list.map((job) => (
-          <JobRow key={job.id} job={job} />
-        ))}
-        {list.length === 0 && (
-          <div style={{ ...cardStyle, justifyContent: "center" }}>
-            <p style={emptyStyle}>
-              {segment === "active"
-                ? "No active jobs — start a new quote to book your next build."
-                : "No past jobs yet."}
-            </p>
-          </div>
-        )}
-      </div>
+      {loadState === "loading" && (
+        <div style={{ ...cardStyle, justifyContent: "center" }}>
+          <p style={emptyStyle}>Loading your jobs…</p>
+        </div>
+      )}
+
+      {loadState === "error" && (
+        <div style={{ ...cardStyle, justifyContent: "center", flexDirection: "column", gap: 12 }}>
+          <p style={emptyStyle}>{errorMessage ?? "Something went wrong."}</p>
+          <button type="button" onClick={() => void loadJobs()} style={retryBtnStyle}>
+            Try again
+          </button>
+        </div>
+      )}
+
+      {loadState === "ready" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {list.map((job) => (
+            <JobRow key={job.id} job={job} />
+          ))}
+          {list.length === 0 && (
+            <div style={{ ...cardStyle, justifyContent: "center" }}>
+              <p style={emptyStyle}>
+                {segment === "active"
+                  ? "No active jobs — start a new quote to book your next build."
+                  : "No past jobs yet."}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -293,4 +383,17 @@ const emptyStyle: CSSProperties = {
   fontFamily: "var(--font-body)",
   fontSize: 14.5,
   color: "var(--ink-500)",
+};
+
+const retryBtnStyle: CSSProperties = {
+  alignSelf: "center",
+  border: "1px solid var(--blue-deep)",
+  background: "var(--blue-deep)",
+  color: "#fff",
+  borderRadius: 10,
+  padding: "8px 16px",
+  fontFamily: "var(--font-body)",
+  fontSize: 13,
+  fontWeight: 700,
+  cursor: "pointer",
 };

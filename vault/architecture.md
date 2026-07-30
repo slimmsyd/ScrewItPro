@@ -155,13 +155,33 @@ Browser
 
 | Slice | Deliverable | Status |
 |-------|-------------|--------|
-| **C0** | Vault freeze + ops→customer status map | this section |
-| **C1** | DB migrations (scaffold) | in progress |
-| **C2** | `GET /api/customer/jobs` + order detail | next |
-| **C3** | Draft/book writes items + order_number | planned |
+| **C0** | Vault freeze + ops→customer status map | done |
+| **C1** | DB migrations (scaffold) | done (PR #31) |
+| **C2** | `GET /api/customer/jobs` + order detail + My Jobs wire-up | **as-built** |
+| **C2.5** | Soft-gate demo book write (no Stripe) → real job on My Jobs | **as-built** (non-prod) |
+| **C3** | Real Stripe book writes items + lifecycle on deposit | planned (next) |
 | **C4** | `transitionOrder` + tracker events | planned |
 | **C5** | Stripe webhook idempotency | planned |
 | **C6** | Portal cutover + notifications from events | planned |
+
+#### C2 customer read APIs (as-built)
+
+| Route | Auth | Behavior |
+|-------|------|----------|
+| `GET /api/customer/jobs` | Session required (401) | List own orders via user client + RLS; map with `mapDbOrderToPortal`; omit pre-book/cancelled lifecycles |
+| `GET /api/customer/orders/[id]` | Session required | One job by `order_number` (SIP-…) or uuid; 404 if missing/not owned/not visible |
+| My Jobs UI | `/customer/jobs` | Fetches list API; empty state when no rows; fixtures only with `?demo=1` |
+
+**Helpers:** `lib/orders/map-db-order-to-portal.ts`, `lib/orders/customer-jobs.ts` (no service role).  
+
+#### C2.5 soft-gate booking write (as-built, non-prod)
+
+| Route | Auth | Behavior |
+|-------|------|----------|
+| `POST /api/quote/book-demo` | Session + `NODE_ENV !== production` | Service-role insert: order + `order_items`, `lifecycle_status=awaiting_arrival`, `payment_status=unpaid`, `metadata.demoBooking` |
+| Price soft-gate Continue | Same gate | Calls book-demo → confirmation with real `order_number` → My Jobs lists job |
+
+**Stripe deposit / webhook lifecycle:** still deferred (TODO on webhook). When wired, set `awaiting_arrival` + `payment_status=deposit_paid` on real pay — do not rely on soft-gate in production.
 
 **Principles**
 

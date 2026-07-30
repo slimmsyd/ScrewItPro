@@ -4,8 +4,18 @@ import { statusIndex } from "./status";
 
 /**
  * Portal job catalog — list / segment / hero selection / next-step copy.
- * Single seam for Dashboard + My Jobs until a real jobs API lands.
+ * My Jobs (Phase C2) loads real rows via GET /api/customer/jobs.
+ * Fixture helpers remain for ?demo=1 and dev tooling.
  */
+
+/** Segment helpers that work on any job array (API or fixtures). */
+export function segmentActiveJobs(jobs: MockOrder[]): MockOrder[] {
+  return jobs.filter((o) => o.status !== "delivered");
+}
+
+export function segmentPastJobs(jobs: MockOrder[]): MockOrder[] {
+  return jobs.filter((o) => o.status === "delivered");
+}
 
 export function listPortalJobs(): MockOrder[] {
   return listMockOrderIds()
@@ -14,11 +24,11 @@ export function listPortalJobs(): MockOrder[] {
 }
 
 export function listActiveJobs(): MockOrder[] {
-  return listPortalJobs().filter((o) => o.status !== "delivered");
+  return segmentActiveJobs(listPortalJobs());
 }
 
 export function listPastJobs(): MockOrder[] {
-  return listPortalJobs().filter((o) => o.status === "delivered");
+  return segmentPastJobs(listPortalJobs());
 }
 
 /**

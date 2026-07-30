@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import ConfirmationShell from "@/components/portal/ConfirmationShell";
 import ConfirmationPanel from "@/components/orders/ConfirmationPanel";
 import { getMockOrder } from "@/lib/orders";
+import { resolvePortalOrder } from "@/lib/orders/resolve-portal-order";
 
 export async function generateMetadata({
   params,
@@ -10,15 +11,15 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const order = getMockOrder(id);
-  if (!order) return { title: "Order not found" };
-  return { title: `Order #${order.id}` };
+  const mock = getMockOrder(id);
+  if (mock) return { title: `Order #${mock.id}` };
+  return { title: `Order #${id}` };
 }
 
 /**
  * Step 5 — post-book confirmation ("You're booked!").
- * Design: /orders/SIP-4471
- * ?demo=1 — continued from quote soft-gate without Stripe deposit.
+ * Resolves fixture mock OR real customer job (soft-gate / future Stripe book).
+ * Real DB orders use SIP-xxxxx with no ?demo=1. Query demo=1 is fixture-only.
  */
 export default async function OrderConfirmationPage({
   params,
@@ -28,13 +29,18 @@ export default async function OrderConfirmationPage({
   searchParams: Promise<{ demo?: string }>;
 }) {
   const { id } = await params;
-  const { demo } = await searchParams;
-  const order = getMockOrder(id);
+  // searchParams.demo kept for old fixture links; ignored for real SIP jobs
+  await searchParams;
+
+  const order = await resolvePortalOrder(id);
   if (!order) notFound();
+
+  // Yellow "Demo path" banner only for design fixtures (SIP-4471 etc.), never real DB jobs.
+  const isDemo = getMockOrder(id) != null;
 
   return (
     <ConfirmationShell>
-      <ConfirmationPanel order={order} isDemo={demo === "1"} />
+      <ConfirmationPanel order={order} isDemo={isDemo} />
     </ConfirmationShell>
   );
 }
