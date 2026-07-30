@@ -4,6 +4,13 @@
 **App root:** `my-app/`  
 **Planning corpus (deeper specs):** `docs/` — vault wins for *standards*; plans win for *roadmap detail*.
 
+### Git / deploy surfaces
+
+| Branch | Role |
+|--------|------|
+| **`main`** | Marketing-only production. No product portal/quote/booking merges without an explicit launch call. |
+| **`develop`** | Product integration (quote, My Jobs, soft-gate, emails, Phase C). **Default PR target.** |
+
 ---
 
 ## Product

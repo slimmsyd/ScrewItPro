@@ -6,6 +6,17 @@ White-glove furniture assembly + hub logistics platform (Houston).
 
 ---
 
+## Branch policy (locked)
+
+| Branch | Purpose |
+|--------|---------|
+| **`main`** | **Marketing site only** (public landing / waitlist-era production). Do **not** merge quote, portal, My Jobs, booking, or ops platform work here until an explicit product launch decision. |
+| **`develop`** | **Default integration branch** for all product engineering (quote, soft-gate book, My Jobs, emails, Phase C, etc.). Open PRs → `develop`. |
+
+**Agents:** Always branch from and PR into **`develop`**, never **`main`**, unless the user explicitly asks for a marketing-only fix on `main`.
+
+---
+
 ## Source of truth: the Vault
 
 **Project standards live in [`vault/`](./vault/).**  
