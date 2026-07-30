@@ -121,5 +121,21 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(`${origin}/join?joined=1`);
+  // Post-login routing (Slice 2.5): honor safe return_to, else role home.
+  const returnToRaw = searchParams.get("return_to");
+  const { safeReturnTo, portalHomeFor, JOIN_PATH } = await import("@/lib/site");
+  const { roleFromAuthUser } = await import("@/lib/auth/roles");
+  const role = roleFromAuthUser(user);
+  const dest =
+    returnToRaw && returnToRaw.length > 0
+      ? safeReturnTo(returnToRaw, portalHomeFor(role))
+      : `${JOIN_PATH}?joined=1`;
+
+  // Absolute path only
+  if (dest.startsWith("http")) {
+    return NextResponse.redirect(`${origin}${JOIN_PATH}?joined=1`);
+  }
+  return NextResponse.redirect(
+    dest.startsWith("/") ? `${origin}${dest}` : `${origin}/${dest}`
+  );
 }

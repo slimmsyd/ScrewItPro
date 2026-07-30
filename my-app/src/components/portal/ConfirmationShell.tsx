@@ -53,7 +53,7 @@ export default function ConfirmationShell({
         }}
       >
         <Link
-          href="/jobs"
+          href="/customer/jobs"
           style={{
             display: "flex",
             alignItems: "center",

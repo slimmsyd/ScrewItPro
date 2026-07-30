@@ -497,7 +497,7 @@ function PortalProfileFooter({ onNavigate }: { onNavigate?: () => void }) {
           }}
         >
           <MenuLink
-            href="/account"
+            href="/customer/account"
             icon={User}
             label="View profile"
             onClick={() => {
@@ -506,7 +506,7 @@ function PortalProfileFooter({ onNavigate }: { onNavigate?: () => void }) {
             }}
           />
           <MenuLink
-            href="/account"
+            href="/customer/account"
             icon={Settings}
             label="Settings"
             onClick={() => {

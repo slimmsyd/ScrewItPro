@@ -210,3 +210,4 @@ Prefer **no single source file over ~1,000 lines** (components/pages). Split by 
 | 2026-07-30 | Initial catalog from codebase inventory |
 | 2026-07-30 | Split ItemsStep → quote/items/*; join page → JoinForm + joinUi + helpers |
 | 2026-07-30 | Slice 1: delete OrdersShell + mock-catalog; BuyMode paste-only; retailers.ts |
+| 2026-07-30 | Slice 2: portal routes live under `/customer/*`; `/403` page |

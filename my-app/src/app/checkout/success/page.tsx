@@ -1,6 +1,5 @@
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getMockOrder } from "@/lib/orders";
 
@@ -32,7 +31,7 @@ export default async function CheckoutSuccessPage({
   const { order } = await searchParams;
 
   if (order && getMockOrder(order)) {
-    redirect(`/orders/${order.trim()}`);
+    redirect(`/customer/orders/${order.trim()}`);
   }
 
   return (
@@ -50,19 +49,6 @@ export default async function CheckoutSuccessPage({
           Order reference: {order}
         </p>
       )}
-      <p style={{ marginTop: 28 }}>
-        <Link
-          href="/orders/SIP-4471"
-          style={{
-            color: "#1d6efe",
-            fontWeight: 600,
-            fontSize: 14,
-            textDecoration: "none",
-          }}
-        >
-          Preview confirmation experience
-        </Link>
-      </p>
     </div>
   );
 }

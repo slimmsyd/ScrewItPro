@@ -108,14 +108,14 @@ export default function QuoteAccountMenu({
   const navItems: MenuLink[] = [
     {
       kind: "link",
-      href: "/jobs",
+      href: "/customer/jobs",
       label: "My Jobs",
       icon: LayoutDashboard,
       badge: jobsBadge,
     },
     {
       kind: "link",
-      href: "/account",
+      href: "/customer/account",
       label: "Account",
       icon: User,
     },

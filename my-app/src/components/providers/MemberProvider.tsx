@@ -13,6 +13,8 @@ import {
   deriveMemberStatus,
   type MemberStatus,
   type MemberUser,
+  type SipRole,
+  type SipStatus,
 } from "@/lib/member";
 import { publicEnv } from "@/lib/env";
 
@@ -22,6 +24,8 @@ type SessionApiUser = {
   picture?: string;
   provider?: string;
   position?: number | null;
+  role?: SipRole;
+  status?: SipStatus;
 };
 
 type MemberContextValue = {
@@ -46,6 +50,8 @@ function mapUser(raw: SessionApiUser | null | undefined): MemberUser | null {
       typeof raw.position === "number" && raw.position > 0
         ? raw.position
         : null,
+    role: raw.role ?? "customer",
+    status: raw.status ?? "active",
   };
 }
 

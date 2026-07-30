@@ -111,7 +111,7 @@ Browser
 | Quote | `/quote`, `/quote/items`, `/quote/where`, `/quote/price` | Multi-step Get-a-Price |
 | Checkout | `/checkout/success`, `/checkout/cancelled` | Stripe return URLs |
 | Orders | `/orders/[id]`, `/orders/[id]/track` | Confirmation + tracker UI |
-| Portal (customer) | `/account`, `/jobs`, `/notifications`, `/referrals` | Shell + WIP views/panels (in flux on branch) |
+| Portal (customer) | `/customer/{jobs,account,notifications,referrals,orders/*}` | Shell under real URL prefix for middleware guards; old paths redirect |
 | Admin | `/admin/leads` | Lead list + export API |
 | Legal | `/privacy`, `/terms` | Legal shells |
 | AEO | `/furniture-assembly-pickup-delivery-houston` | SEO/AEO landing |
@@ -217,6 +217,7 @@ No project-wide test runner or CI pipeline is established in-repo as of this sna
 | 2026-07-30 | Soft 1k-line file cap for components/pages; ItemsStep + join page split into panels/helpers |
 | 2026-07-30 | **Service radius locked to 40 mi** (`BUSINESS.geo.radiusM = 64_374`). Source of truth: `lib/seo/business.ts`. |
 | 2026-07-30 | Slice 1: delete mock catalog; BuyMode paste-only; AddressField fail-closed; soft-gate fails closed in production; no fixture-email fallback |
+| 2026-07-30 | Slice 2: `/customer/*` prefix + redirects; Vitest; middleware coarse gates; admin via profiles.role; checkout `{orderId}` only + `POST /api/quote/draft` |
 | (prior) | Google Auth unified onto Supabase OAuth; legacy `sip_session` cleared in middleware |
 | (prior) | Interim orders/payments for deposit Checkout scaffold |
 | (prior) | Customer portal Phase 0 shell (church vs state) |
