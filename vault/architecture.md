@@ -296,9 +296,21 @@ Health (no secrets): `GET /api/health` via `getEnvStatus()`.
 
 ---
 
-## Testing & CI (current gap)
+## Testing & CI
 
-No project-wide test runner or CI pipeline is established in-repo as of this snapshot. When added, document the command matrix here.
+**Runner:** Vitest. **Pipeline:** `.github/workflows/ci.yml` — runs on every PR to `develop` / `main` and on pushes to those branches. All commands run from `my-app/`.
+
+| Command | CI step | Gate |
+|---------|---------|------|
+| `npm test` (`vitest run`) | Test | **blocking** |
+| `npm run typecheck` (`tsc --noEmit`) | Typecheck | **blocking** |
+| `npm run lint` (`eslint`) | Lint | **advisory** — see below |
+
+**Why lint is advisory:** 20 pre-existing errors on `develop` at the time CI landed (16× `react-hooks/set-state-in-effect`, 3× `react-hooks/refs`, 3× `no-unused-vars`, 1× `no-unescaped-entities`, across 16 files). A gate that is red on day one gets routed around. Clear the backlog, then delete `continue-on-error` from the lint step to make it blocking.
+
+**`next build` is deliberately not in CI.** `lib/env.ts` throws on missing secrets, so a build would fail for lack of credentials rather than for a real defect. Vercel builds every push with real env. Add it here only alongside a documented set of CI-safe dummy env vars.
+
+**Next hardening step:** guard tests for the invariants in `security.md`'s incident log — prod soft-gate disabled, no `createAdminClient` reachable from a Client Component, `BUSINESS.geo.radiusM === 64_374`. Each one pins a bug that already shipped once.
 
 ---
 
@@ -330,6 +342,7 @@ No project-wide test runner or CI pipeline is established in-repo as of this sna
 | 2026-07-30 | Phase C started: customer-first order spine; C0 map + C1 schema (extend interim orders) |
 | 2026-07-30 | Refer & Earn Points: opaque codes, `/r/[code]`, claim on signup, points not dollars |
 | 2026-07-30 | **D-REFERRAL-POINTS:** ops admin edits referral point amounts in Admin UI (revisit when Admin ships) |
+| 2026-08-05 | **CI landed** (`.github/workflows/ci.yml`): test + typecheck blocking on PRs to `develop`/`main`; lint advisory until the 20-error backlog clears |
 | (prior) | Google Auth unified onto Supabase OAuth; legacy `sip_session` cleared in middleware |
 | (prior) | Interim orders/payments for deposit Checkout scaffold |
 | (prior) | Customer portal Phase 0 shell (church vs state) |

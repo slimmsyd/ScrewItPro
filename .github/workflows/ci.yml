@@ -1,0 +1,63 @@
+name: CI
+
+# Runs on every PR and on pushes to the long-lived branches.
+# Per vault/decisions.md D-BRANCH: `develop` is the product integration branch
+# and the default PR base; `main` is marketing-only. Both get checked.
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+# A new push to the same PR cancels the older in-flight run.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Test / Typecheck / Lint
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        # The only runnable app lives here; the repo root holds vault/ and docs/.
+        working-directory: my-app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: my-app/package-lock.json
+
+      # `ci` (not `install`) installs exactly the lockfile — no silent upgrades.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # TODO(lint-gate): reporting-only until the 20 pre-existing errors on
+      # `develop` are cleared (16x react-hooks/set-state-in-effect, 3x
+      # react-hooks/refs, 3x no-unused-vars, 1x no-unescaped-entities across 16
+      # files). A gate that is red on day one gets routed around, so this starts
+      # as advisory. Once the backlog is zero, delete `continue-on-error` and
+      # lint becomes blocking like the two steps above.
+      - name: Lint (advisory)
+        run: npm run lint
+        continue-on-error: true
+
+# Deliberately NOT run here: `next build`.
+# lib/env.ts throws when required secrets are missing, so a build would fail in
+# CI for lack of credentials rather than for a real defect. Vercel already
+# builds every push with the real env. Add it here only alongside a documented
+# set of CI-safe dummy env vars.
