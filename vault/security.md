@@ -80,6 +80,28 @@ Writes go through Next.js API + `createAdminClient()`. RLS enabled; anon/authent
 | Referral claim / code assign | `claim_referral`, `ensure_referral_code` RPCs (service_role); points only via `apply_points` |
 | `sip_ref` cookie | httpOnly, SameSite=Lax; set by `GET /r/[code]`; cleared after signup claim |
 
+### Admin identity — two doors (2026-08-05)
+
+| Role | Granted by | Checked | Notes |
+|------|-----------|---------|-------|
+| **SUPER ADMIN (dev)** | `SUPER_ADMIN_EMAILS` env (comma-separated) | Before any DB read | Cannot be granted by a Postgres write, and survives a broken/suspended `profiles` row. Server-only — never `NEXT_PUBLIC_`. |
+| **ADMIN (owner)** | `profiles.role = 'admin'` + `status = 'active'` | `requireAdmin()` | Bootstrap via SQL (see below). |
+
+`requireAdmin()` returns `{ ok, userId, email, isSuperAdmin }` or a typed reason:
+`unauthenticated` | `forbidden` | `invited` | `not_configured`. **`invited` is
+distinct from `forbidden`** — an admin whose `profiles.status = 'invited'` gets
+the "invite waiting" screen, not a refusal.
+
+**Route exception:** `/admin/signin` is in `PUBLIC_ADMIN_LEAVES` (`lib/auth/route-guards.ts`)
+and is the **only** public path under `/admin`. Without it, `decideRouteAccess`
+sends signed-out visitors on `/admin/*` to the customer `/join` page — including
+off the admin sign-in page itself. Pinned by `__tests__/admin-signin-access.test.ts`,
+which also asserts no prefix leak (`/admin/signin-x` stays gated).
+
+**The sign-in screen never decides access.** It renders a state the server already
+resolved. The source UI kit put the roster and the session in the browser; that is
+the client-side-role-claim pattern forbidden below.
+
 ### Roles (schema present, portal gates incomplete)
 
 `profiles.role`: `customer` | `admin` | `technician` | `driver`.
@@ -148,6 +170,7 @@ There is **no org_id multi-tenancy** yet. Do not invent cross-customer reads “
 | `POST /api/payments/webhook` | Must verify signature |
 | `GET /api/admin/leads/export` | **requireAdmin()** — `profiles.role = admin` (no URL token) |
 | `/admin/leads` | Same requireAdmin; bootstrap first admin via SQL |
+| `/admin/signin` | **Public by design** (only public `/admin` leaf). Renders a server-resolved state; makes no access decision |
 | `GET /api/health` | Config booleans only — no secrets |
 | `POST /api/quote/lookup-product` | Server-side fetch; untrusted HTML |
 
@@ -234,6 +257,8 @@ Record funky authz/authn bugs here so we do not repeat them.
 | 2026-07-30 | Admin leads gated by `?key=` secret in URL/HTML | Deleted; `requireAdmin()` from profiles.role |
 | 2026-07-30 | Phase C1 order spine tables + customer SELECT RLS | Migrations under `20260730*_phase_c1_*` |
 | 2026-07-30 | Referral points: client cannot set codes/points; claim via service-role RPC only | `sip_ref` httpOnly; pin trigger includes `referral_code`/`referred_by` |
+| 2026-08-05 | Admin sign-in UI kit shipped a client-side `ROSTER` + `localStorage` session | Kept the visuals, replaced the mechanism: Supabase OAuth + server `requireAdmin()`. Client renders a resolved answer only |
+| 2026-08-05 | `/admin/signin` would have been unreachable — `/admin/*` bounces anon users to `/join` | `PUBLIC_ADMIN_LEAVES` exception + test asserting the rest of `/admin` stays gated and no prefix leak |
 
 ---
 

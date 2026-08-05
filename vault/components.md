@@ -134,6 +134,22 @@ These exist on the current branch; structure may still change. **Import — don�
 
 ---
 
+## Admin (`admin/`)
+
+| Name | Path | Kind | Use when | Notes |
+|------|------|------|----------|-------|
+| **AdminSignIn** | `admin/AdminSignIn.tsx` | View | The `/admin/signin` gate | Renders a **server-resolved** `AdminSignInState` (`idle` \| `denied` \| `invited` \| `in` \| `not_configured`). Never computes access. Adapted from `ui_kits/admin/signin-export`. |
+
+Adaptation notes (why it differs from the kit):
+
+- **Muted text is `--ink-500`, not `--ink-300`.** `#9AA1BC` on white is ~3:1 — under the 4.5:1 floor. `ink-300` is for decorative glyphs and rules only.
+- **Page wash is pinned to `#F4F6FB`, not `var(--gray-50)`.** `globals.css` forces `--gray-50: #fff` under 768px, which would dissolve a white card into the page on every phone.
+- **No roster of names.** The kit listed teammates; inventing them on a live screen is the fixture-PII pattern `security.md` forbids. The panel states the policy instead.
+- Focus rings live in `globals.css` as `.sip-admin-focus:focus-visible` — inline styles cannot express `:focus-visible`.
+- Spinner reuses the existing `screwitSpin` keyframe and is stilled under `prefers-reduced-motion`.
+
+---
+
 ## Marketing / home (`home/`)
 
 Prefer composing existing sections rather than rebuilding the landing page.

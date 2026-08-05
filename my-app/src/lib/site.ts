@@ -57,6 +57,17 @@ export function customerOrderTrackPath(orderId: string, query = ""): string {
   return `${CUSTOMER_ORDERS_PATH}/${encodeURIComponent(orderId)}/track${q}`;
 }
 
+// ─── Admin ───
+
+/**
+ * Admin sign-in. Public by design (see route-guards): the rest of /admin
+ * requires a session, so if this page were gated too, a signed-out admin would
+ * be bounced to the customer /join page and could never reach their own door.
+ */
+export const ADMIN_SIGNIN_PATH = "/admin/signin";
+/** Where a verified admin lands. Leads is the only admin screen built today. */
+export const ADMIN_HOME_PATH = "/admin/leads";
+
 export type SipRole = "customer" | "admin" | "technician" | "driver";
 
 /** Post-login / 403 home for a role. Staff portals not shipped → 403 not_available. */

@@ -34,6 +34,20 @@ export const serverEnv = {
  get stripeSecretKey() {
  return getEnv("STRIPE_SECRET_KEY");
  },
+ /**
+  * Super-admin (dev) allowlist — comma-separated emails.
+  *
+  * Deliberately env, not a DB role: a super admin cannot be granted by writing
+  * to Postgres, so a Supabase compromise cannot mint one, and a bad profiles
+  * row cannot lock the dev out. Server-only — never expose via NEXT_PUBLIC_.
+  * Empty is valid: the platform owner still gets in via profiles.role='admin'.
+  */
+ get superAdminEmails(): readonly string[] {
+ return (process.env.SUPER_ADMIN_EMAILS ?? "")
+ .split(",")
+ .map((e) => e.trim().toLowerCase())
+ .filter(Boolean);
+ },
  get stripeWebhookSecret() {
  return getEnv("STRIPE_WEBHOOK_SECRET", true);
  },

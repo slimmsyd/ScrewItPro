@@ -20,6 +20,15 @@ export const PUBLIC_PREFIXES = [
 /** Paths that require any signed-in session. */
 export const CUSTOMER_PREFIX = "/customer";
 
+/**
+ * Public leaf inside an otherwise-gated tree.
+ *
+ * /admin/* sends anonymous visitors to the customer join page. The admin
+ * sign-in screen lives under that prefix, so without this exception a
+ * signed-out admin gets redirected away from the very page that signs them in.
+ */
+export const PUBLIC_ADMIN_LEAVES = ["/admin/signin"] as const;
+
 /** Staff prefixes — claim must match (or layout re-asserts). */
 export const STAFF_PREFIXES = {
   admin: "/admin",
@@ -48,6 +57,9 @@ export function isPublicPath(pathname: string): boolean {
   if (pathMatchesPrefix(pathname, "/furniture-assembly-pickup-delivery-houston"))
     return true;
   if (pathMatchesPrefix(pathname, "/403")) return true;
+  // Public leaves inside gated trees (admin sign-in) — must come before the
+  // /admin prefix gate in decideRouteAccess, which this function precedes.
+  if (PUBLIC_ADMIN_LEAVES.some((p) => pathname === p)) return true;
   // Static marketing home + known public leaves
   if (pathname === "/" || pathname === "") return true;
   // Next assets handled by middleware matcher skip

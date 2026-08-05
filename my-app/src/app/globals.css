@@ -1193,3 +1193,23 @@ header[id] {
     padding: 24px 16px 48px !important;
   }
 }
+
+/* ─── Admin sign-in ─────────────────────────────────────────────────────────
+   Inline styles cannot express :focus-visible, so the keyboard affordance for
+   the admin gate lives here. Ring uses the brand focus token, not a UA default. */
+.sip-admin-focus:focus-visible {
+ outline: none;
+ border-color: var(--border-focus);
+ box-shadow: 0 0 0 3px rgba(29, 110, 254, 0.28);
+}
+
+.sip-admin-spinner {
+ animation: screwitSpin 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+ /* Still, but still legible as a busy indicator via its two-tone ring. */
+ .sip-admin-spinner {
+  animation: none;
+ }
+}
