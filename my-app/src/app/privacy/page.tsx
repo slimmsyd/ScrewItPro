@@ -55,7 +55,7 @@ export default function PrivacyPage() {
       <LegalSection id="scope" title="2. Scope">
         <LegalP>This Policy applies to information we collect when you:</LegalP>
         <LegalUl>
-          <li>Visit screwitpros.com or related marketing pages</li>
+          <li>Visit screwitpro.com or related marketing pages</li>
           <li>Join our waitlist or subscribe to product updates</li>
           <li>Create an account or sign in (including via Google or other providers)</li>
           <li>Request a quote, book a job, or contact support</li>
@@ -302,18 +302,18 @@ export default function PrivacyPage() {
           <br />
           Privacy inquiries:{" "}
           <a
-            href="mailto:privacy@screwitpros.com"
+            href="mailto:privacy@screwitpro.com"
             style={{ color: "var(--blue-electric)" }}
           >
-            privacy@screwitpros.com
+            privacy@screwitpro.com
           </a>
           <br />
           General support:{" "}
           <a
-            href="mailto:hello@screwitpros.com"
+            href="mailto:hello@screwitpro.com"
             style={{ color: "var(--blue-electric)" }}
           >
-            hello@screwitpros.com
+            hello@screwitpro.com
           </a>
           <br />
           Service area (initial): Houston Metro, Texas, USA

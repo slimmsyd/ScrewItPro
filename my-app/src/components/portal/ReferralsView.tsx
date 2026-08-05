@@ -143,7 +143,7 @@ export default function ReferralsView() {
 
   const { data } = state;
   const host =
-    typeof window !== "undefined" ? window.location.host : "screwitpros.com";
+    typeof window !== "undefined" ? window.location.host : "www.screwitpro.com";
   const displayLink = `${host}${data.path}`;
   const fullUrl =
     typeof window !== "undefined"

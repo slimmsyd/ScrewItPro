@@ -77,7 +77,7 @@ export function waitlistConfirmation(
     ${paragraph(
       `In the meantime, here's how it works: you buy the furniture, ship it to our Houston hub, and we assemble, QC, and white-glove deliver it. That's it.`
     )}
-    ${button("Visit ScrewIt Pros", process.env.NEXT_PUBLIC_APP_URL ?? "https://screwitpros.com")}
+    ${button("Visit ScrewIt Pros", process.env.NEXT_PUBLIC_APP_URL ?? "https://www.screwitpro.com")}
   `;
 
   return {
@@ -346,7 +346,7 @@ export function welcome(data: WelcomeData = {}): RenderedEmail {
     ${paragraph(
       "Your account is active. You're all set to book furniture assembly and white-glove delivery across the Houston metro."
     )}
-    ${button("Get started", process.env.NEXT_PUBLIC_APP_URL ?? "https://screwitpros.com")}
+    ${button("Get started", process.env.NEXT_PUBLIC_APP_URL ?? "https://www.screwitpro.com")}
   `;
   return {
     code: "welcome",
@@ -524,7 +524,7 @@ const previewSamples: ReadonlyArray<{
     render: () =>
       verification({
         name: "Jordan",
-        verifyUrl: "https://screwitpros.com/auth/confirm?token=sample-token",
+        verifyUrl: "https://www.screwitpro.com/auth/confirm?token=sample-token",
       }),
   },
   {
@@ -537,8 +537,8 @@ const previewSamples: ReadonlyArray<{
       bookingConfirmation({
         customerName: "Jordan",
         orderNumber: "SIP-10042",
-        trackUrl: "https://screwitpros.com/customer/orders/SIP-10042/track",
-        jobsUrl: "https://screwitpros.com/customer/jobs",
+        trackUrl: "https://www.screwitpro.com/customer/orders/SIP-10042/track",
+        jobsUrl: "https://www.screwitpro.com/customer/jobs",
         deliveryLine: "Yale St, 77008",
         itemSummary: "HEMNES dresser · 1 item",
         depositFormatted: "$74.70",
@@ -556,7 +556,7 @@ const previewSamples: ReadonlyArray<{
         deliveryLine: "Yale St, 77008",
         depositFormatted: "$74.70",
         paymentNote: "No deposit was charged (demo book path).",
-        trackUrl: "https://screwitpros.com/customer/orders/SIP-10042/track",
+        trackUrl: "https://www.screwitpro.com/customer/orders/SIP-10042/track",
         source: "book-demo",
       }),
   },

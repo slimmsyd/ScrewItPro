@@ -295,10 +295,10 @@ export default function TermsPage() {
           ScrewIt Pros agree to attempt good-faith informal resolution of any
           dispute by contacting{" "}
           <a
-            href="mailto:hello@screwitpros.com"
+            href="mailto:hello@screwitpro.com"
             style={{ color: "var(--blue-electric)" }}
           >
-            hello@screwitpros.com
+            hello@screwitpro.com
           </a>{" "}
           before filing a formal claim.
         </LegalP>
@@ -337,18 +337,18 @@ export default function TermsPage() {
           <br />
           Email:{" "}
           <a
-            href="mailto:hello@screwitpros.com"
+            href="mailto:hello@screwitpro.com"
             style={{ color: "var(--blue-electric)" }}
           >
-            hello@screwitpros.com
+            hello@screwitpro.com
           </a>
           <br />
           Legal:{" "}
           <a
-            href="mailto:legal@screwitpros.com"
+            href="mailto:legal@screwitpro.com"
             style={{ color: "var(--blue-electric)" }}
           >
-            legal@screwitpros.com
+            legal@screwitpro.com
           </a>
           <br />
           Initial service area: Houston Metro, Texas, USA

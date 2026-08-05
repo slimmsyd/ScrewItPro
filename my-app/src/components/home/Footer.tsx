@@ -105,7 +105,7 @@ export default function Footer() {
         { label: t("footer.howItWorks"), href: "/#how" },
         { label: t("footer.whyUs"), href: "/#why" },
         { label: t("footer.serviceArea"), href: "/#area" },
-        { label: t("footer.contact"), href: "mailto:hello@screwitpros.com" },
+        { label: t("footer.contact"), href: "mailto:hello@screwitpro.com" },
       ],
     },
     {

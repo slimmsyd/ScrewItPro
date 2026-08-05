@@ -56,7 +56,7 @@ function assetBase(appUrl: string): string {
  */
 export function renderLayout(bodyHtml: string, options: LayoutOptions = {}): string {
   const appUrl =
-    options.appUrl ?? process.env.NEXT_PUBLIC_APP_URL ?? "https://screwitpros.com";
+    options.appUrl ?? process.env.NEXT_PUBLIC_APP_URL ?? "https://www.screwitpro.com";
   const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "ScrewIt Pros";
   const assets = assetBase(appUrl);
   const year = new Date().getFullYear();

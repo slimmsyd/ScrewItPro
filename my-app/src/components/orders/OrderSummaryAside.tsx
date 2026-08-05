@@ -3,7 +3,7 @@ import type { MockOrder } from "@/lib/orders";
 import { formatCents, itemCountLabel } from "@/lib/orders";
 import OrderItemThumb from "@/components/orders/OrderItemThumb";
 
-const SUPPORT_MAIL = "hello@screwitpros.com";
+const SUPPORT_MAIL = "hello@screwitpro.com";
 
 export default function OrderSummaryAside({ order }: { order: MockOrder }) {
   const primary = order.items[0];

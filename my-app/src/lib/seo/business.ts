@@ -24,7 +24,13 @@ export const BUSINESS = {
   slogan: "If You Don't Want to Do It, ScrewIt!",
   description:
     "Furniture assembly and white-glove delivery for the Houston metro. We pick up your flat-pack furniture, assemble and QC it at our hub, then deliver it fully built and placed in your home.",
-  email: "hello@screwitpros.com",
+  email: "hello@screwitpro.com",
+  /**
+   * Customer-care inbox for live orders (hub intake, tracking, post-book help).
+   * Distinct from `email`, which is the general/legal contact quoted in schema
+   * and the terms + privacy pages.
+   */
+  careEmail: "care@screwitpro.com",
   priceRange: "$$",
 
   /** Assembly price floor. Quoted on-page as "from $49" — it is not a fixed price. */

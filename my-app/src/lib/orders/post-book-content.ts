@@ -22,7 +22,7 @@ export const HUB_INTAKE = {
    */
   lines: [
     "Houston, TX · service area hub",
-    `Ship-to / drop-off street: email ${BUSINESS.email} with your order number if you need the current address.`,
+    `Ship-to / drop-off street: email ${BUSINESS.careEmail} with your order number if you need the current address.`,
   ] as readonly string[],
   /** How the customer should mark boxes */
   labelTemplate: (orderNumber: string) =>
@@ -32,7 +32,7 @@ export const HUB_INTAKE = {
     "Photograph any damage before you ship or drop off.",
     "Use the order number on every box and on the packing slip.",
   ] as readonly string[],
-  supportEmail: BUSINESS.email,
+  supportEmail: BUSINESS.careEmail,
 } as const;
 
 /** Primary next-step language for each customer status (honest CTAs only). */

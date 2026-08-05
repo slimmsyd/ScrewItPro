@@ -68,7 +68,7 @@ export async function sendBookingConfirmationEmail(
       return { attempted: false, skippedReason: "no_recipient" };
     }
 
-    const appUrl = (publicEnv.appUrl || "https://screwitpros.com").replace(
+    const appUrl = (publicEnv.appUrl || "https://www.screwitpro.com").replace(
       /\/$/,
       ""
     );
