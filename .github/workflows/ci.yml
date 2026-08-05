@@ -36,6 +36,19 @@ jobs:
           cache: npm
           cache-dependency-path: my-app/package-lock.json
 
+      # Pin npm, not just Node. `@tailwindcss/oxide-wasm32-wasi` ships
+      # bundleDependencies, and npm versions disagree on how those are recorded
+      # in the lock file — so a lock written by npm 11.6.1 is rejected by the
+      # npm bundled with Node 24.18 ("Missing: @emnapi/core... from lock file"),
+      # with no actual dependency change involved. Node patch bumps move the
+      # bundled npm, so the Node version alone is not enough to pin.
+      #
+      # Keep this equal to the npm that regenerates package-lock.json locally
+      # (`npm -v`). If it drifts, CI fails loudly with the message above and the
+      # fix is to bump this line.
+      - name: Pin npm to the lockfile's version
+        run: npm install -g npm@11.6.1
+
       # `ci` (not `install`) installs exactly the lockfile — no silent upgrades.
       - name: Install dependencies
         run: npm ci
