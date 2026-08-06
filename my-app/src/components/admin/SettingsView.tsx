@@ -18,23 +18,18 @@ import {
   Calendar,
   CalendarX,
   Check,
-  CheckCircle2,
   ChevronRight,
   DollarSign,
   HelpCircle,
-  Info,
   Mail,
   MapPin,
   Minus,
   Plus,
-  Ruler,
   Shield,
   Timer,
   X,
-  XCircle,
 } from "lucide-react";
 import {
-  coverageFor,
   LEG_KEYS,
   LEG_LABELS,
   money,
@@ -82,7 +77,6 @@ export default function SettingsView() {
   const [draft, setDraft] = useState<AdminSettings | null>(null);
   const [baseline, setBaseline] = useState<AdminSettings | null>(null);
   const [sec, setSec] = useState<SectionKey>("hours");
-  const [testMiles, setTestMiles] = useState(22);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -215,13 +209,6 @@ export default function SettingsView() {
   const { ops, hub, deposit_percent: depositPct } = draft;
   const openDays = 7 - ops.closedDays.length;
   const totalMins = LEG_KEYS.reduce((a, k) => a + ops.durations[k], 0);
-  const coverage = coverageFor(
-    testMiles,
-    hub.radius_miles,
-    ops.tiers,
-    ops.farFee,
-    ops.exceptions
-  );
 
   const sections: {
     k: SectionKey;
@@ -960,91 +947,6 @@ export default function SettingsView() {
               </div>
             </div>
           </div>
-
-          <div
-            style={{
-              background: "var(--blue-50)",
-              borderRadius: 12,
-              padding: "12px 13px",
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 9,
-              }}
-            >
-              <Ruler size={13} color="var(--blue-electric)" />
-              <b style={{ fontSize: 11.5, color: "var(--blue-deep)" }}>
-                Test an address
-              </b>
-              <input
-                type="number"
-                className="sip-admin-num sip-admin-focus"
-                value={testMiles}
-                min={0}
-                step={1}
-                aria-label="Miles from shop"
-                onChange={(e) =>
-                  setTestMiles(Math.max(0, Number(e.target.value) || 0))
-                }
-                style={{
-                  marginLeft: "auto",
-                  width: 58,
-                  border: "1px solid var(--blue-100)",
-                  borderRadius: 8,
-                  padding: "5px 9px",
-                  fontSize: 12.5,
-                  fontWeight: 700,
-                  fontFamily: "var(--font-body)",
-                  color: "var(--blue-deep)",
-                  textAlign: "right",
-                  background: "#fff",
-                }}
-              />
-              <span style={{ fontSize: 11, color: "var(--blue-700)" }}>
-                mi out
-              </span>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 9,
-                fontSize: 12,
-                color: coverage.ok
-                  ? "var(--blue-700)"
-                  : "var(--status-error)",
-                fontWeight: 600,
-                flexWrap: "wrap",
-              }}
-            >
-              {coverage.ok ? (
-                <CheckCircle2 size={14} color="var(--status-success)" />
-              ) : (
-                <XCircle size={14} color="var(--status-error)" />
-              )}
-              {coverage.ok
-                ? `We book it · ${coverage.label}`
-                : `${coverage.label} - booking refused`}
-              {coverage.ok && (
-                <span
-                  style={{
-                    marginLeft: "auto",
-                    color: "var(--ink-500)",
-                    fontWeight: 500,
-                  }}
-                >
-                  {moneyShort(ops.baseRate)} job becomes{" "}
-                  {moneyShort(ops.baseRate + coverage.fee)}
-                </span>
-              )}
-            </div>
-          </div>
         </Band>
 
         <div style={{ paddingTop: 16 }}>
@@ -1201,14 +1103,6 @@ export default function SettingsView() {
             ))}
           </div>
         </div>
-
-        <Note>
-          Hub address and radius = free zone (“we travel up to”). Outside radius
-          stays bookable with the far fee on the quote. Public config:{" "}
-          <code style={{ fontSize: 11 }}>/api/public/service-area</code>. Hard
-          refresh after Save. Distance tiers are reserved for later — Model 1
-          only charges past the free zone (far fee).
-        </Note>
       </>
     ),
     emails: (
@@ -1560,27 +1454,6 @@ export default function SettingsView() {
               </button>
             );
           })}
-        </div>
-        <div
-          style={{
-            borderTop: "1px solid var(--gray-100)",
-            padding: "12px 14px",
-            display: "flex",
-            gap: 9,
-            fontSize: 11,
-            color: "var(--ink-500)",
-            lineHeight: 1.45,
-          }}
-        >
-          <Info
-            size={13}
-            color="var(--ink-500)"
-            style={{ marginTop: 1, flex: "0 0 13px" }}
-          />
-          <span>
-            Hub radius is the free-travel zone; far fee applies past it on the
-            quote. Hard refresh map/quote after Save.
-          </span>
         </div>
       </div>
 
