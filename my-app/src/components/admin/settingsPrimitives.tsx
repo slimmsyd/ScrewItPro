@@ -1,27 +1,109 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 import { Info, Minus, Plus } from "lucide-react";
+
+type TipPlace = "above" | "below";
 
 /**
  * Inline "?" control with hover/focus tooltip for admin Settings.
+ * Portals the bubble to document.body so scroll/overflow parents cannot clip it.
  * Prefer short plain-language “what / why” copy (not API jargon).
  */
 export function HelpTip({ text }: { text: string }) {
+  const tipId = useId();
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [coords, setCoords] = useState<{
+    top: number;
+    left: number;
+    place: TipPlace;
+  }>({ top: 0, left: 0, place: "above" });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const placeBubble = useCallback(() => {
+    const el = btnRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const gap = 10;
+    const preferAbove = r.top >= 120;
+    const place: TipPlace = preferAbove ? "above" : "below";
+    const top = place === "above" ? r.top - gap : r.bottom + gap;
+    // Keep bubble centered on the ? but padded from viewport edges
+    const pad = 12;
+    const halfMax = 140; // ~half of max-width 280
+    const left = Math.min(
+      Math.max(r.left + r.width / 2, pad + halfMax),
+      window.innerWidth - pad - halfMax
+    );
+    setCoords({ top, left, place });
+  }, []);
+
+  const show = useCallback(() => {
+    placeBubble();
+    setOpen(true);
+  }, [placeBubble]);
+
+  const hide = useCallback(() => setOpen(false), []);
+
+  useEffect(() => {
+    if (!open) return;
+    const onScroll = () => placeBubble();
+    const onResize = () => placeBubble();
+    // Capture scroll from nested overflow panes
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [open, placeBubble]);
+
   return (
     <span className="sip-admin-help">
       <button
+        ref={btnRef}
         type="button"
         className="sip-admin-help-btn sip-admin-focus"
         aria-label="What is this?"
-        // Native title as a fallback when CSS tooltips are clipped
-        title={text}
+        aria-describedby={open ? tipId : undefined}
+        aria-expanded={open}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        onFocus={show}
+        onBlur={hide}
       >
         ?
       </button>
-      <span className="sip-admin-help-bubble" role="tooltip">
-        {text}
-      </span>
+      {mounted &&
+        open &&
+        createPortal(
+          <span
+            id={tipId}
+            role="tooltip"
+            className={`sip-admin-help-bubble sip-admin-help-bubble--fixed sip-admin-help-bubble--${coords.place}`}
+            style={{
+              top: coords.top,
+              left: coords.left,
+            }}
+          >
+            {text}
+          </span>,
+          document.body
+        )}
     </span>
   );
 }
