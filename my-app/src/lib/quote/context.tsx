@@ -13,7 +13,10 @@ import {
   loadQuoteDraft,
   saveQuoteDraft,
 } from "@/lib/quote/draft-storage";
-import { computeQuoteTotals } from "@/lib/quote/pricing";
+import {
+  computeQuoteTotals,
+  type TravelRateCard,
+} from "@/lib/quote/pricing";
 import type {
   EntryMode,
   PickupMode,
@@ -26,11 +29,21 @@ import {
   SCREWIT_HUB_PLACE,
 } from "@/lib/quote/types";
 import type { ResolvedPlace } from "@/lib/places";
+import { fetchServiceAreaConfig } from "@/lib/config/service-area-client";
+
+/** TX-only soft wall: outside radius is bookable; non-TX is not. */
+function isBookablePlace(place: ResolvedPlace | null): boolean {
+  if (!place) return false;
+  if (place.state && place.state.toUpperCase() !== "TX") return false;
+  return true;
+}
 
 type QuoteContextValue = {
   draft: QuoteDraft;
   totals: QuoteTotals;
   hydrated: boolean;
+  /** Hub + farFee for travel preview (from public service-area). */
+  travelRates: TravelRateCard | null;
   setPickupAddress: (place: ResolvedPlace | null) => void;
   setDeliveryAddress: (place: ResolvedPlace | null) => void;
   setShipToHub: (ship: boolean) => void;
@@ -53,6 +66,7 @@ function emptyDraft(): QuoteDraft {
 export function QuoteProvider({ children }: { children: ReactNode }) {
   const [draft, setDraft] = useState<QuoteDraft>(emptyDraft);
   const [hydrated, setHydrated] = useState(false);
+  const [travelRates, setTravelRates] = useState<TravelRateCard | null>(null);
 
   // sessionStorage hydrate after mount (client-only; avoid SSR mismatch)
   useEffect(() => {
@@ -62,6 +76,23 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       setHydrated(true);
     }, 0);
     return () => window.clearTimeout(timer);
+  }, []);
+
+  // Public hub + farFee for Model 1 travel preview on totals
+  useEffect(() => {
+    let cancelled = false;
+    fetchServiceAreaConfig().then((c) => {
+      if (cancelled) return;
+      setTravelRates({
+        lat: c.lat,
+        lng: c.lng,
+        radiusMiles: c.radiusMiles,
+        farFee: c.farFee,
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -177,13 +208,17 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const totals = useMemo(() => computeQuoteTotals(draft), [draft]);
+  const totals = useMemo(
+    () => computeQuoteTotals(draft, travelRates),
+    [draft, travelRates]
+  );
 
+  // Model 1 soft wall: outside radius is bookable; fee shows on Price.
   const canProceedFromWhere = Boolean(
-    draft.deliveryAddress?.inServiceArea &&
+    isBookablePlace(draft.deliveryAddress) &&
       (draft.pickupMode === "ship"
         ? true
-        : draft.pickupAddress?.inServiceArea)
+        : isBookablePlace(draft.pickupAddress))
   );
 
   const canProceedFromItems = draft.items.length > 0;
@@ -193,6 +228,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       draft,
       totals,
       hydrated,
+      travelRates,
       setPickupAddress,
       setDeliveryAddress,
       setShipToHub,
@@ -209,6 +245,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       draft,
       totals,
       hydrated,
+      travelRates,
       setPickupAddress,
       setDeliveryAddress,
       setShipToHub,

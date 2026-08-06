@@ -76,8 +76,11 @@
 | **items/shared** | `quote/items/shared.tsx` | Shared | FieldLabel, inputStyle, stepperBtn for items panels |
 | **retailers** | `lib/quote/retailers.ts` | Config | `SUPPORTED_RETAILERS` (display only) + `COLLECTION_STORES` — never gate lookup |
 | **WhereStep** | `quote/WhereStep.tsx` | Step | Address / service area |
-| **PriceStep** | `quote/PriceStep.tsx` | Step | Pricing + deposit presentation |
-| **AddressField** | `quote/AddressField.tsx` | Field | Address entry with places behavior |
+| **PriceStep** | `quote/PriceStep.tsx` | Step | Honest breakdown + deposit rail; **Travel · out of area** line when `totals.travelCents > 0` (Model 1). Stripe-ready: draft/book pass delivery geo for server re-price. |
+| **AddressField** | `quote/AddressField.tsx` | Field | Places autocomplete; soft wall outside radius (accept + notice + fee hint); hard refuse non-TX only |
+| **WhereStep** | `quote/WhereStep.tsx` | Step | Pickup/deliver; out-of-area callout when travel fee applies |
+| **PaymentAside** | `quote/PaymentAside.tsx` | Rail | Deposit / balance / total (includes travel in subtotal) |
+| **QuoteAside** | `quote/QuoteAside.tsx` | Rail | Mini line items; shows travel when fee > 0 |
 | **BuildCart** | `quote/BuildCart.tsx` | Domain | Cart/line items in quote |
 | **PaymentAside** | `quote/PaymentAside.tsx` | Aside | Payment summary rail |
 | **QuoteAside** | `quote/QuoteAside.tsx` | Aside | Quote summary rail |
@@ -139,14 +142,22 @@ These exist on the current branch; structure may still change. **Import — don�
 | Name | Path | Kind | Use when | Notes |
 |------|------|------|----------|-------|
 | **AdminSignIn** | `admin/AdminSignIn.tsx` | View | The `/admin/signin` gate | Renders a **server-resolved** `AdminSignInState` (`idle` \| `denied` \| `invited` \| `in` \| `not_configured`). Never computes access. Adapted from `ui_kits/admin/signin-export`. |
+| **AdminAppShell** | `admin/AdminAppShell.tsx` | Shell | Every authenticated `/admin/*` page (not sign-in) | Left sidebar + topbar; progressive nav. Access is **never** decided here — layout already ran `requireAdmin()`. Kit source: `admin-export/Admin.html`. |
+| **adminNav** | `admin/adminNav.ts` | Config | Shell nav items | Full kit IA; `shipped: true` only for live routes. Scoreboard: `docs/ADMIN-PORT.md`. |
+| **SettingsView** | `admin/SettingsView.tsx` | View | `/admin/settings` | **Settings v2** (design_handoff_admin_settings): section **rail** with live subtitles + dense form **pane** + foot save bar. Steppers for numbers. **Persists** deposit + hub + `ops_rules`. Product defaults 30% / 40 mi. |
+| **ShopAddressField** | `admin/ShopAddressField.tsx` | Field | Settings shop address | Houston-biased Places autocomplete; selects formatted address + lat/lng for hub pin. Not radius-gated (hub is the origin). |
+| **QuoteAccountMenu** | `quote/QuoteAccountMenu.tsx` | Chrome | Marketing / quote / confirmation signed-in chip | **Role-aware** via `accountMenuFor(role)`: Admin primary + customer secondary for admins; customer links for customers; honest note for tech/driver. Navigation only — not authz. |
+| **accountMenuFor** | `lib/auth/account-menu.ts` | Config | Account dropdown items by `SipRole` | Single source for menu sections; extend when tech/driver portals ship. |
 
-Adaptation notes (why it differs from the kit):
+Adaptation notes (shared with sign-in kit port):
 
 - **Muted text is `--ink-500`, not `--ink-300`.** `#9AA1BC` on white is ~3:1 — under the 4.5:1 floor. `ink-300` is for decorative glyphs and rules only.
 - **Page wash is pinned to `#F4F6FB`, not `var(--gray-50)`.** `globals.css` forces `--gray-50: #fff` under 768px, which would dissolve a white card into the page on every phone.
 - **No roster of names.** The kit listed teammates; inventing them on a live screen is the fixture-PII pattern `security.md` forbids. The panel states the policy instead.
 - Focus rings live in `globals.css` as `.sip-admin-focus:focus-visible` — inline styles cannot express `:focus-visible`.
 - Spinner reuses the existing `screwitSpin` keyframe and is stilled under `prefers-reduced-motion`.
+- **Product numbers win kit seed:** deposit **30%**, radius **40 mi** (not kit 70% / 30 mi).
+- **Progressive nav:** unshipped items visible as “Soon” — do not invent fake pages.
 
 ---
 
@@ -159,7 +170,7 @@ Prefer composing existing sections rather than rebuilding the landing page.
 | **LandingPage** | `home/LandingPage.tsx` | Page | Full homepage composition |
 | **Nav** | `home/Nav.tsx` | Chrome | Marketing nav (not portal sidebar) |
 | **MobileMenu** | `home/MobileMenu.tsx` | Chrome | Marketing mobile nav |
-| **Hero** (+ HeroSearch, HeroAddressBar, HeroBackdrop) | `home/Hero*.tsx` | Section | Above-the-fold marketing |
+| **Hero** (+ HeroSearch, HeroAddressBar, HeroBackdrop) | `home/Hero*.tsx` | Section | Above-the-fold marketing. **HeroAddressBar** pickup listbox pins **ScrewIt Hub** (ship-to-hub); seeds quote with `pickupMode: "ship"` when chosen. |
 | **SupportChat** | `home/SupportChat.tsx` | Widget | Chip concierge / support chat shell |
 | **HoustonMap** | `home/HoustonMap.tsx` | Map | Service area map |
 | **Footer** | `home/Footer.tsx` | Chrome | Site footer |

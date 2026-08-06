@@ -80,7 +80,7 @@ export const en = {
     v2TitleB: "and delivered ready.",
     v2Sub: "We pick up your furniture, professionally build it at our workshop, and deliver it fully assembled. Get an instant quote in 60 seconds.",
     addrPickupLabel: "Pick up from",
-    addrPickupPh: "Pickup address",
+    addrPickupPh: "Pickup address or our hub",
     addrDeliverLabel: "Deliver to",
     addrDeliverPh: "Delivery address",
     ctaWaitlist: "Join waitlist",
@@ -98,6 +98,8 @@ export const en = {
     placesWaitlistOutOfArea:
       "Outside Houston Metro for now - join the waitlist and we’ll notify you when we expand to your area.",
     placesResolveError: "Couldn’t verify that place. Try another suggestion.",
+    hubOptionPrimary: "ScrewIt Pros Hub",
+    hubOptionSecondary: "I'll ship boxes to the workshop — free inbound",
   },
   search: {
     popular: "Popular services",
@@ -250,7 +252,7 @@ export const en = {
   area: {
     eyebrow: "Service Area",
     title: "Currently Serving the Houston Metro Area",
-    sub: "Serving homeowners, renters, seniors, busy professionals, and families throughout the greater Houston area.",
+    sub: "Serving homeowners, renters, seniors, busy professionals, and families within about {{radiusMiles}} miles of our Houston hub.",
     expanding: "Expanding Soon",
     atlanta: "Atlanta",
     austin: "Austin",
@@ -258,11 +260,11 @@ export const en = {
     dallas: "Dallas",
   },
   map: {
-    hubTitle: "ScrewIt Pros - Houston Metro",
-    infoTitle: "Houston Metro",
+    hubTitle: "ScrewIt Pros - Houston hub",
+    infoTitle: "Houston hub service area",
     infoBody:
-      "ScrewIt Pros service area - pickup, assembly & white-glove delivery.",
-    liveBadge: "Live service area · Houston Metro",
+      "Within about {{radiusMiles}} miles of our hub - pickup, assembly & white-glove delivery.",
+    liveBadge: "Live · about {{radiusMiles}} mi from hub",
     missingTitle: "Map: Houston Metro coverage",
     missingHint:
       "Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to .env.local (enable Maps JavaScript API), then restart npm run dev.",

@@ -12,6 +12,7 @@ import type { LucideIcon } from "lucide-react";
 import { isGoogleMapsConfigured } from "@/lib/google";
 import {
   fetchPlacePredictions,
+  getServiceArea,
   resolvePlace,
   type PlaceSuggestion,
   type ResolvedPlace,
@@ -22,8 +23,9 @@ const SUPPORT_EMAIL = BUSINESS.email;
 
 /**
  * Houston-metro Places autocomplete for the quote Where step.
- * Fail-closed: no mock places. Missing Maps config or transient API errors
- * surface real messages — never invent inServiceArea: true.
+ * Fail-closed: no mock places. Service radius from Admin Settings hub config.
+ * Model 1 soft wall: outside radius is accepted with a travel-fee notice.
+ * Never invent inServiceArea: true (flag still means "inside free zone").
  */
 export default function AddressField({
   label,
@@ -48,6 +50,8 @@ export default function AddressField({
   const [highlight, setHighlight] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Soft notice (e.g. out-of-area travel) — not a hard block. */
+  const [notice, setNotice] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const reqId = useRef(0);
 
@@ -114,13 +118,28 @@ export default function AddressField({
       }
       setLoading(true);
       setError(null);
+      setNotice(null);
       try {
-        const resolved = await resolvePlace(s.placeId);
-        if (!resolved.inServiceArea) {
+        const [resolved, area] = await Promise.all([
+          resolvePlace(s.placeId),
+          getServiceArea(),
+        ]);
+        // Fail closed on non-TX; soft wall outside radius (Model 1).
+        if (resolved.state && resolved.state.toUpperCase() !== "TX") {
           setError(
-            `We currently serve the Houston metro area only (about ${BUSINESS.geo.radiusMiles} miles from downtown).`
+            "We currently serve the Houston Metro area in Texas. That address is outside Texas."
           );
           onChange(null);
+          setText(resolved.formattedAddress);
+        } else if (!resolved.inServiceArea) {
+          const fee =
+            typeof area.farFee === "number" && area.farFee > 0
+              ? ` A +$${Math.round(area.farFee)} travel fee will appear on your quote.`
+              : "";
+          setNotice(
+            `Outside our usual ${area.radiusMiles} mi area from the hub — still bookable.${fee}`
+          );
+          onChange(resolved);
           setText(resolved.formattedAddress);
         } else {
           onChange(resolved);
@@ -210,6 +229,7 @@ export default function AddressField({
             onChange(null);
             setOpen(true);
             setError(null);
+            setNotice(null);
           }}
           onFocus={() => !disabled && mapsOn && setOpen(true)}
           onKeyDown={onKeyDown}
@@ -244,6 +264,19 @@ export default function AddressField({
           }}
         >
           {error}
+        </p>
+      )}
+      {!error && notice && (
+        <p
+          role="status"
+          style={{
+            margin: "6px 0 0",
+            fontSize: 12.5,
+            color: "var(--blue-steel)",
+            fontWeight: 600,
+          }}
+        >
+          {notice}
         </p>
       )}
       {open && suggestions.length > 0 && !disabled && mapsOn && (

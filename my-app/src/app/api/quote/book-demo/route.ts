@@ -26,6 +26,9 @@ const bodySchema = z.object({
   items: z.array(lineSchema).min(1).max(50),
   pickupMode: z.enum(["pickup", "ship"]).nullable().optional(),
   deliveryLine: z.string().max(400).optional(),
+  deliveryLat: z.number().min(-90).max(90).optional(),
+  deliveryLng: z.number().min(-180).max(180).optional(),
+  deliveryZip: z.string().max(12).optional(),
 });
 
 export async function POST(request: Request) {
@@ -78,6 +81,11 @@ export async function POST(request: Request) {
       items: input.items,
       pickupMode: input.pickupMode ?? null,
       deliveryLine: input.deliveryLine,
+      delivery: {
+        lat: input.deliveryLat,
+        lng: input.deliveryLng,
+        zip: input.deliveryZip,
+      },
     });
 
     // Booking email — never fails the book response

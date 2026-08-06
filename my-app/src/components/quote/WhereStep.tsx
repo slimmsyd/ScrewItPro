@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Home,
@@ -15,13 +16,20 @@ import QuoteAside from "@/components/quote/QuoteAside";
 import ScreenTransition from "@/components/quote/ScreenTransition";
 import AddressField from "@/components/quote/AddressField";
 import { useQuote } from "@/lib/quote/context";
-import { SCREWIT_HUB_PLACE } from "@/lib/quote/types";
+import {
+  hubPlaceFromServiceArea,
+  SCREWIT_HUB_PLACE,
+  SCREWIT_HUB_PLACE_ID,
+} from "@/lib/quote/types";
 import { QUOTE_ITEMS_PATH } from "@/lib/site";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { fetchServiceAreaConfig } from "@/lib/config/service-area-client";
+import type { ServiceAreaConfig } from "@/lib/config/service-area";
 
 /**
  * Where step: dual-stop route card (pickup + deliver) + ship/pickup mode.
  * Both stops are always visible; ship mode locks pickup to the ScrewIt Hub.
+ * Hub address comes from Admin Settings (public service-area config).
  */
 export default function WhereStep() {
   const router = useRouter();
@@ -34,13 +42,29 @@ export default function WhereStep() {
     setDeliveryAddress,
     canProceedFromWhere,
   } = useQuote();
+  const showTravelCallout =
+    totals.beyondRadius && totals.travelCents > 0;
+  const [hubConfig, setHubConfig] = useState<ServiceAreaConfig | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchServiceAreaConfig().then((c) => {
+      if (!cancelled) setHubConfig(c);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const shipMode = draft.pickupMode === "ship";
+  const hubPlace = hubConfig
+    ? hubPlaceFromServiceArea(hubConfig)
+    : SCREWIT_HUB_PLACE;
 
   const goNext = () => {
     if (!canProceedFromWhere) return;
     if (shipMode) {
-      setPickupAddress(SCREWIT_HUB_PLACE);
+      setPickupAddress(hubPlace);
     }
     router.push(QUOTE_ITEMS_PATH);
   };
@@ -129,6 +153,35 @@ export default function WhereStep() {
           for you to manage.
         </p>
 
+        {showTravelCallout && (
+          <div
+            role="status"
+            style={{
+              maxWidth: 640,
+              marginBottom: 16,
+              padding: "12px 14px",
+              borderRadius: 10,
+              background: "var(--blue-50)",
+              border: "1px solid rgba(29,110,254,0.2)",
+              fontFamily: "var(--font-body)",
+              fontSize: 13.5,
+              fontWeight: 600,
+              color: "var(--blue-deep)",
+              lineHeight: 1.45,
+            }}
+          >
+            Outside our usual service area
+            {totals.travelMiles > 0
+              ? ` (~${Math.round(totals.travelMiles)} mi from hub)`
+              : ""}
+            . Travel fee{" "}
+            <strong>
+              +${(totals.travelCents / 100).toFixed(0)}
+            </strong>{" "}
+            will show on your honest breakdown — no hidden fees.
+          </div>
+        )}
+
         {/* Route card: always shows PICK UP + DELIVER (handoff) */}
         <div
           style={{
@@ -186,13 +239,16 @@ export default function WhereStep() {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               {shipMode ? (
-                <LockedHubField />
+                <LockedHubField
+                  address={hubPlace.formattedAddress}
+                  loading={!hubConfig}
+                />
               ) : (
                 <AddressField
                   label="PICK UP FROM"
                   icon={Package}
                   value={
-                    draft.pickupAddress?.placeId === SCREWIT_HUB_PLACE.placeId
+                    draft.pickupAddress?.placeId === SCREWIT_HUB_PLACE_ID
                       ? null
                       : draft.pickupAddress
                   }
@@ -377,7 +433,13 @@ export default function WhereStep() {
 }
 
 /** Locked pickup field when customer ships boxes to the hub (handoff Field). */
-function LockedHubField() {
+function LockedHubField({
+  address,
+  loading,
+}: {
+  address: string;
+  loading?: boolean;
+}) {
   return (
     <div>
       <div
@@ -422,12 +484,24 @@ function LockedHubField() {
             style={{
               fontFamily: "var(--font-body)",
               fontSize: 12.5,
-              color: "var(--ink-500)",
+              color: "var(--ink-700)",
               marginTop: 2,
+              lineHeight: 1.35,
+              wordBreak: "break-word",
+            }}
+          >
+            {loading ? "Loading hub address…" : address}
+          </div>
+          <div
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: 11.5,
+              color: "var(--ink-500)",
+              marginTop: 3,
               lineHeight: 1.35,
             }}
           >
-            We email the label &amp; address after booking
+            Label every box with your order number after booking
           </div>
         </div>
       </div>

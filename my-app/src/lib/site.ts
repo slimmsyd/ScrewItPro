@@ -65,8 +65,8 @@ export function customerOrderTrackPath(orderId: string, query = ""): string {
  * be bounced to the customer /join page and could never reach their own door.
  */
 export const ADMIN_SIGNIN_PATH = "/admin/signin";
-/** Where a verified admin lands. Leads is the only admin screen built today. */
-export const ADMIN_HOME_PATH = "/admin/leads";
+/** Where a verified admin lands after sign-in (Settings — admin port Slice 1). */
+export const ADMIN_HOME_PATH = "/admin/settings";
 
 export type SipRole = "customer" | "admin" | "technician" | "driver";
 
@@ -74,7 +74,7 @@ export type SipRole = "customer" | "admin" | "technician" | "driver";
 export function portalHomeFor(role: SipRole | string | null | undefined): string {
   switch (role) {
     case "admin":
-      return "/admin/leads";
+      return ADMIN_HOME_PATH;
     case "technician":
     case "driver":
       return "/403?reason=not_available";

@@ -5,7 +5,7 @@ import { Check, KeyRound, Mail, MailCheck, ShieldX, TriangleAlert } from "lucide
 import { ADMIN_SIGNIN_PATH } from "@/lib/site";
 
 /**
- * Admin sign-in — invite-only gate. Adapted from the signin-export UI kit.
+ * Admin sign-in - invite-only gate. Adapted from the signin-export UI kit.
  *
  * Three deliberate departures from the kit:
  *  1. The kit decided access in the browser (a ROSTER array + a localStorage
@@ -30,7 +30,7 @@ const MUTED = "var(--ink-500)";
 /** ink-300 is for decorative glyphs and rules only. */
 const FAINT = "var(--ink-300)";
 
-/** Kit cards sit on --gray-50, which globals.css forces to #fff under 768px —
+/** Kit cards sit on --gray-50, which globals.css forces to #fff under 768px  - 
  *  the card would dissolve into the page. Pin the wash explicitly. */
 const PAGE_WASH = "#F4F6FB";
 
@@ -62,7 +62,7 @@ function GoogleMark({ size = 18 }: { size?: number }) {
   );
 }
 
-/** Status glyph tile — success / warning / error surfaces from the token set. */
+/** Status glyph tile - success / warning / error surfaces from the token set. */
 function StatusTile({
   tone,
   children,
@@ -89,7 +89,7 @@ export default function AdminSignIn({
   returnTo,
 }: {
   state: AdminSignInState;
-  /** Signed-in address, when there is one — shown so a refusal is unambiguous. */
+  /** Signed-in address, when there is one - shown so a refusal is unambiguous. */
   email?: string | null;
   /** Safe path to land on after Google. */
   returnTo?: string;
@@ -101,7 +101,7 @@ export default function AdminSignIn({
   useEffect(() => {
     if (state !== "in") return;
     const t = setTimeout(() => {
-      window.location.href = returnTo ?? "/admin/leads";
+      window.location.href = returnTo ?? "/admin/settings";
     }, 900);
     return () => clearTimeout(t);
   }, [state, returnTo]);
@@ -355,7 +355,7 @@ export default function AdminSignIn({
                   Who has access
                 </b>
               </div>
-              {/* `margin: 0` must precede marginTop — later keys win in a style
+              {/* `margin: 0` must precede marginTop - later keys win in a style
                   object, and reversing these silently collapses the gap. */}
               <dl style={{ margin: 0, display: "flex", flexDirection: "column", gap: 10, marginTop: 13 }}>
                 <RoleRow name="Super admin" detail="Platform engineering. Granted outside the database." />
@@ -396,7 +396,7 @@ function RoleRow({ name, detail }: { name: string; detail: string }) {
  *
  * Client-side rather than a GET /auth/signout route: a link that mutates
  * session state can be triggered cross-site, and the app has no signout
- * endpoint today — sign-out elsewhere goes through the same browser client.
+ * endpoint today - sign-out elsewhere goes through the same browser client.
  */
 function SignOutButton({ children }: { children: React.ReactNode }) {
   const [busy, setBusy] = useState(false);
@@ -407,7 +407,7 @@ function SignOutButton({ children }: { children: React.ReactNode }) {
       const { createClient } = await import("@/lib/supabase/client");
       await createClient().auth.signOut();
     } catch {
-      /* already signed out or unconfigured — the reload still lands correctly */
+      /* already signed out or unconfigured - the reload still lands correctly */
     }
     window.location.href = ADMIN_SIGNIN_PATH;
   };

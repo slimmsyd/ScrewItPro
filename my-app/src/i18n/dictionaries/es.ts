@@ -83,7 +83,7 @@ export const es: Dictionary = {
     v2TitleB: "y entregados listos.",
     v2Sub: "Recogemos tus muebles, los armamos profesionalmente en nuestro taller y te los entregamos totalmente ensamblados. Obtén una cotización al instante en 60 segundos.",
     addrPickupLabel: "Recoger en",
-    addrPickupPh: "Dirección de recogida",
+    addrPickupPh: "Dirección de recogida o nuestro hub",
     addrDeliverLabel: "Entregar en",
     addrDeliverPh: "Dirección de entrega",
     ctaWaitlist: "Unirme a la lista",
@@ -103,6 +103,8 @@ export const es: Dictionary = {
       "Fuera del área metropolitana de Houston por ahora - únete a la lista y te avisaremos cuando expandamos a tu zona.",
     placesResolveError:
       "No pudimos verificar ese lugar. Prueba otra sugerencia.",
+    hubOptionPrimary: "ScrewIt Pros Hub",
+    hubOptionSecondary: "Envío cajas al taller — entrada gratis",
   },
   search: {
     popular: "Servicios populares",
@@ -257,7 +259,7 @@ export const es: Dictionary = {
   area: {
     eyebrow: "Área de servicio",
     title: "Actualmente en el área metropolitana de Houston",
-    sub: "Atendemos a propietarios, inquilinos, séniors, profesionales y familias en el gran Houston.",
+    sub: "Atendemos a propietarios, inquilinos, séniors, profesionales y familias a unos {{radiusMiles}} millas de nuestro hub en Houston.",
     expanding: "Pronto en más ciudades",
     atlanta: "Atlanta",
     austin: "Austin",
@@ -265,11 +267,11 @@ export const es: Dictionary = {
     dallas: "Dallas",
   },
   map: {
-    hubTitle: "ScrewIt Pros - Houston Metro",
-    infoTitle: "Houston Metro",
+    hubTitle: "ScrewIt Pros - hub de Houston",
+    infoTitle: "Área del hub de Houston",
     infoBody:
-      "Área de servicio ScrewIt Pros: recogida, ensamblaje y entrega white glove.",
-    liveBadge: "Área activa · Houston Metro",
+      "A unos {{radiusMiles}} millas de nuestro hub: recogida, ensamblaje y entrega white glove.",
+    liveBadge: "Activa · unos {{radiusMiles}} mi del hub",
     missingTitle: "Mapa: cobertura Houston Metro",
     missingHint:
       "Agrega NEXT_PUBLIC_GOOGLE_MAPS_API_KEY en .env.local (habilita Maps JavaScript API) y reinicia npm run dev.",

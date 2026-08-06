@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   BadgeCheck,
   Home,
+  MapPin,
   Package,
   Sparkles,
   Truck,
@@ -73,6 +74,9 @@ export default function PriceStep() {
           deliveryLine:
             draft.deliveryAddress?.formattedAddress ??
             draft.deliveryAddress?.name,
+          deliveryLat: draft.deliveryAddress?.lat,
+          deliveryLng: draft.deliveryAddress?.lng,
+          deliveryZip: draft.deliveryAddress?.zip,
         }),
       });
       const json = (await res.json()) as {
@@ -157,6 +161,9 @@ export default function PriceStep() {
           deliveryLine:
             draft.deliveryAddress?.formattedAddress ??
             draft.deliveryAddress?.name,
+          deliveryLat: draft.deliveryAddress?.lat,
+          deliveryLng: draft.deliveryAddress?.lng,
+          deliveryZip: draft.deliveryAddress?.zip,
         }),
       });
       const draftJson = (await draftRes.json()) as {
@@ -240,6 +247,19 @@ export default function PriceStep() {
       sub: draft.deliveryAddress?.formattedAddress ?? "White-glove delivery",
       cents: totals.deliveryCents,
     },
+    ...(totals.travelCents > 0
+      ? [
+          {
+            icon: MapPin,
+            label: "Travel · out of area",
+            sub:
+              totals.travelMiles > 0
+                ? `~${Math.round(totals.travelMiles)} mi from hub · ${totals.travelLabel}`
+                : totals.travelLabel,
+            cents: totals.travelCents,
+          },
+        ]
+      : []),
   ];
 
   const payment = (

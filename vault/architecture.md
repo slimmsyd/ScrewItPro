@@ -17,7 +17,9 @@
 
 ## Product
 
-**ScrewIt Pros** is a hub-based furniture assembly + white-glove delivery business (Houston, **40 mi** service radius from downtown hub — locked 2026-07-30 / plan D1).
+**ScrewIt Pros** is a hub-based furniture assembly + white-glove delivery business (Houston, **40 mi** free-travel / service radius from downtown hub — locked 2026-07-30 / plan D1).
+
+**Travel pricing (Model 1):** “We travel up to X mi” = **free zone** (no travel fee). Outside radius is still bookable (**soft wall**) with a visible **out-of-area travel fee** (`ops_rules.farFee`). Distance **tiers** in Settings are reserved for a future graduated model — they do not charge the customer under Model 1.
 
 Flow: customer buys flat-pack → ships/sends to hub → staff receive / assemble / QC → white-glove delivery and in-home placement.
 
@@ -84,8 +86,12 @@ ScrewItPro/
 | `lib/payments.ts`, `lib/stripe.ts` | Checkout + Stripe client |
 | `lib/orders/*` | Order types, status helpers, booked snapshot, portal jobs (WIP) |
 | `lib/quote/*` | Quote draft context, pricing, product lookup, catalog |
+| `lib/quote/travel-pricing.ts` | **Model 1** pure travel rules: free ≤ radius; outside → `farFee` + bookable; ZIP refuse hard-block |
 | `lib/emails/*` | Templates, layout, dispatch, log |
 | `lib/admin/leads.ts` | Admin lead export data |
+| `lib/admin/settings.ts` | Admin settings read/save (`app_settings` deposit + hub + ops_rules); soft-geocode hub on save; `coverageFor` → Model 1 |
+| `lib/config/service-area.ts` | Hub + radius + `farFee` defaults, normalize, pure `isInServiceArea`, server `getServiceAreaConfig` |
+| `lib/config/service-area-client.ts` | Browser fetch + session cache of public service-area (includes `farFee`) |
 | `lib/member.ts` | Member/session helpers for UI |
 | `lib/site.ts` | Paths, assets, `SITE_MODE` (quote vs waitlist CTAs) |
 | `lib/seo/*`, `lib/deepseek.ts`, `lib/resend.ts`, `lib/crm.ts`, `lib/places.ts` | Integrations |
@@ -122,7 +128,8 @@ Browser
 | Orders | `/orders/[id]`, `/orders/[id]/track` | Confirmation + tracker UI |
 | Portal (customer) | `/customer/{jobs,account,notifications,referrals,orders/*}` | Shell under real URL prefix for middleware guards; old paths redirect |
 | Referral short link | `/r/[code]` | Sets `sip_ref` cookie → `/join?mode=signup`; opaque codes (`SIP…`) |
-| Admin | `/admin/leads` | Lead list + export API |
+| Admin | `/admin/signin` (public), `/admin/settings`, `/admin/leads` | Shell + progressive nav (`AdminAppShell`). Sign-in public leaf; rest `requireAdmin`. Port scoreboard: `docs/ADMIN-PORT.md`. Kit: full ops UI not yet ported (Orders/Board/etc.). |
+| Public config | `GET /api/public/service-area` | Safe hub subset (`address`, lat/lng, radius, **`farFee`**). Feeds marketing map + quote Places gate + Model 1 travel preview. Source: `app_settings.hub` + `ops_rules.farFee`; `BUSINESS.geo` / default farFee fallback. See `docs/WHERE-WE-WORK.md`. |
 | Legal | `/privacy`, `/terms` | Legal shells |
 | AEO | `/furniture-assembly-pickup-delivery-houston` | SEO/AEO landing |
 | Dev | `/dev/emails`, `/dev/demo-reset` | Local tooling — not product |
@@ -343,6 +350,9 @@ Health (no secrets): `GET /api/health` via `getEnvStatus()`.
 | 2026-07-30 | Refer & Earn Points: opaque codes, `/r/[code]`, claim on signup, points not dollars |
 | 2026-07-30 | **D-REFERRAL-POINTS:** ops admin edits referral point amounts in Admin UI (revisit when Admin ships) |
 | 2026-08-05 | **CI landed** (`.github/workflows/ci.yml`): test + typecheck blocking on PRs to `develop`/`main`; lint advisory until the 20-error backlog clears |
+| 2026-08-06 | Admin port Slice 0–1: `AdminAppShell` + progressive nav + Settings (persist deposit/hub only). Route groups `(app)` vs `(public)/signin`. Home → `/admin/settings`. |
+| 2026-08-06 | **Where we work:** `app_settings.hub` → `/api/public/service-area` → Places gate + HoustonMap. `BUSINESS.geo` is fallback only. Fixed map circle (was 55 km). |
+| 2026-08-06 | **Model 1 travel:** free inside hub radius; outside radius soft-wall + `ops.farFee` on quote Price / server draft. Deposit % includes travel (Stripe-ready). Tiers reserved, not on customer fee. |
 | (prior) | Google Auth unified onto Supabase OAuth; legacy `sip_session` cleared in middleware |
 | (prior) | Interim orders/payments for deposit Checkout scaffold |
 | (prior) | Customer portal Phase 0 shell (church vs state) |
