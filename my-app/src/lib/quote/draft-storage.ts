@@ -6,20 +6,22 @@ export const QUOTE_DRAFT_KEY = "screwitpro_quote_draft_v1";
 
 /**
  * Seed draft from marketing hero before navigating to /quote (no React context).
- * Prefills both stops as a customer pickup → delivery route (editable on Where).
- * User can still switch to "ship to hub" on the Where step.
+ * Default: customer pickup → delivery (editable on Where).
+ * When pickup is the ScrewIt Hub, seed ship-to-hub mode.
  */
 export function seedQuoteDraftFromHero(
   pickup: ResolvedPlace,
-  deliver: ResolvedPlace
+  deliver: ResolvedPlace,
+  options?: { shipToHub?: boolean }
 ): void {
   const existing = loadQuoteDraft();
+  const shipToHub = Boolean(options?.shipToHub);
   saveQuoteDraft({
     ...existing,
     pickupAddress: pickup,
     deliveryAddress: deliver,
-    shipToHub: false,
-    pickupMode: "pickup",
+    shipToHub,
+    pickupMode: shipToHub ? "ship" : "pickup",
   });
 }
 

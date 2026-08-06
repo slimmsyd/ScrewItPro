@@ -6,15 +6,37 @@ import {
   Bell,
   ChevronDown,
   CreditCard,
+  Inbox,
   LayoutDashboard,
   LogOut,
   MapPin,
+  Settings,
+  Shield,
   User,
 } from "lucide-react";
 import type { MemberUser } from "@/lib/member";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import {
+  accountMenuFor,
+  type AccountMenuIcon,
+  type AccountMenuLink,
+} from "@/lib/auth/account-menu";
 
-/** Initials for avatar chip — name words first, else email local-part. */
+const ICONS: Record<
+  AccountMenuIcon,
+  React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>
+> = {
+  LayoutDashboard,
+  User,
+  MapPin,
+  CreditCard,
+  Bell,
+  Settings,
+  Inbox,
+  Shield,
+};
+
+/** Initials for avatar chip - name words first, else email local-part. */
 export function memberInitials(user: MemberUser): string {
   const name = user.name?.trim();
   if (name) {
@@ -73,19 +95,9 @@ export function QuoteAccountMenuSkeleton() {
   );
 }
 
-type MenuLink = {
-  kind: "link";
-  href: string;
-  label: string;
-  icon: typeof User;
-  /** Optional count badge (e.g. active jobs) — omit when unknown */
-  badge?: string;
-};
-
 /**
- * Signed-in account chip + expanded dropdown (post-book handoff ProfileMenu).
- * Destinations are siloed pages; this menu only navigates / signs out.
- * Uses existing MemberUser + signOut — no parallel auth.
+ * Signed-in account chip + role-aware dropdown.
+ * Destinations come from accountMenuFor(role) - menu is navigation only, not authz.
  */
 export default function QuoteAccountMenu({
   user,
@@ -104,40 +116,8 @@ export default function QuoteAccountMenu({
   const initials = memberInitials(user);
   const displayName = user.name?.trim() || user.email.split("@")[0] || "Account";
   const hasPhoto = Boolean(user.picture?.trim());
-
-  const navItems: MenuLink[] = [
-    {
-      kind: "link",
-      href: "/customer/jobs",
-      label: "My Jobs",
-      icon: LayoutDashboard,
-      badge: jobsBadge,
-    },
-    {
-      kind: "link",
-      href: "/customer/account",
-      label: "Account",
-      icon: User,
-    },
-    {
-      kind: "link",
-      href: "/account#addresses",
-      label: "Addresses",
-      icon: MapPin,
-    },
-    {
-      kind: "link",
-      href: "/account#payment",
-      label: "Payment",
-      icon: CreditCard,
-    },
-    {
-      kind: "link",
-      href: "/account#notifications",
-      label: "Notifications",
-      icon: Bell,
-    },
-  ];
+  const role = user.role ?? "customer";
+  const menu = accountMenuFor(role, { isSuperAdmin: user.isSuperAdmin });
 
   useEffect(() => {
     if (!open) return;
@@ -168,7 +148,7 @@ export default function QuoteAccountMenu({
     >
       <button
         type="button"
-        aria-label={`Account menu for ${displayName}`}
+        aria-label={`Account menu for ${displayName}, ${menu.roleLabel}`}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
@@ -246,7 +226,7 @@ export default function QuoteAccountMenu({
             position: "absolute",
             top: "calc(100% + 10px)",
             right: 0,
-            width: 248,
+            width: 268,
             background: "#fff",
             border: "1px solid var(--border-default)",
             borderRadius: 12,
@@ -327,6 +307,28 @@ export default function QuoteAccountMenu({
               >
                 {user.email}
               </div>
+              <span
+                style={{
+                  display: "inline-block",
+                  marginTop: 5,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  color:
+                    role === "admin"
+                      ? "var(--blue-deep)"
+                      : role === "customer"
+                        ? "var(--ink-500)"
+                        : "var(--ink-700)",
+                  background:
+                    role === "admin" ? "var(--blue-50)" : "var(--gray-100)",
+                  borderRadius: 99,
+                  padding: "2px 8px",
+                }}
+              >
+                {menu.roleLabel}
+              </span>
             </div>
           </div>
 
@@ -338,12 +340,60 @@ export default function QuoteAccountMenu({
             }}
           />
 
-          {navItems.map((item) => (
-            <MenuRowLink
-              key={item.href + item.label}
-              item={item}
-              onNavigate={close}
-            />
+          {menu.sections.map((section, si) => (
+            <div key={section.title ?? `sec-${si}`}>
+              {section.title ? (
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "var(--ink-300)",
+                    padding: "8px 10px 4px",
+                  }}
+                >
+                  {section.title}
+                </div>
+              ) : null}
+              {section.items.map((item, ii) => {
+                if (item.kind === "note") {
+                  return (
+                    <p
+                      key={`note-${si}-${ii}`}
+                      style={{
+                        margin: "4px 10px 10px",
+                        fontSize: 12.5,
+                        lineHeight: 1.45,
+                        color: "var(--ink-500)",
+                        fontFamily: "var(--font-body)",
+                      }}
+                    >
+                      {item.text}
+                    </p>
+                  );
+                }
+                const badge =
+                  item.badgeKey === "jobs" && jobsBadge ? jobsBadge : undefined;
+                return (
+                  <MenuRowLink
+                    key={item.href + item.label}
+                    item={item}
+                    badge={badge}
+                    onNavigate={close}
+                  />
+                );
+              })}
+              {si < menu.sections.length - 1 ? (
+                <div
+                  style={{
+                    height: 1,
+                    background: "var(--gray-100)",
+                    margin: "6px 2px",
+                  }}
+                />
+              ) : null}
+            </div>
           ))}
 
           <div
@@ -398,12 +448,14 @@ const rowButtonStyle: CSSProperties = {
 
 function MenuRowLink({
   item,
+  badge,
   onNavigate,
 }: {
-  item: MenuLink;
+  item: AccountMenuLink;
+  badge?: string;
   onNavigate: () => void;
 }) {
-  const Icon = item.icon;
+  const Icon = ICONS[item.icon];
   return (
     <Link
       href={item.href}
@@ -431,7 +483,7 @@ function MenuRowLink({
     >
       <Icon size={17} color="var(--ink-500)" strokeWidth={2} />
       <span style={{ flex: 1 }}>{item.label}</span>
-      {item.badge ? (
+      {badge ? (
         <span
           style={{
             fontFamily: "var(--font-body)",
@@ -443,7 +495,7 @@ function MenuRowLink({
             padding: "1px 8px",
           }}
         >
-          {item.badge}
+          {badge}
         </span>
       ) : null}
     </Link>

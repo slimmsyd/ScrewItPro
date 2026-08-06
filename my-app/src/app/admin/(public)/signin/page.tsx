@@ -8,14 +8,14 @@ import { createClient } from "@/lib/supabase/server";
 import { ADMIN_HOME_PATH, safeReturnTo } from "@/lib/site";
 
 /**
- * /admin/signin — the admin door.
+ * /admin/signin - the admin door.
  *
  * Public by route-guard exception (PUBLIC_ADMIN_LEAVES): every other /admin
  * path bounces anonymous visitors to the customer join page, which would make
  * this page unreachable by the people it exists for.
  *
  * The access decision is made here, on the server, by requireAdmin(). The
- * component renders an already-resolved answer — it never computes access.
+ * component renders an already-resolved answer - it never computes access.
  */
 export const dynamic = "force-dynamic";
 
@@ -54,7 +54,7 @@ export default async function AdminSignInPage({
           ? "not_configured"
           : "denied";
 
-  // A refusal names the account it refused — otherwise the reader cannot tell
+  // A refusal names the account it refused - otherwise the reader cannot tell
   // which of their Google accounts the browser actually used.
   let email: string | null = null;
   if (state === "denied" || state === "invited") {
@@ -65,7 +65,7 @@ export default async function AdminSignInPage({
       } = await supabase.auth.getUser();
       email = user?.email ?? null;
     } catch {
-      /* unconfigured — the screen reads fine without it */
+      /* unconfigured - the screen reads fine without it */
     }
   }
 

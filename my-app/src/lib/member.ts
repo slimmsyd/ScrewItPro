@@ -16,9 +16,14 @@ export type MemberUser = {
   picture: string;
   provider: string;
   position: number | null;
-  /** From JWT app_metadata.sip_role (hook) or default customer. Not marketing status. */
+  /**
+   * Display/routing role from GET /api/auth/session (profiles + super-admin env).
+   * Not an authz claim — gates re-check server-side.
+   */
   role?: SipRole;
   status?: SipStatus;
+  /** True when email is on SUPER_ADMIN_EMAILS (display only). */
+  isSuperAdmin?: boolean;
 };
 
 export type PrimaryCtaAction = "join" | "share" | "quote" | "finish_join";

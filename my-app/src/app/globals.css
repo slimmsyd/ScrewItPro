@@ -1203,6 +1203,17 @@ header[id] {
  box-shadow: 0 0 0 3px rgba(29, 110, 254, 0.28);
 }
 
+/* Admin Settings steppers: hide native number spinners */
+.sip-admin-num::-webkit-outer-spin-button,
+.sip-admin-num::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.sip-admin-num {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 .sip-admin-spinner {
  animation: screwitSpin 0.8s linear infinite;
 }

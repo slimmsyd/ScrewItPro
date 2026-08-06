@@ -26,6 +26,7 @@ type SessionApiUser = {
   position?: number | null;
   role?: SipRole;
   status?: SipStatus;
+  isSuperAdmin?: boolean;
 };
 
 type MemberContextValue = {
@@ -52,6 +53,7 @@ function mapUser(raw: SessionApiUser | null | undefined): MemberUser | null {
         : null,
     role: raw.role ?? "customer",
     status: raw.status ?? "active",
+    isSuperAdmin: Boolean(raw.isSuperAdmin),
   };
 }
 

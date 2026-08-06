@@ -2,20 +2,25 @@
  * Houston Metro Places autocomplete helpers.
  * Client-only - uses Maps JS Places library via loadGoogleMaps.
  *
- * Prediction strategy: no `types` filter so results include street addresses
- * and establishments (IKEA, Target, apartments, etc.) for furniture pickup.
+ * Service area center + radius come from GET /api/public/service-area
+ * (Admin Settings hub). BUSINESS.geo is fallback only.
  */
 
 import { isGoogleMapsConfigured, loadGoogleMaps } from "@/lib/google";
 import { BUSINESS } from "@/lib/seo/business";
+import {
+  isInServiceArea,
+  type ServiceAreaConfig,
+} from "@/lib/config/service-area";
+import { fetchServiceAreaConfig } from "@/lib/config/service-area-client";
 
-/** Downtown Houston - bias + service-area center. Owned by @/lib/seo/business. */
+/** Fallback constants (sync). Prefer await getServiceArea() for live radius. */
 export const HOUSTON_CENTER = {
   lat: BUSINESS.geo.lat,
   lng: BUSINESS.geo.lng,
 } as const;
 
-/** Service radius from hub — see BUSINESS.geo (locked 40 mi). */
+/** @deprecated Prefer live config.radiusM - kept for any sync callers. */
 export const HOUSTON_METRO_RADIUS_M = BUSINESS.geo.radiusM;
 
 export type PlaceSuggestion = {
@@ -39,27 +44,33 @@ export type ResolvedPlace = {
 let sessionToken: google.maps.places.AutocompleteSessionToken | null = null;
 let placesReady: Promise<void> | null = null;
 
-function haversineM(
-  a: { lat: number; lng: number },
-  b: { lat: number; lng: number }
-): number {
-  const R = 6371000;
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const dLat = toRad(b.lat - a.lat);
-  const dLng = toRad(b.lng - a.lng);
-  const lat1 = toRad(a.lat);
-  const lat2 = toRad(b.lat);
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(h));
+/** Sync gate using BUSINESS defaults only. Prefer isInHoustonMetroAsync. */
+export function isInHoustonMetro(
+  lat: number,
+  lng: number,
+  state?: string
+): boolean {
+  return isInServiceArea(lat, lng, state, {
+    address: "Houston, TX",
+    lat: BUSINESS.geo.lat,
+    lng: BUSINESS.geo.lng,
+    radiusMiles: BUSINESS.geo.radiusMiles,
+    radiusM: BUSINESS.geo.radiusM,
+    farFee: 45,
+  });
 }
 
-export function isInHoustonMetro(lat: number, lng: number, state?: string): boolean {
-  if (state && state.toUpperCase() !== "TX") return false;
-  return (
-    haversineM(HOUSTON_CENTER, { lat, lng }) <= HOUSTON_METRO_RADIUS_M
-  );
+export async function isInHoustonMetroAsync(
+  lat: number,
+  lng: number,
+  state?: string
+): Promise<boolean> {
+  const config = await fetchServiceAreaConfig();
+  return isInServiceArea(lat, lng, state, config);
+}
+
+export async function getServiceArea(): Promise<ServiceAreaConfig> {
+  return fetchServiceAreaConfig();
 }
 
 function component(
@@ -79,7 +90,6 @@ async function ensurePlaces(): Promise<void> {
 
   placesReady = (async () => {
     const g = await loadGoogleMaps(["places"]);
-    // Ensure Places library is actually available (script may have loaded without it first)
     if (!g.maps.places) {
       const mapsWithImport = g.maps as typeof google.maps & {
         importLibrary?: (name: string) => Promise<unknown>;
@@ -108,8 +118,7 @@ function currentSessionToken(): google.maps.places.AutocompleteSessionToken {
 }
 
 /**
- * Debounced caller should invoke this. Returns up to 6 Houston-biased suggestions.
- * Uses establishment-friendly predictions (no type filter).
+ * Debounced caller should invoke this. Returns up to 6 hub-biased suggestions.
  */
 export async function fetchPlacePredictions(
   input: string
@@ -118,10 +127,11 @@ export async function fetchPlacePredictions(
   if (q.length < 2) return [];
 
   await ensurePlaces();
+  const config = await fetchServiceAreaConfig();
 
   const service = new google.maps.places.AutocompleteService();
   const token = currentSessionToken();
-  const center = new google.maps.LatLng(HOUSTON_CENTER.lat, HOUSTON_CENTER.lng);
+  const center = new google.maps.LatLng(config.lat, config.lng);
 
   const predictions = await new Promise<
     google.maps.places.AutocompletePrediction[]
@@ -129,10 +139,9 @@ export async function fetchPlacePredictions(
     service.getPlacePredictions(
       {
         input: q,
-        // No `types` → addresses + establishments (stores, apartments, etc.)
         componentRestrictions: { country: "us" },
         location: center,
-        radius: HOUSTON_METRO_RADIUS_M,
+        radius: config.radiusM,
         sessionToken: token,
       },
       (results, status) => {
@@ -159,20 +168,21 @@ export async function fetchPlacePredictions(
     primary: p.structured_formatting?.main_text || p.description,
     secondary:
       p.structured_formatting?.secondary_text ||
-      p.description.replace(p.structured_formatting?.main_text ?? "", "").trim() ||
+      p.description
+        .replace(p.structured_formatting?.main_text ?? "", "")
+        .trim() ||
       "",
   }));
 }
 
 /**
- * Resolve a place_id to lat/lng + service-area flag.
- * Ends the autocomplete session (session token consumed).
+ * Resolve a place_id to lat/lng + service-area flag using live hub config.
  */
 export async function resolvePlace(placeId: string): Promise<ResolvedPlace> {
   await ensurePlaces();
+  const config = await fetchServiceAreaConfig();
 
   const token = currentSessionToken();
-  // PlacesService needs a DOM node attribution anchor
   const attr = document.createElement("div");
   const service = new google.maps.places.PlacesService(attr);
 
@@ -191,7 +201,6 @@ export async function resolvePlace(placeId: string): Promise<ResolvedPlace> {
           sessionToken: token,
         },
         (result, status) => {
-          // Session ends after details - mint a new token for the next typeahead
           sessionToken = null;
           if (
             status === google.maps.places.PlacesServiceStatus.OK &&
@@ -212,7 +221,11 @@ export async function resolvePlace(placeId: string): Promise<ResolvedPlace> {
     throw new Error("Place has no coordinates");
   }
 
-  const state = component(place.address_components, "administrative_area_level_1", true);
+  const state = component(
+    place.address_components,
+    "administrative_area_level_1",
+    true
+  );
   const city =
     component(place.address_components, "locality") ||
     component(place.address_components, "sublocality") ||
@@ -228,6 +241,6 @@ export async function resolvePlace(placeId: string): Promise<ResolvedPlace> {
     city,
     state,
     zip,
-    inServiceArea: isInHoustonMetro(lat, lng, state),
+    inServiceArea: isInServiceArea(lat, lng, state, config),
   };
 }

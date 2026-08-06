@@ -44,9 +44,11 @@ export const BUSINESS = {
   },
 
   /**
-   * Downtown Houston — service-area center.
-   * Locked radius: 40 miles (decision D1 / vault, 2026-07-30).
-   * radiusM is the authoritative gate for isInHoustonMetro().
+   * Downtown Houston hub fallback (service-area center).
+   * Default radius: 40 miles (product default D1 / vault, 2026-07-30).
+   * Live ops may override via app_settings.hub (Admin Settings).
+   * Runtime gate: lib/config/service-area + /api/public/service-area.
+   * These constants are fallback only when DB/config is unavailable.
    */
   geo: {
     lat: 29.7604,

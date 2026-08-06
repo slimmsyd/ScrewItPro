@@ -9,6 +9,7 @@ import type { User } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   priceDraftServerSide,
+  type DeliveryGeoInput,
   type DraftLineInput,
 } from "@/lib/quote/server-pricing";
 
@@ -17,6 +18,7 @@ export type SoftGateBookingInput = {
   items: DraftLineInput[];
   pickupMode?: "pickup" | "ship" | null;
   deliveryLine?: string;
+  delivery?: DeliveryGeoInput | null;
 };
 
 export type SoftGateBookingResult = {
@@ -41,9 +43,10 @@ function fulfillmentModeForLine(
 export async function createSoftGateBooking(
   input: SoftGateBookingInput
 ): Promise<SoftGateBookingResult> {
-  const priced = priceDraftServerSide({
+  const priced = await priceDraftServerSide({
     items: input.items,
     pickupMode: input.pickupMode ?? null,
+    delivery: input.delivery ?? null,
   });
 
   if (priced.subtotalCents <= 0 || input.items.length === 0) {
@@ -76,6 +79,9 @@ export async function createSoftGateBooking(
         deliveryLine: input.deliveryLine ?? null,
         lineCount: priced.lineCount,
         assemblyCents: priced.assemblyCents,
+        travelCents: priced.travelCents,
+        beyondRadius: priced.beyondRadius,
+        travelMiles: priced.travelMiles,
       },
     })
     .select("id, order_number")

@@ -36,6 +36,12 @@ export default function QuoteAside({
     label: "Delivery · assembled & placed",
     cents: totals.deliveryCents,
   });
+  if (totals.travelCents > 0) {
+    rows.push({
+      label: "Travel · out of area",
+      cents: totals.travelCents,
+    });
+  }
 
   return (
     <aside

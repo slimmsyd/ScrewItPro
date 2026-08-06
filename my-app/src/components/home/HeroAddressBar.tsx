@@ -10,7 +10,13 @@ import {
   type KeyboardEvent,
 } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowUp, ArrowDown, MapPin, type LucideIcon } from "lucide-react";
+import {
+  ArrowUp,
+  ArrowDown,
+  MapPin,
+  Warehouse,
+  type LucideIcon,
+} from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { isGoogleMapsConfigured } from "@/lib/google";
@@ -21,9 +27,19 @@ import {
   type ResolvedPlace,
 } from "@/lib/places";
 import { seedQuoteDraftFromHero } from "@/lib/quote/draft-storage";
+import {
+  hubPlaceFromServiceArea,
+  SCREWIT_HUB_PLACE,
+  SCREWIT_HUB_PLACE_ID,
+} from "@/lib/quote/types";
+import { fetchServiceAreaConfig } from "@/lib/config/service-area-client";
+import type { ServiceAreaConfig } from "@/lib/config/service-area";
 import { QUOTE_PATH } from "@/lib/site";
 
 type FieldKey = "pickup" | "deliver";
+
+/** Synthetic listbox row for ship-to-hub on marketing pickup. */
+const HUB_LIST_ID = SCREWIT_HUB_PLACE_ID;
 
 function HighlightMatch({ text, query }: { text: string; query: string }) {
   const q = query.trim();
@@ -42,9 +58,9 @@ function HighlightMatch({ text, query }: { text: string; query: string }) {
 }
 
 /**
- * Pickup/delivery bar with Google Places autocomplete (Houston metro only).
- * Establishment-friendly predictions; out-of-area selection blocks submit.
- * Waitlist copy shows after every selection (product is waitlist-first).
+ * Pickup/delivery bar with Google Places autocomplete (Houston metro).
+ * Pickup listbox pins ScrewIt Hub so customers can choose ship-to-hub
+ * without typing a street address.
  */
 export default function HeroAddressBar({
   cta,
@@ -63,6 +79,7 @@ export default function HeroAddressBar({
   const [deliverText, setDeliverText] = useState("");
   const [pickupPlace, setPickupPlace] = useState<ResolvedPlace | null>(null);
   const [deliverPlace, setDeliverPlace] = useState<ResolvedPlace | null>(null);
+  const [hubConfig, setHubConfig] = useState<ServiceAreaConfig | null>(null);
 
   const [activeField, setActiveField] = useState<FieldKey | null>(null);
   const [highlight, setHighlight] = useState(0);
@@ -76,15 +93,37 @@ export default function HeroAddressBar({
   const rootRef = useRef<HTMLFormElement>(null);
   const reqId = useRef(0);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetchServiceAreaConfig().then((c) => {
+      if (!cancelled) setHubConfig(c);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const hubPlace = hubConfig
+    ? hubPlaceFromServiceArea(hubConfig)
+    : SCREWIT_HUB_PLACE;
+
   const activeQuery =
     activeField === "pickup"
       ? pickupText
       : activeField === "deliver"
         ? deliverText
         : "";
-  const open = Boolean(activeField && activeQuery.trim().length >= 2);
+  /** Pickup opens immediately so Hub is clickable; deliver needs 2+ chars. */
+  const open = Boolean(
+    activeField === "pickup" ||
+      (activeField === "deliver" && activeQuery.trim().length >= 2)
+  );
+  const showHubOption = activeField === "pickup";
+  /** Combined listbox length for keyboard nav (hub + place rows). */
+  const listLength =
+    (showHubOption ? 1 : 0) + (loading ? 0 : suggestions.length);
 
-  // Debounced predictions
+  // Debounced predictions (skip when query short — hub still available on pickup)
   useEffect(() => {
     if (!activeField) {
       setSuggestions([]);
@@ -104,7 +143,10 @@ export default function HeroAddressBar({
         if (!mapsOn) {
           if (reqId.current === id) {
             setSuggestions([]);
-            setFormError(t("hero.placesResolveError"));
+            // Pickup can still choose Hub without Maps.
+            if (activeField !== "pickup") {
+              setFormError(t("hero.placesResolveError"));
+            }
           }
           return;
         }
@@ -117,7 +159,9 @@ export default function HeroAddressBar({
         } catch {
           if (reqId.current === id) {
             setSuggestions([]);
-            setFormError(t("hero.placesResolveError"));
+            if (activeField !== "pickup") {
+              setFormError(t("hero.placesResolveError"));
+            }
           }
         }
       } finally {
@@ -143,6 +187,15 @@ export default function HeroAddressBar({
     setHighlight(0);
   }, [suggestions, activeField]);
 
+  const selectHub = useCallback(() => {
+    setPickupText(hubPlace.formattedAddress);
+    setPickupPlace(hubPlace);
+    setFormError(null);
+    setWaitlistNote(t("hero.placesWaitlistInArea"));
+    setActiveField(null);
+    setSuggestions([]);
+  }, [hubPlace, t]);
+
   const selectSuggestion = useCallback(
     async (s: PlaceSuggestion) => {
       if (!activeField) return;
@@ -164,12 +217,18 @@ export default function HeroAddressBar({
           setDeliverPlace(resolved);
         }
 
-        // Waitlist message on every selection (product goal)
-        if (resolved.inServiceArea) {
-          setWaitlistNote(t("hero.placesWaitlistInArea"));
-        } else {
-          setWaitlistNote(t("hero.placesWaitlistOutOfArea"));
+        // Model 1 soft wall: outside radius still bookable (travel fee on quote).
+        // Non-TX still fails closed via resolvePlace / isInServiceArea.
+        if (resolved.state && resolved.state.toUpperCase() !== "TX") {
           setFormError(t("hero.placesOutOfAreaBlock"));
+          setWaitlistNote(t("hero.placesWaitlistOutOfArea"));
+        } else if (resolved.inServiceArea) {
+          setWaitlistNote(t("hero.placesWaitlistInArea"));
+          setFormError(null);
+        } else {
+          // Outside free zone — allow continue; quote shows travel fee.
+          setWaitlistNote(t("hero.placesWaitlistOutOfArea"));
+          setFormError(null);
         }
         setActiveField(null);
         setSuggestions([]);
@@ -195,10 +254,11 @@ export default function HeroAddressBar({
     setWaitlistNote(null);
   };
 
+  const isTxBookable = (p: typeof pickupPlace) =>
+    Boolean(p && (!p.state || p.state.toUpperCase() === "TX"));
+
   const canSubmit =
-    pickupPlace?.inServiceArea === true &&
-    deliverPlace?.inServiceArea === true &&
-    !resolving;
+    isTxBookable(pickupPlace) && isTxBookable(deliverPlace) && !resolving;
 
   const trySubmit = () => {
     if (resolving) return;
@@ -207,33 +267,37 @@ export default function HeroAddressBar({
       setFormError(t("hero.placesSelectBoth"));
       return;
     }
-    if (!pickupPlace.inServiceArea || !deliverPlace.inServiceArea) {
+    if (!isTxBookable(pickupPlace) || !isTxBookable(deliverPlace)) {
       setFormError(t("hero.placesOutOfAreaBlock"));
       setWaitlistNote(t("hero.placesWaitlistOutOfArea"));
       return;
     }
     setFormError(null);
     // Get-a-Price journey: seed draft and enter Where step (price before bureaucracy).
-    seedQuoteDraftFromHero(pickupPlace, deliverPlace);
+    // Hub pickup → ship-to-hub mode; outside radius OK (Model 1 travel on Price).
+    const shipToHub = pickupPlace.placeId === SCREWIT_HUB_PLACE_ID;
+    seedQuoteDraftFromHero(pickupPlace, deliverPlace, { shipToHub });
     router.push(QUOTE_PATH);
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (!open) return;
+    const len = Math.max(listLength, 1);
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      if (suggestions.length)
-        setHighlight((h) => (h + 1) % suggestions.length);
+      setHighlight((h) => (h + 1) % len);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      if (suggestions.length)
-        setHighlight(
-          (h) => (h - 1 + suggestions.length) % suggestions.length
-        );
+      setHighlight((h) => (h - 1 + len) % len);
     } else if (e.key === "Enter") {
-      if (suggestions[highlight]) {
-        e.preventDefault();
-        void selectSuggestion(suggestions[highlight]);
+      e.preventDefault();
+      if (showHubOption && highlight === 0) {
+        selectHub();
+        return;
+      }
+      const placeIndex = showHubOption ? highlight - 1 : highlight;
+      if (suggestions[placeIndex]) {
+        void selectSuggestion(suggestions[placeIndex]);
       }
     } else if (e.key === "Escape") {
       setActiveField(null);
@@ -291,8 +355,14 @@ export default function HeroAddressBar({
             aria-autocomplete="list"
             aria-invalid={ooa || undefined}
             aria-activedescendant={
-              open && activeField === key && suggestions[highlight]
-                ? `${listId}-opt-${suggestions[highlight].placeId}`
+              open && activeField === key
+                ? key === "pickup" && highlight === 0
+                  ? `${listId}-opt-${HUB_LIST_ID}`
+                  : (() => {
+                      const idx = key === "pickup" ? highlight - 1 : highlight;
+                      const s = suggestions[idx];
+                      return s ? `${listId}-opt-${s.placeId}` : undefined;
+                    })()
                 : undefined
             }
             onChange={(e) => onFieldChange(key, e.target.value)}
@@ -414,6 +484,79 @@ export default function HeroAddressBar({
             aria-label={t("hero.placesListLabel")}
             style={dropdownStyle}
           >
+            {showHubOption && (
+              <li
+                key={HUB_LIST_ID}
+                id={`${listId}-opt-${HUB_LIST_ID}`}
+                role="option"
+                aria-selected={highlight === 0}
+                onMouseEnter={() => setHighlight(0)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  selectHub();
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 12,
+                  padding: "12px 16px",
+                  cursor: "pointer",
+                  background:
+                    highlight === 0 ? "var(--blue-50)" : "transparent",
+                  transition: "background 150ms ease",
+                  borderBottom:
+                    suggestions.length > 0 || loading
+                      ? "1px solid var(--gray-100)"
+                      : "none",
+                }}
+              >
+                <Warehouse
+                  size={20}
+                  strokeWidth={1.75}
+                  color="var(--blue-electric)"
+                  style={{ flexShrink: 0, marginTop: 2 }}
+                  aria-hidden
+                />
+                <span style={{ minWidth: 0 }}>
+                  <span
+                    style={{
+                      display: "block",
+                      fontFamily: "var(--font-body)",
+                      fontSize: 15,
+                      fontWeight: 700,
+                      color: "var(--blue-deep)",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {t("hero.hubOptionPrimary")}
+                  </span>
+                  <span
+                    style={{
+                      display: "block",
+                      fontFamily: "var(--font-body)",
+                      fontSize: 13,
+                      color: "var(--ink-500)",
+                      marginTop: 2,
+                      lineHeight: 1.35,
+                    }}
+                  >
+                    {hubPlace.formattedAddress}
+                  </span>
+                  <span
+                    style={{
+                      display: "block",
+                      fontFamily: "var(--font-body)",
+                      fontSize: 12,
+                      color: "var(--blue-steel)",
+                      marginTop: 2,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {t("hero.hubOptionSecondary")}
+                  </span>
+                </span>
+              </li>
+            )}
             {loading ? (
               <li
                 style={{
@@ -425,7 +568,7 @@ export default function HeroAddressBar({
               >
                 {t("hero.placesSearching")}
               </li>
-            ) : suggestions.length === 0 ? (
+            ) : suggestions.length === 0 && activeQuery.trim().length >= 2 ? (
               <li
                 style={{
                   padding: "14px 18px",
@@ -438,14 +581,15 @@ export default function HeroAddressBar({
               </li>
             ) : (
               suggestions.map((place, i) => {
-                const active = i === highlight;
+                const rowIndex = showHubOption ? i + 1 : i;
+                const active = rowIndex === highlight;
                 return (
                   <li
                     key={place.placeId}
                     id={`${listId}-opt-${place.placeId}`}
                     role="option"
                     aria-selected={active}
-                    onMouseEnter={() => setHighlight(i)}
+                    onMouseEnter={() => setHighlight(rowIndex)}
                     onMouseDown={(e) => {
                       e.preventDefault();
                       void selectSuggestion(place);

@@ -108,6 +108,18 @@ the client-side-role-claim pattern forbidden below.
 
 **As-built gap:** middleware does **not** yet enforce role-based route prefixes (`/admin`, `/tech`, `/driver`). Do not assume URL privacy. When adding admin tools, require server-side role checks immediately (see Planned below).
 
+### Session identity for chrome (2026-08-06)
+
+`GET /api/auth/session` resolves **display** role via `resolveSessionIdentity()`:
+
+1. Email on `SUPER_ADMIN_EMAILS` → `role: admin`, `isSuperAdmin: true`
+2. Else `profiles.role` + `profiles.status` (user-scoped client)
+3. Else JWT `app_metadata.sip_role` / metadata fallback → default customer
+
+Used by `MemberProvider` + **role-aware account menu** (`accountMenuFor` / `QuoteAccountMenu`).
+
+**This is not authz.** Opening “Go to Admin” does not grant admin; `/admin/*` and admin APIs still use `requireAdmin()`. Never trust `user.role` from the client alone for privileged actions.
+
 ---
 
 ## Data-handling rules
@@ -165,13 +177,15 @@ There is **no org_id multi-tenancy** yet. Do not invent cross-customer reads “
 | `POST /api/auth/signup` | Account creation; no secret leak |
 | `GET /api/auth/session` | Session read only |
 | `POST /api/inquiries` | Public write; service role |
-| `POST /api/quote/draft` | **Auth required**; server-prices items; inserts `pending_payment` order |
+| `POST /api/quote/draft` | **Auth required.** Server-prices items + Model 1 travel from `deliveryLat/Lng/Zip` + hub/ops; inserts `pending_payment`. Never trust client totals. Stripe uses order row deposit. |
 | `POST /api/payments/checkout` | **Auth required**; body `{ orderId }` only; ownership + status checks; Stripe secret |
 | `POST /api/payments/webhook` | Must verify signature |
 | `GET /api/admin/leads/export` | **requireAdmin()** — `profiles.role = admin` (no URL token) |
-| `/admin/leads` | Same requireAdmin; bootstrap first admin via SQL |
+| `GET/PUT /api/admin/settings` | **requireAdmin()**; service-role upsert of `app_settings` keys `deposit_percent`, `hub`, `ops_rules`. Zod-validated full body on PUT. No secrets. |
+| `/admin/leads`, `/admin/settings` | `(app)` layout `requireAdmin()` + shell; bootstrap first admin via SQL |
 | `/admin/signin` | **Public by design** (only public `/admin` leaf). Renders a server-resolved state; makes no access decision |
 | `GET /api/health` | Config booleans only — no secrets |
+| `GET /api/public/service-area` | **Public read.** Hub address + lat/lng + radius + **`farFee`** (dollars, for quote travel preview). No secrets, no auth. Fail closed to defaults if DB unavailable. **Not** a pricing authority — draft/checkout re-price server-side. |
 | `POST /api/quote/lookup-product` | Server-side fetch; untrusted HTML |
 
 ---
@@ -193,11 +207,15 @@ There is **no org_id multi-tenancy** yet. Do not invent cross-customer reads “
 
 ---
 
-## Service area
+## Service area + travel fee (Model 1)
 
-- Authoritative center + radius: `lib/seo/business.ts` → `BUSINESS.geo` (**40 miles** / `radiusM: 64_374`).
-- Gate: `isInHoustonMetro()` in `lib/places.ts` after Places `resolvePlace`.
-- Address UI (`AddressField`, `HeroAddressBar`) must fail closed if Maps is missing or predictions fail — no mock autocomplete.
+- **Free zone center + radius:** live from `app_settings.hub` via `GET /api/public/service-area`; fallback `BUSINESS.geo` (**40 miles** / `radiusM: 64_374`).
+- **`inServiceArea`:** still means *inside free zone* (haversine ≤ radius). Outside radius is **bookable** (soft wall) with travel fee — not a hard refuse for TX addresses.
+- **Out-of-area fee:** `ops_rules.farFee` (public as `farFee` on service-area for UI preview only).
+- **Authority:** `evaluateTravelPricing` + `priceDraftServerSide` recompute fee from delivery geo + hub/ops. **Never trust client `travelCents` / total for Stripe.**
+- **Deposit base:** `subtotal = assembly + pickup + delivery + travel`; 30% deposit includes travel.
+- **Hard refuse:** non-TX; ZIP `mode: refuse` exceptions (when wired on book). Not “miles > radius.”
+- Address UI must fail closed if Maps is missing — no mock autocomplete with invented `inServiceArea: true`.
 
 ---
 
@@ -259,6 +277,9 @@ Record funky authz/authn bugs here so we do not repeat them.
 | 2026-07-30 | Referral points: client cannot set codes/points; claim via service-role RPC only | `sip_ref` httpOnly; pin trigger includes `referral_code`/`referred_by` |
 | 2026-08-05 | Admin sign-in UI kit shipped a client-side `ROSTER` + `localStorage` session | Kept the visuals, replaced the mechanism: Supabase OAuth + server `requireAdmin()`. Client renders a resolved answer only |
 | 2026-08-05 | `/admin/signin` would have been unreachable — `/admin/*` bounces anon users to `/join` | `PUBLIC_ADMIN_LEAVES` exception + test asserting the rest of `/admin` stays gated and no prefix leak |
+| 2026-08-06 | Admin Settings port needs write on `app_settings` (SELECT-only RLS for authenticated) | `GET/PATCH /api/admin/settings` via `requireAdmin` + service-role upsert; deposit + hub only |
+| 2026-08-06 | Account dropdown always looked customer; super-admin never surfaced | Session identity from profiles + SUPER_ADMIN_EMAILS; role-aware `accountMenuFor` — still not authz |
+| 2026-08-06 | Service radius only in code; map used wrong 55 km circle | Public service-area API from `app_settings.hub`; Places + map consume it; BUSINESS.geo fallback |
 
 ---
 

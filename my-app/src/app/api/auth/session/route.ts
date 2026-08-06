@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getWaitlistPosition } from "@/lib/waitlist";
-import {
-  roleFromAuthUser,
-  statusFromAuthUser,
-} from "@/lib/auth/roles";
+import { resolveSessionIdentity } from "@/lib/auth/session-identity";
 
 /**
  * GET /api/auth/session
- * Returns the current Supabase Auth user (if any) for the join success UI.
+ * Returns the current Supabase Auth user (if any) for chrome + join UI.
  *
- * Reads the real session rather than parsing the old unsigned sip_session
- * cookie, so this is now a trustworthy answer to "who is signed in".
- * role/status come from app_metadata (Custom Access Token Hook when live).
+ * Reads the real session (not the old unsigned sip_session cookie).
+ * role/status: profiles first, SUPER_ADMIN_EMAILS → admin for display,
+ * then JWT metadata. Display only — never use this response as authz.
  */
 export async function GET() {
   let supabase;
@@ -42,6 +39,8 @@ export async function GET() {
     position = null;
   }
 
+  const identity = await resolveSessionIdentity(user);
+
   return NextResponse.json({
     user: {
       email: user.email,
@@ -55,8 +54,9 @@ export async function GET() {
         "",
       provider: (user.app_metadata?.provider as string | undefined) ?? "email",
       position,
-      role: roleFromAuthUser(user),
-      status: statusFromAuthUser(user),
+      role: identity.role,
+      status: identity.status,
+      isSuperAdmin: identity.isSuperAdmin,
     },
   });
 }

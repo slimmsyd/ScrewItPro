@@ -23,6 +23,10 @@ const bodySchema = z.object({
   items: z.array(lineSchema).min(1).max(50),
   pickupMode: z.enum(["pickup", "ship"]).nullable().optional(),
   deliveryLine: z.string().max(400).optional(),
+  /** Delivery geo for server-side Model 1 travel fee (anti-spoof). */
+  deliveryLat: z.number().min(-90).max(90).optional(),
+  deliveryLng: z.number().min(-180).max(180).optional(),
+  deliveryZip: z.string().max(12).optional(),
 });
 
 export async function POST(request: Request) {
@@ -59,9 +63,15 @@ export async function POST(request: Request) {
 
   try {
     const input = bodySchema.parse(raw);
-    const priced = priceDraftServerSide({
+    // Server re-prices travel from delivery geo — never trust client cents.
+    const priced = await priceDraftServerSide({
       items: input.items,
       pickupMode: input.pickupMode ?? null,
+      delivery: {
+        lat: input.deliveryLat,
+        lng: input.deliveryLng,
+        zip: input.deliveryZip,
+      },
     });
 
     if (priced.subtotalCents <= 0) {
@@ -86,6 +96,9 @@ export async function POST(request: Request) {
           deliveryLine: input.deliveryLine ?? null,
           lineCount: priced.lineCount,
           assemblyCents: priced.assemblyCents,
+          travelCents: priced.travelCents,
+          beyondRadius: priced.beyondRadius,
+          travelMiles: priced.travelMiles,
         },
       })
       .select("id")

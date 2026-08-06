@@ -46,6 +46,17 @@ export type QuoteTotals = {
   assemblyCents: number;
   pickupCents: number;
   deliveryCents: number;
+  /**
+   * Out-of-area travel only (Model 1). $0 inside hub radius.
+   * Included in subtotal before deposit % (Stripe deposit base).
+   */
+  travelCents: number;
+  /** Human label for breakdown when travelCents > 0. */
+  travelLabel: string;
+  /** True when delivery is outside hub free zone. */
+  beyondRadius: boolean;
+  /** Straight-line miles from hub to delivery (0 if unknown). */
+  travelMiles: number;
   subtotalCents: number;
   depositCents: number;
   balanceCents: number;
@@ -62,9 +73,15 @@ export const EMPTY_DRAFT: QuoteDraft = {
   items: [],
 };
 
-/** Default hub placeholder when customer ships boxes to ScrewIt. */
+/**
+ * Stable placeId for "ship to hub" mode (not a Google place id).
+ * Display address comes from Admin Settings via service-area config at runtime.
+ */
+export const SCREWIT_HUB_PLACE_ID = "screwit-hub-houston";
+
+/** Fallback hub place when public config is unavailable. */
 export const SCREWIT_HUB_PLACE: ResolvedPlace = {
-  placeId: "screwit-hub-houston",
+  placeId: SCREWIT_HUB_PLACE_ID,
   name: "ScrewIt Pros Hub",
   formattedAddress: "ScrewIt Pros Hub · Houston Metro",
   lat: 29.7604,
@@ -73,3 +90,22 @@ export const SCREWIT_HUB_PLACE: ResolvedPlace = {
   state: "TX",
   inServiceArea: true,
 };
+
+/** Build the ship-to-hub place from live Admin hub config. */
+export function hubPlaceFromServiceArea(area: {
+  address: string;
+  lat: number;
+  lng: number;
+}): ResolvedPlace {
+  const address = area.address.trim() || SCREWIT_HUB_PLACE.formattedAddress;
+  return {
+    placeId: SCREWIT_HUB_PLACE_ID,
+    name: "ScrewIt Pros Hub",
+    formattedAddress: address,
+    lat: area.lat,
+    lng: area.lng,
+    city: "Houston",
+    state: "TX",
+    inServiceArea: true,
+  };
+}

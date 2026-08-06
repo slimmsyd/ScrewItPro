@@ -4,9 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { MapPin } from "lucide-react";
 import { isGoogleMapsConfigured, loadGoogleMaps } from "@/lib/google";
 import { useLocale } from "@/components/providers/LocaleProvider";
-
-const HOUSTON = { lat: 29.7604, lng: -95.3698 };
-const COVERAGE_RADIUS_M = 55_000;
+import { defaultsFromBusiness } from "@/lib/config/service-area";
+import { fetchServiceAreaConfig } from "@/lib/config/service-area-client";
 
 const MAP_STYLES: google.maps.MapTypeStyle[] = [
   { elementType: "geometry", stylers: [{ color: "#f4f6fb" }] },
@@ -75,6 +74,7 @@ export default function HoustonMap({
     "loading" | "ready" | "error" | "missing"
   >(() => (isGoogleMapsConfigured() ? "loading" : "missing"));
   const [errorMsg, setErrorMsg] = useState("");
+  const [liveMiles, setLiveMiles] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isGoogleMapsConfigured()) {
@@ -89,12 +89,19 @@ export default function HoustonMap({
 
     (async () => {
       try {
-        const g = await loadGoogleMaps(["maps"]);
+        const [g, area] = await Promise.all([
+          loadGoogleMaps(["maps"]),
+          fetchServiceAreaConfig(),
+        ]);
         if (cancelled || !hostRef.current) return;
 
+        const center = { lat: area.lat, lng: area.lng };
+        // Fit roughly: 1 degree lat ~ 69 mi; zoom 9 is fine for ~40 mi
+        const zoom = area.radiusMiles <= 15 ? 10 : area.radiusMiles <= 30 ? 9 : 8;
+
         const map = new g.maps.Map(hostRef.current, {
-          center: HOUSTON,
-          zoom: 9,
+          center,
+          zoom,
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: true,
@@ -106,14 +113,14 @@ export default function HoustonMap({
 
         new g.maps.Marker({
           map,
-          position: HOUSTON,
+          position: center,
           title: t("map.hubTitle"),
         });
 
         new g.maps.Circle({
           map,
-          center: HOUSTON,
-          radius: COVERAGE_RADIUS_M,
+          center,
+          radius: area.radiusM,
           fillColor: "#1D6EFE",
           fillOpacity: 0.14,
           strokeColor: "#04209B",
@@ -122,21 +129,28 @@ export default function HoustonMap({
           clickable: false,
         });
 
+        const infoBody = t("map.infoBody").replace(
+          "{{radiusMiles}}",
+          String(area.radiusMiles)
+        );
         const info = new g.maps.InfoWindow({
           content: `
-            <div style="font-family:system-ui,sans-serif;padding:4px 2px;max-width:200px">
+            <div style="font-family:system-ui,sans-serif;padding:4px 2px;max-width:220px">
               <strong style="color:#04209B">${t("map.infoTitle")}</strong>
               <div style="font-size:12px;color:#545B7A;margin-top:4px">
-                ${t("map.infoBody")}
+                ${infoBody}
               </div>
             </div>
           `,
-          position: HOUSTON,
+          position: center,
         });
         info.open({ map });
 
         mapRef.current = map;
-        setStatus("ready");
+        if (!cancelled) {
+          setLiveMiles(area.radiusMiles);
+          setStatus("ready");
+        }
       } catch (e) {
         if (cancelled) return;
         console.error("[HoustonMap]", e);
@@ -151,6 +165,8 @@ export default function HoustonMap({
       cancelled = true;
     };
   }, [t, locale]);
+
+  const badgeMiles = liveMiles ?? defaultsFromBusiness().radiusMiles;
 
   if (status === "missing") {
     return (
@@ -176,7 +192,7 @@ export default function HoustonMap({
         <div style={{ fontWeight: 600, color: "var(--ink-700)" }}>
           {t("map.missingTitle")}
         </div>
-        <div style={{ maxWidth: 360, fontSize: 13, color: "var(--ink-300)" }}>
+        <div style={{ maxWidth: 360, fontSize: 13, color: "var(--ink-500)" }}>
           {t("map.missingHint")}
         </div>
       </div>
@@ -187,7 +203,6 @@ export default function HoustonMap({
     <div
       style={{
         position: "relative",
-        // Full-bleed: flush with section edges; no card chrome
         borderRadius: fullBleed ? 0 : "var(--radius-xl)",
         overflow: "hidden",
         height,
@@ -274,7 +289,10 @@ export default function HoustonMap({
               boxShadow: "0 0 0 3px rgba(29,110,254,0.2)",
             }}
           />
-          {t("map.liveBadge")}
+          {t("map.liveBadge").replace(
+            "{{radiusMiles}}",
+            String(badgeMiles)
+          )}
         </div>
       )}
     </div>
