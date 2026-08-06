@@ -33,7 +33,7 @@ Also: `docs/WHERE-WE-WORK.md`, `docs/HANDOFF-service-area-model-b.md`, vault upd
 | `hours` | Hours and capacity | Partial | Saved; not full board/schedule driver |
 | `work` | Work durations | Partial | Saved; not full legs engine |
 | `emails` | Customer emails | Mostly chrome | List + note; full templates port planned |
-| `access` | **Roles and access** | **UI kit only** | **Next target** — table is not enforcement |
+| `access` | **Roles and access** | **Live roster + invite** | Super admins from env; invite admin/tech/driver; kit matrix removed |
 
 **Service area locks (do not reopen):**
 
@@ -44,30 +44,33 @@ Also: `docs/WHERE-WE-WORK.md`, `docs/HANDOFF-service-area-model-b.md`, vault upd
 
 ---
 
-## Next: Roles and access
+## Roles and access (implemented slice)
 
 ### Live authz (read vault first)
 
 - `requireAdmin()` — only real admin gate for `/admin/*` APIs  
-- Super-admin: `SUPER_ADMIN_EMAILS`  
+- Super-admin: `SUPER_ADMIN_EMAILS` (care owners; never via invite UI)  
 - DB admin: `profiles.role = 'admin'` + `status = 'active'`  
-- Enum as-built: `customer` | `admin` | `technician` | `driver`  
-- Display role: `session-identity.ts` + account menu — **not** authorization  
-- Field portals / kit “Field only” **not** shipped  
+- Invite: `POST /api/admin/team/invite` — roles `admin` \| `technician` \| `driver`  
+- Only super admin may invite new **admins**; any admin may invite tech/driver  
+- **Auth truth:** Supabase `generateLink` (no Supabase invite email)  
+- **Brand email:** Resend template `staff-invite` via `dispatchEmail`  
+- Accept: `activate_own_staff_invite` on session/callback (`invited` → `active`)  
+- Display role: `session-identity.ts` — **not** authorization  
+- Field portals still not shipped — tech/driver roles OK for data test  
 
-### Suggested first PR for Roles
 
-1. Replace kit matrix with **truthful** copy: who can open Admin today + how to bootstrap.  
-2. Optional: `requireAdmin` list of profiles with `role = admin`.  
-3. Do **not** ship promote/demote without explicit product + security review.  
-4. Do **not** issue technician/driver logins until those surfaces exist.  
+### Apply migration
 
-**Open first:**
+`my-app/supabase/migrations/20260806180000_admin_team_invite.sql`  
+RPCs: `admin_set_profile_staff`, `activate_own_staff_invite`  
 
-- `lib/auth/require-admin.ts`, `roles.ts`, `session-identity.ts`  
-- Settings `access` pane in `SettingsView.tsx`  
-- `vault/security.md`  
-- `docs/ADMIN-PORT.md` (Team / Settings scoreboard)  
+### Still not shipped
+
+- Promote/demote/suspend UI, full `/admin/team` page  
+- Tech/driver portals  
+- Super-admin management from Settings  
+
 
 ---
 

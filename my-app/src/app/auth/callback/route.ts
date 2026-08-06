@@ -145,11 +145,22 @@ export async function GET(request: Request) {
     }
   }
 
+  // Staff invite accept: invited → active so requireAdmin can let admins in.
+  try {
+    const { activateOwnStaffInvite } = await import("@/lib/admin/team");
+    await activateOwnStaffInvite(supabase);
+  } catch (e) {
+    console.warn("[auth/callback] staff invite activate skipped", e);
+  }
+
   // Post-login routing (Slice 2.5): honor safe return_to, else role home.
   const returnToRaw = searchParams.get("return_to");
   const { safeReturnTo, portalHomeFor, JOIN_PATH } = await import("@/lib/site");
-  const { roleFromAuthUser } = await import("@/lib/auth/roles");
-  const role = roleFromAuthUser(user);
+  const { resolveSessionIdentity } = await import(
+    "@/lib/auth/session-identity"
+  );
+  const identity = await resolveSessionIdentity(user);
+  const role = identity.role;
   const dest =
     returnToRaw && returnToRaw.length > 0
       ? safeReturnTo(returnToRaw, portalHomeFor(role))

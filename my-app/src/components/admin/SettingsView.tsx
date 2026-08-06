@@ -40,6 +40,7 @@ import {
   type OpsRules,
 } from "@/lib/admin/settings";
 import ShopAddressField from "@/components/admin/ShopAddressField";
+import TeamAccessPanel from "@/components/admin/TeamAccessPanel";
 import {
   Band,
   G,
@@ -251,7 +252,7 @@ export default function SettingsView() {
       k: "access",
       icon: <Shield size={15} />,
       label: "Roles and access",
-      val: "4 roles · not enforced",
+      val: "Invite · staff roles",
     },
   ];
 
@@ -1148,139 +1149,7 @@ export default function SettingsView() {
         </div>
       </>
     ),
-    access: (
-      <>
-        <Head
-          title="Roles and access"
-          sub="visible on every pro, enforced nowhere"
-          help="Planned staff roles for the ops kit. Live enforcement today is admin-only (requireAdmin). Do not issue field-only logins until their portal ships."
-        />
-        <div
-          style={{
-            border: "1px solid var(--border-default)",
-            borderRadius: 12,
-            overflow: "hidden",
-            marginTop: 6,
-          }}
-        >
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              tableLayout: "auto",
-            }}
-          >
-            <thead>
-              <tr>
-                {["Role", "Can see", "Can do", "Money"].map((h, i) => (
-                  <th
-                    key={h}
-                    style={{
-                      textAlign: i === 3 ? "right" : "left",
-                      padding: "10px 14px",
-                      fontSize: 10,
-                      fontWeight: 700,
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                      color: "var(--ink-500)",
-                      background: "#FCFDFF",
-                      borderBottom: "1px solid var(--border-default)",
-                    }}
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {(
-                [
-                  ["Owner", "Everything", "Everything", "Refunds + payouts"],
-                  [
-                    "Dispatcher",
-                    "Orders, board, schedule, customers",
-                    "Assign, reschedule, message",
-                    "View only",
-                  ],
-                  [
-                    "Workshop lead",
-                    "Board, orders, team",
-                    "Advance stages, photos, clock",
-                    "None",
-                  ],
-                  [
-                    "Field only",
-                    "Their own day",
-                    "Clock in and out, photos",
-                    "None",
-                  ],
-                ] as const
-              ).map(([r, see, doo, mon]) => (
-                <tr key={r}>
-                  <td
-                    style={{
-                      height: 42,
-                      padding: "0 14px",
-                      fontWeight: 700,
-                      color: "var(--ink-900)",
-                      fontSize: 12.5,
-                      borderBottom: "1px solid var(--gray-100)",
-                    }}
-                  >
-                    {r}
-                  </td>
-                  <td
-                    style={{
-                      height: 42,
-                      padding: "0 14px",
-                      fontSize: 11.5,
-                      color: "var(--ink-500)",
-                      borderBottom: "1px solid var(--gray-100)",
-                    }}
-                  >
-                    {see}
-                  </td>
-                  <td
-                    style={{
-                      height: 42,
-                      padding: "0 14px",
-                      fontSize: 11.5,
-                      color: "var(--ink-500)",
-                      borderBottom: "1px solid var(--gray-100)",
-                    }}
-                  >
-                    {doo}
-                  </td>
-                  <td
-                    style={{
-                      height: 42,
-                      padding: "0 14px",
-                      textAlign: "right",
-                      fontSize: 11.5,
-                      fontWeight: 600,
-                      color:
-                        mon === "None"
-                          ? "var(--ink-500)"
-                          : mon === "View only"
-                            ? "var(--ink-500)"
-                            : "var(--ink-900)",
-                      borderBottom: "1px solid var(--gray-100)",
-                    }}
-                  >
-                    {mon}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <Note tone="w" icon={<HelpCircle size={13} />}>
-          Live today: <b>requireAdmin()</b> (super-admin env or profiles.role =
-          admin). Kit roles are not enforced yet. Do not issue field-only logins
-          until their portal ships.
-        </Note>
-      </>
-    ),
+    access: <TeamAccessPanel />,
   };
 
   return (

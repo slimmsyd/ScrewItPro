@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getWaitlistPosition } from "@/lib/waitlist";
 import { resolveSessionIdentity } from "@/lib/auth/session-identity";
+import { activateOwnStaffInvite } from "@/lib/admin/team";
 
 /**
  * GET /api/auth/session
@@ -10,6 +11,8 @@ import { resolveSessionIdentity } from "@/lib/auth/session-identity";
  * Reads the real session (not the old unsigned sip_session cookie).
  * role/status: profiles first, SUPER_ADMIN_EMAILS → admin for display,
  * then JWT metadata. Display only — never use this response as authz.
+ *
+ * Side effect: invited staff (admin/tech/driver) flip to active on first session.
  */
 export async function GET() {
   let supabase;
@@ -26,6 +29,9 @@ export async function GET() {
   if (!user?.email) {
     return NextResponse.json({ user: null });
   }
+
+  // Accept staff invites (invited → active) before resolving display identity.
+  await activateOwnStaffInvite(supabase);
 
   const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
 

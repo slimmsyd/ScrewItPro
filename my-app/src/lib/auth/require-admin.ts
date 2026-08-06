@@ -59,11 +59,29 @@ export async function requireAdmin(): Promise<RequireAdminResult> {
   }
 
   // Prefer user-scoped client (RLS). If select own works, check role.
-  const { data: own, error: ownErr } = await supabase
+  let { data: own, error: ownErr } = await supabase
     .from("profiles")
     .select("role, status")
     .eq("id", user.id)
     .maybeSingle();
+
+  // First visit after invite: flip invited → active while they hold a session.
+  if (!ownErr && own?.status === "invited" && own?.role === "admin") {
+    try {
+      const { activateOwnStaffInvite } = await import("@/lib/admin/team");
+      await activateOwnStaffInvite(supabase);
+      const again = await supabase
+        .from("profiles")
+        .select("role, status")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (!again.error && again.data) {
+        own = again.data;
+      }
+    } catch {
+      /* keep invited */
+    }
+  }
 
   if (!ownErr && own) {
     return resolveProfile(own.role, own.status, user.id, email);
