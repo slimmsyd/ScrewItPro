@@ -54,7 +54,6 @@ import {
   eyebrow,
   iconBtn,
   linkAdd,
-  tierInput,
 } from "@/components/admin/settingsPrimitives";
 import { clearServiceAreaClientCache } from "@/lib/config/service-area-client";
 
@@ -240,7 +239,7 @@ export default function SettingsView() {
       k: "area",
       icon: <MapPin size={15} />,
       label: "Service area",
-      val: `${hub.radius_miles} mi radius · ${ops.tiers.length} fee tiers`,
+      val: `${hub.radius_miles} mi free · $${ops.farFee} past that`,
     },
     {
       k: "emails",
@@ -834,193 +833,20 @@ export default function SettingsView() {
               onChange={(v) => patchOps({ driveMinutes: v })}
             />
           </Row>
+          <Row
+            label="Out-of-area travel fee"
+            help={`Charged when delivery is past “We travel up to” (${hub.radius_miles} mi). Shows on the customer quote as Travel · out of area and is included in the deposit total. Inside the free zone there is no travel fee.`}
+          >
+            <Stepper
+              value={ops.farFee}
+              step={5}
+              min={0}
+              unit="$"
+              w={74}
+              onChange={(v) => patchOps({ farFee: v })}
+            />
+          </Row>
         </G>
-
-        <Band cols="repeat(auto-fit, minmax(280px, 1fr))">
-          <div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                paddingBottom: 8,
-              }}
-            >
-              <LabelWithHelp
-                help="Distance bands for stepped travel fees later. Today’s live quote only charges the out-of-area far fee past “We travel up to” — tier fees inside the free zone are not applied yet."
-              >
-                <b style={eyebrow}>Travel surcharge</b>
-              </LabelWithHelp>
-              <button
-                type="button"
-                className="sip-admin-focus"
-                onClick={() =>
-                  patchOps({
-                    tiers: [
-                      ...ops.tiers,
-                      {
-                        to: ops.tiers[ops.tiers.length - 1]!.to + 10,
-                        fee: ops.farFee,
-                      },
-                    ],
-                  })
-                }
-                style={linkAdd}
-              >
-                <Plus size={12} />
-                Add tier
-              </button>
-            </div>
-            <div
-              style={{
-                border: "1px solid var(--border-default)",
-                borderRadius: 11,
-                overflow: "hidden",
-              }}
-            >
-              {ops.tiers.map((t, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 9,
-                    padding: "8px 11px",
-                    borderBottom: "1px solid var(--gray-100)",
-                    background: i % 2 ? "#FCFDFF" : "#fff",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 11.5,
-                      color: "var(--ink-500)",
-                      width: 62,
-                      flex: "0 0 62px",
-                    }}
-                  >
-                    {i === 0 ? "Up to" : "Then to"}
-                  </span>
-                  <input
-                    type="number"
-                    className="sip-admin-num sip-admin-focus"
-                    value={t.to}
-                    min={1}
-                    step={5}
-                    aria-label={`Tier ${i + 1} miles`}
-                    onChange={(e) => {
-                      const to = Math.max(1, Number(e.target.value) || 0);
-                      patchOps({
-                        tiers: ops.tiers.map((x, j) =>
-                          j === i ? { ...x, to } : x
-                        ),
-                      });
-                    }}
-                    style={tierInput}
-                  />
-                  <span style={{ fontSize: 11, color: "var(--ink-500)", flex: 1 }}>
-                    mi
-                  </span>
-                  <span style={{ fontSize: 11, color: "var(--ink-500)" }}>
-                    adds
-                  </span>
-                  <input
-                    type="number"
-                    className="sip-admin-num sip-admin-focus"
-                    value={t.fee}
-                    min={0}
-                    step={5}
-                    aria-label={`Tier ${i + 1} fee`}
-                    onChange={(e) => {
-                      const fee = Math.max(0, Number(e.target.value) || 0);
-                      patchOps({
-                        tiers: ops.tiers.map((x, j) =>
-                          j === i ? { ...x, fee } : x
-                        ),
-                      });
-                    }}
-                    style={tierInput}
-                  />
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: "var(--ink-500)",
-                      width: 12,
-                    }}
-                  >
-                    $
-                  </span>
-                  {ops.tiers.length > 1 ? (
-                    <button
-                      type="button"
-                      className="sip-admin-focus"
-                      aria-label={`Remove tier ${i + 1}`}
-                      onClick={() =>
-                        patchOps({
-                          tiers: ops.tiers.filter((_, j) => j !== i),
-                        })
-                      }
-                      style={iconBtn}
-                    >
-                      <X size={13} />
-                    </button>
-                  ) : (
-                    <span style={{ width: 18 }} />
-                  )}
-                </div>
-              ))}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 9,
-                  padding: "8px 11px",
-                  background: ops.tiers.length % 2 ? "#FCFDFF" : "#fff",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 11.5,
-                    color: "var(--ink-500)",
-                    flex: 1,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                  }}
-                >
-                  Beyond free zone (past {hub.radius_miles} mi)
-                  <HelpTip text="Out-of-area travel fee charged when delivery is past “We travel up to.” Shows on the customer quote as Travel · out of area and is included in the deposit total." />
-                </span>
-                <span style={{ fontSize: 11, color: "var(--ink-500)" }}>
-                  adds
-                </span>
-                <input
-                  type="number"
-                  className="sip-admin-num sip-admin-focus"
-                  value={ops.farFee}
-                  min={0}
-                  step={5}
-                  aria-label="Far fee (out-of-area travel)"
-                  onChange={(e) =>
-                    patchOps({
-                      farFee: Math.max(0, Number(e.target.value) || 0),
-                    })
-                  }
-                  style={tierInput}
-                />
-                <span
-                  style={{
-                    fontSize: 11,
-                    color: "var(--ink-500)",
-                    width: 12,
-                  }}
-                >
-                  $
-                </span>
-                <span style={{ width: 18 }} />
-              </div>
-            </div>
-          </div>
-        </Band>
 
         <div style={{ paddingTop: 16 }}>
           <div
