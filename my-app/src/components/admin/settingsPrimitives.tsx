@@ -3,7 +3,63 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Info, Minus, Plus } from "lucide-react";
 
-export function Head({ title, sub }: { title: string; sub?: string }) {
+/**
+ * Inline "?" control with hover/focus tooltip for admin Settings.
+ * Prefer short plain-language “what / why” copy (not API jargon).
+ */
+export function HelpTip({ text }: { text: string }) {
+  return (
+    <span className="sip-admin-help">
+      <button
+        type="button"
+        className="sip-admin-help-btn sip-admin-focus"
+        aria-label="What is this?"
+        // Native title as a fallback when CSS tooltips are clipped
+        title={text}
+      >
+        ?
+      </button>
+      <span className="sip-admin-help-bubble" role="tooltip">
+        {text}
+      </span>
+    </span>
+  );
+}
+
+/** Label + optional ? help (for section eyebrows, not full Rows). */
+export function LabelWithHelp({
+  children,
+  help,
+  style,
+}: {
+  children: ReactNode;
+  help?: string;
+  style?: CSSProperties;
+}) {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        ...style,
+      }}
+    >
+      {children}
+      {help ? <HelpTip text={help} /> : null}
+    </span>
+  );
+}
+
+export function Head({
+  title,
+  sub,
+  help,
+}: {
+  title: string;
+  sub?: string;
+  help?: string;
+}) {
   return (
     <div
       style={{
@@ -21,9 +77,13 @@ export function Head({ title, sub }: { title: string; sub?: string }) {
           fontWeight: 400,
           color: "var(--blue-deep)",
           letterSpacing: "-0.01em",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
         }}
       >
         {title}
+        {help ? <HelpTip text={help} /> : null}
       </h2>
       {sub && (
         <span
@@ -44,11 +104,15 @@ export function Head({ title, sub }: { title: string; sub?: string }) {
 export function Row({
   label,
   hint,
+  help,
   children,
   tall,
 }: {
   label: string;
+  /** Optional secondary line under the label (keep short). */
   hint?: string;
+  /** Plain-language “what/why” for the ? tooltip. */
+  help?: string;
   children: ReactNode;
   tall?: boolean;
 }) {
@@ -75,9 +139,13 @@ export function Row({
             fontSize: 12.5,
             color: "var(--ink-900)",
             fontWeight: 500,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
           }}
         >
-          {label}
+          <span>{label}</span>
+          {help ? <HelpTip text={help} /> : null}
         </div>
         {hint && (
           <div
