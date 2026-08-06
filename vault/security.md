@@ -84,13 +84,14 @@ Writes go through Next.js API + `createAdminClient()`. RLS enabled; anon/authent
 
 | Role | Granted by | Checked | Notes |
 |------|-----------|---------|-------|
-| **SUPER ADMIN (dev)** | `SUPER_ADMIN_EMAILS` env (comma-separated) | Before any DB read | Cannot be granted by a Postgres write, and survives a broken/suspended `profiles` row. Server-only — never `NEXT_PUBLIC_`. |
-| **ADMIN (owner)** | `profiles.role = 'admin'` + `status = 'active'` | `requireAdmin()` | Bootstrap via SQL (see below). |
+| **SUPER ADMIN (care)** | `SUPER_ADMIN_EMAILS` env (comma-separated) | Before any DB read | Prod care owners (e.g. company operators). Cannot be granted by a Postgres write or Settings invite; survives a broken/suspended `profiles` row. Server-only — never `NEXT_PUBLIC_`. |
+| **ADMIN (staff)** | `profiles.role = 'admin'` + `status = 'active'` | `requireAdmin()` | Bootstrap via SQL **or** Settings → Roles and access **Invite** (super admin inviter only). |
 
 `requireAdmin()` returns `{ ok, userId, email, isSuperAdmin }` or a typed reason:
 `unauthenticated` | `forbidden` | `invited` | `not_configured`. **`invited` is
 distinct from `forbidden`** — an admin whose `profiles.status = 'invited'` gets
-the "invite waiting" screen, not a refusal.
+the "invite waiting" screen, not a refusal. First successful session after invite
+calls `activate_own_staff_invite` → `status = active`.
 
 **Route exception:** `/admin/signin` is in `PUBLIC_ADMIN_LEAVES` (`lib/auth/route-guards.ts`)
 and is the **only** public path under `/admin`. Without it, `decideRouteAccess`
@@ -106,7 +107,15 @@ the client-side-role-claim pattern forbidden below.
 
 `profiles.role`: `customer` | `admin` | `technician` | `driver`.
 
-**As-built gap:** middleware does **not** yet enforce role-based route prefixes (`/admin`, `/tech`, `/driver`). Do not assume URL privacy. When adding admin tools, require server-side role checks immediately (see Planned below).
+| Tier | How granted | Notes |
+|------|-------------|-------|
+| Super admin | `SUPER_ADMIN_EMAILS` only | Never via invite UI |
+| Admin / technician / driver | `POST /api/admin/team/invite` after `requireAdmin` | Role + `status=invited` via RPC `admin_set_profile_staff`. **Auth truth:** Supabase `generateLink` (invite/magiclink) — no Supabase built-in invite email. **Brand delivery:** Resend template `staff-invite` via `dispatchEmail`. Only **super admin inviters** may grant `admin`. |
+| Customer | Default signup | Cannot self-promote (`profiles_pin_privileged_columns`) |
+
+**Settings UI:** `/admin/settings` → Roles and access — roster (`GET /api/admin/team`) + invite form. Not a full Team page yet.
+
+**As-built gap:** middleware does **not** yet enforce role-based route prefixes (`/admin`, `/tech`, `/driver`). Do not assume URL privacy. Field portals (`/tech`, `/driver`) return not_available; inviting those roles early is allowed for testing.
 
 ### Session identity for chrome (2026-08-06)
 
@@ -182,7 +191,9 @@ There is **no org_id multi-tenancy** yet. Do not invent cross-customer reads “
 | `POST /api/payments/webhook` | Must verify signature |
 | `GET /api/admin/leads/export` | **requireAdmin()** — `profiles.role = admin` (no URL token) |
 | `GET/PUT /api/admin/settings` | **requireAdmin()**; service-role upsert of `app_settings` keys `deposit_percent`, `hub`, `ops_rules`. Zod-validated full body on PUT. No secrets. |
-| `/admin/leads`, `/admin/settings` | `(app)` layout `requireAdmin()` + shell; bootstrap first admin via SQL |
+| `GET /api/admin/team` | **requireAdmin()**; env super-admin list + staff profiles (service role) |
+| `POST /api/admin/team/invite` | **requireAdmin()**; Zod `{ email, role }`; super admin required to grant `admin`; never mints super-admin. Returns `emailSent` / `emailError` for Resend path |
+| `/admin/leads`, `/admin/settings` | `(app)` layout `requireAdmin()` + shell; super admin via env; staff admin via invite or SQL |
 | `/admin/signin` | **Public by design** (only public `/admin` leaf). Renders a server-resolved state; makes no access decision |
 | `GET /api/health` | Config booleans only — no secrets |
 | `GET /api/public/service-area` | **Public read.** Hub address + lat/lng + radius + **`farFee`** (dollars, for quote travel preview). No secrets, no auth. Fail closed to defaults if DB unavailable. **Not** a pricing authority — draft/checkout re-price server-side. |

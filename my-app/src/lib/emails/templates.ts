@@ -36,7 +36,8 @@ export type EmailTemplateCode =
   | "verification"
   | "welcome"
   | "booking-confirmation"
-  | "booking-team-notice";
+  | "booking-team-notice"
+  | "staff-invite";
 
 export type RenderedEmail = {
   code: EmailTemplateCode;
@@ -295,6 +296,83 @@ export function newBookingNotice(data: NewBookingNoticeData): RenderedEmail {
     ]
       .filter(Boolean)
       .join("\n"),
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Staff invite (admin / technician / driver)                         */
+/* ------------------------------------------------------------------ */
+
+export type StaffInviteEmailData = {
+  /** Secure Supabase Auth action link (invite or magic link). */
+  inviteUrl: string;
+  roleLabel: string;
+  /** Optional inviter address for context. */
+  inviterEmail?: string | null;
+  appName?: string | null;
+};
+
+/**
+ * Branded team invite — delivery via Resend; link from Supabase Auth (truth).
+ */
+export function staffInvite(data: StaffInviteEmailData): RenderedEmail {
+  const appName = data.appName?.trim() || "ScrewIt Pros";
+  const role = data.roleLabel.trim() || "team member";
+  const inviter = data.inviterEmail?.trim();
+  const inviteUrl = data.inviteUrl.trim();
+
+  const who = inviter
+    ? paragraph(
+        `${escapeHtml(inviter)} invited you to join the <strong style="color:${brand.blueDeep};">${escapeHtml(
+          appName
+        )}</strong> team as <strong style="color:${brand.blueDeep};">${escapeHtml(
+          role
+        )}</strong>.`
+      )
+    : paragraph(
+        `You've been invited to join the <strong style="color:${brand.blueDeep};">${escapeHtml(
+          appName
+        )}</strong> team as <strong style="color:${brand.blueDeep};">${escapeHtml(
+          role
+        )}</strong>.`
+      );
+
+  const body = `
+    ${heading("You're invited")}
+    ${who}
+    ${paragraph(
+      "Click the button below to accept and sign in. This link is unique to you — don't forward it."
+    )}
+    ${button("Accept invite", inviteUrl)}
+    ${paragraph(
+      `If the button doesn't work, paste this link into your browser:<br /><a href="${escapeHtml(
+        inviteUrl
+      )}" style="color:${brand.blueElectric};word-break:break-all;">${escapeHtml(
+        inviteUrl
+      )}</a>`
+    )}
+    ${paragraph(
+      "Questions? Reply to this email or reach the care team at your company."
+    )}
+  `;
+
+  return {
+    code: "staff-invite",
+    subject: `You're invited to ${appName} as ${role}`,
+    html: renderLayout(body, {
+      preheader: `Join ${appName} as ${role}`,
+    }),
+    text: [
+      `You're invited to ${appName}`,
+      "",
+      inviter
+        ? `${inviter} invited you as ${role}.`
+        : `You've been invited as ${role}.`,
+      "",
+      `Accept invite: ${inviteUrl}`,
+      "",
+      "This link is unique to you — don't forward it.",
+    ].join("\n"),
   };
 }
 

@@ -39,7 +39,7 @@ Flow: customer buys flat-pack → ships/sends to hub → staff receive / assembl
 | Icons | lucide-react |
 | Auth / DB | Supabase (`@supabase/ssr`, Auth + Postgres + RLS) |
 | Payments | Stripe (Checkout deposit + webhook scaffold) |
-| Email | Resend + `email_log` |
+| Email | Resend + `email_log` (booking, waitlist, **staff-invite**; Auth links from Supabase) |
 | AI | DeepSeek client (Chip / support chat) |
 | Maps | Google Maps JS + Places |
 | CRM mirror | Optional n8n webhook |
@@ -90,6 +90,7 @@ ScrewItPro/
 | `lib/emails/*` | Templates, layout, dispatch, log |
 | `lib/admin/leads.ts` | Admin lead export data |
 | `lib/admin/settings.ts` | Admin settings read/save (`app_settings` deposit + hub + ops_rules); soft-geocode hub on save; `coverageFor` → Model 1 |
+| `lib/admin/team.ts` | Staff roster + invite: env super admins, `profiles` staff roles, Supabase `generateLink`, Resend `staff-invite` |
 | `lib/config/service-area.ts` | Hub + radius + `farFee` defaults, normalize, pure `isInServiceArea`, server `getServiceAreaConfig` |
 | `lib/config/service-area-client.ts` | Browser fetch + session cache of public service-area (includes `farFee`) |
 | `lib/member.ts` | Member/session helpers for UI |
@@ -128,7 +129,7 @@ Browser
 | Orders | `/orders/[id]`, `/orders/[id]/track` | Confirmation + tracker UI |
 | Portal (customer) | `/customer/{jobs,account,notifications,referrals,orders/*}` | Shell under real URL prefix for middleware guards; old paths redirect |
 | Referral short link | `/r/[code]` | Sets `sip_ref` cookie → `/join?mode=signup`; opaque codes (`SIP…`) |
-| Admin | `/admin/signin` (public), `/admin/settings`, `/admin/leads` | Shell + progressive nav (`AdminAppShell`). Sign-in public leaf; rest `requireAdmin`. Port scoreboard: `docs/ADMIN-PORT.md`. Kit: full ops UI not yet ported (Orders/Board/etc.). |
+| Admin | `/admin/signin` (public), `/admin/settings`, `/admin/leads` | Shell + progressive nav (`AdminAppShell`). Sign-in public leaf; rest `requireAdmin`. Settings → **Roles and access**: super-admin list (env) + invite staff (`GET/POST /api/admin/team`). Port scoreboard: `docs/ADMIN-PORT.md`. Kit: full ops UI not yet ported (Orders/Board/Team page/etc.). |
 | Public config | `GET /api/public/service-area` | Safe hub subset (`address`, lat/lng, radius, **`farFee`**). Feeds marketing map + quote Places gate + Model 1 travel preview. Source: `app_settings.hub` + `ops_rules.farFee`; `BUSINESS.geo` / default farFee fallback. See `docs/WHERE-WE-WORK.md`. |
 | Legal | `/privacy`, `/terms` | Legal shells |
 | AEO | `/furniture-assembly-pickup-delivery-houston` | SEO/AEO landing |
@@ -354,6 +355,7 @@ Health (no secrets): `GET /api/health` via `getEnvStatus()`.
 | 2026-08-06 | **Where we work:** `app_settings.hub` → `/api/public/service-area` → Places gate + HoustonMap. `BUSINESS.geo` is fallback only. Fixed map circle (was 55 km). |
 | 2026-08-06 | **Model 1 travel:** free inside hub radius; outside radius soft-wall + `ops.farFee` on quote Price / server draft. Deposit % includes travel (Stripe-ready). Tiers reserved, not on customer fee. |
 | 2026-08-06 | **ZIP exceptions wired:** `ops_rules.exceptions` → public service-area + client preview + server draft/soft-gate refuse (`zip_refused`). |
+| 2026-08-06 | **Roles & access invite:** Settings roster + invite; super admins via `SUPER_ADMIN_EMAILS`; staff via `admin_set_profile_staff`; Auth truth = Supabase `generateLink`; brand email = Resend `staff-invite`. Accept: `activate_own_staff_invite`. |
 | (prior) | Google Auth unified onto Supabase OAuth; legacy `sip_session` cleared in middleware |
 | (prior) | Interim orders/payments for deposit Checkout scaffold |
 | (prior) | Customer portal Phase 0 shell (church vs state) |
