@@ -44,6 +44,8 @@ import {
   Band,
   G,
   Head,
+  HelpTip,
+  LabelWithHelp,
   Note,
   Row,
   Stepper,
@@ -260,9 +262,29 @@ export default function SettingsView() {
         <Head
           title="Hours and capacity"
           sub="closed days grey out in every picker"
+          help="Controls which days and how many jobs per time slot you accept. Closed days grey out in booking pickers."
         />
         <div
-          style={{ display: "flex", gap: 5, padding: "13px 0 3px" }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "12px 0 4px",
+          }}
+        >
+          <span
+            style={{
+              fontSize: 12.5,
+              fontWeight: 500,
+              color: "var(--ink-900)",
+            }}
+          >
+            Open days
+          </span>
+          <HelpTip text="Tap a day to open or close it for bookings. Closed days are greyed out in every schedule picker. Jobs already booked on a day you close later are not moved automatically." />
+        </div>
+        <div
+          style={{ display: "flex", gap: 5, padding: "4px 0 3px" }}
           role="group"
           aria-label="Open days"
         >
@@ -318,7 +340,7 @@ export default function SettingsView() {
         <G>
           <Row
             label="Jobs allowed in one window"
-            hint="a fourth booking warns instead of blocking"
+            help="Maximum jobs we plan to accept in one time window (for example 8–11a). Going over may warn operators instead of hard-blocking until capacity is fully enforced."
           >
             <Stepper
               value={ops.capPerWindow}
@@ -331,7 +353,7 @@ export default function SettingsView() {
           </Row>
           <Row
             label="Booking windows"
-            hint="fixed for now - changing them moves every scheduled job"
+            help="Fixed time slots customers can choose. Changing these later can affect every already-scheduled job, so they stay locked for now."
             tall
           >
             <span
@@ -372,16 +394,23 @@ export default function SettingsView() {
         <Head
           title="Work durations"
           sub="the block each leg is scheduled for"
+          help="Minutes we reserve on the schedule for each leg of a hub job (pickup → intake → build → QC → deliver). Estimates only until the labour clock measures real time."
         />
         <G>
           {LEG_KEYS.map((k) => (
             <Row
               key={k}
               label={LEG_LABELS[k]}
-              hint={
-                k === "build"
-                  ? "the one worth measuring - most orders vary here"
-                  : undefined
+              help={
+                k === "pickup"
+                  ? "Time reserved to collect items from the customer or retailer."
+                  : k === "intake"
+                    ? "Time to receive, check-in, and stage items at the hub."
+                    : k === "build"
+                      ? "Assembly time — usually the longest and most variable leg."
+                      : k === "qc"
+                        ? "Quality check after build before delivery."
+                        : "White-glove delivery and in-home placement time."
               }
             >
               <span
@@ -512,9 +541,16 @@ export default function SettingsView() {
     ),
     price: (
       <>
-        <Head title="Pricing" sub="applies to new orders only" />
+        <Head
+          title="Pricing"
+          sub="applies to new orders only"
+          help="Rate card for new quotes and bookings. Existing orders keep the price they already locked in."
+        />
         <G>
-          <Row label="Base rate per job">
+          <Row
+            label="Base rate per job"
+            help="Starting assembly price for a standard job before extra items or travel."
+          >
             <Stepper
               value={ops.baseRate}
               step={5}
@@ -523,7 +559,10 @@ export default function SettingsView() {
               onChange={(v) => patchOps({ baseRate: v })}
             />
           </Row>
-          <Row label="Each additional item">
+          <Row
+            label="Each additional item"
+            help="Amount added for each extra piece on the same job (beyond the first)."
+          >
             <Stepper
               value={ops.perItem}
               step={5}
@@ -532,7 +571,10 @@ export default function SettingsView() {
               onChange={(v) => patchOps({ perItem: v })}
             />
           </Row>
-          <Row label="Membership" hint="billed monthly, cancel any time">
+          <Row
+            label="Membership"
+            help="Monthly membership price. Customers can cancel any time. Not the same as a one-time job deposit."
+          >
             <Stepper
               value={ops.membership}
               step={5}
@@ -543,7 +585,7 @@ export default function SettingsView() {
           </Row>
           <Row
             label="Deposit to book"
-            hint="no order reaches the board unpaid · product default 30%"
+            help="Percent of the job total charged when they book (Stripe deposit). The rest is balance due on delivery. Product default is 30%."
           >
             <Stepper
               value={depositPct}
@@ -710,8 +752,28 @@ export default function SettingsView() {
         <Head
           title="Service area"
           sub="everything measured from the shop"
+          help="Where the workshop is and how far free travel goes. Distance is measured from the shop pin. Outside the free zone, customers can still book with an out-of-area travel fee."
         />
         <div style={{ padding: "8px 0 4px" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 8,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 12.5,
+                fontWeight: 500,
+                color: "var(--ink-900)",
+              }}
+            >
+              Shop / hub address
+            </span>
+            <HelpTip text="The workshop origin. Drives the home map pin, quote “ship to hub” address, and the center of the free-travel radius." />
+          </div>
           <ShopAddressField
             value={{
               address: hub.address,
@@ -736,7 +798,10 @@ export default function SettingsView() {
           />
         </div>
         <G>
-          <Row label="We travel up to">
+          <Row
+            label="We travel up to"
+            help="Free-travel zone in miles from the shop. Deliveries inside this radius do not add an out-of-area travel fee. Outside still bookable — the far fee applies and shows on the quote."
+          >
             <Stepper
               value={hub.radius_miles}
               step={5}
@@ -758,7 +823,7 @@ export default function SettingsView() {
           </Row>
           <Row
             label="Longest drive we accept"
-            hint="policy only for now - not a hard booking gate yet"
+            help="Policy target for one-way drive time. Not a booking gate yet — real Google Maps drive-time is not wired. Safe to treat as planning only for now."
           >
             <Stepper
               value={ops.driveMinutes}
@@ -781,7 +846,11 @@ export default function SettingsView() {
                 paddingBottom: 8,
               }}
             >
-              <b style={eyebrow}>Travel surcharge</b>
+              <LabelWithHelp
+                help="Distance bands for stepped travel fees later. Today’s live quote only charges the out-of-area far fee past “We travel up to” — tier fees inside the free zone are not applied yet."
+              >
+                <b style={eyebrow}>Travel surcharge</b>
+              </LabelWithHelp>
               <button
                 type="button"
                 className="sip-admin-focus"
@@ -913,9 +982,13 @@ export default function SettingsView() {
                     fontSize: 11.5,
                     color: "var(--ink-500)",
                     flex: 1,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
                   }}
                 >
-                  Beyond that, out to {hub.radius_miles} mi
+                  Beyond free zone (past {hub.radius_miles} mi)
+                  <HelpTip text="Out-of-area travel fee charged when delivery is past “We travel up to.” Shows on the customer quote as Travel · out of area and is included in the deposit total." />
                 </span>
                 <span style={{ fontSize: 11, color: "var(--ink-500)" }}>
                   adds
@@ -926,7 +999,7 @@ export default function SettingsView() {
                   value={ops.farFee}
                   min={0}
                   step={5}
-                  aria-label="Far fee"
+                  aria-label="Far fee (out-of-area travel)"
                   onChange={(e) =>
                     patchOps({
                       farFee: Math.max(0, Number(e.target.value) || 0),
@@ -958,7 +1031,11 @@ export default function SettingsView() {
               paddingBottom: 8,
             }}
           >
-            <b style={eyebrow}>ZIP exceptions</b>
+            <LabelWithHelp
+              help="Force a surcharge or refuse service for specific ZIP codes, even if they fall inside or outside the free zone. Use refuse for areas you will not serve."
+            >
+              <b style={eyebrow}>ZIP exceptions</b>
+            </LabelWithHelp>
             <i
               style={{
                 fontStyle: "normal",
@@ -966,7 +1043,7 @@ export default function SettingsView() {
                 color: "var(--ink-500)",
               }}
             >
-              override the radius
+              override by ZIP
             </i>
             <button
               type="button"
@@ -1110,6 +1187,7 @@ export default function SettingsView() {
         <Head
           title="Customer emails"
           sub="sent automatically on stage change"
+          help="Lifecycle emails customers receive as a job moves (booked, pickup, build, delivery). “Stored” templates can be edited in the database; others still live in code."
         />
         <div
           style={{
@@ -1119,15 +1197,38 @@ export default function SettingsView() {
             columnGap: 26,
           }}
         >
-          {[
-            "Booking confirmation",
-            "Pickup scheduled",
-            "Picked up",
-            "Build started",
-            "Built and inspected",
-            "Out for delivery",
-            "Delivered",
-          ].map((n, i) => (
+          {(
+            [
+              {
+                n: "Booking confirmation",
+                help: "Sent when a customer successfully books. Confirms the job and next steps.",
+              },
+              {
+                n: "Pickup scheduled",
+                help: "Sent when a pickup window is locked for collecting their items.",
+              },
+              {
+                n: "Picked up",
+                help: "Sent after items leave the customer or retailer and are in transit to the hub.",
+              },
+              {
+                n: "Build started",
+                help: "Sent when assembly work begins at the workshop.",
+              },
+              {
+                n: "Built and inspected",
+                help: "Sent when build + QC are complete and the job is ready for delivery.",
+              },
+              {
+                n: "Out for delivery",
+                help: "Sent when the assembled pieces leave the hub for white-glove delivery.",
+              },
+              {
+                n: "Delivered",
+                help: "Sent after in-home placement is complete. Closes the customer loop.",
+              },
+            ] as const
+          ).map(({ n, help }, i) => (
             <div
               key={n}
               style={{
@@ -1159,9 +1260,13 @@ export default function SettingsView() {
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
                 }}
               >
                 {n}
+                <HelpTip text={help} />
               </span>
               {i === 0 && (
                 <span
@@ -1222,6 +1327,7 @@ export default function SettingsView() {
         <Head
           title="Roles and access"
           sub="visible on every pro, enforced nowhere"
+          help="Planned staff roles for the ops kit. Live enforcement today is admin-only (requireAdmin). Do not issue field-only logins until their portal ships."
         />
         <div
           style={{
