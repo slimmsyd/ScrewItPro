@@ -9,7 +9,7 @@ Status values: `planned` | `in_progress` | `ui_only` | `read_live` | `read_write
 | # | Page | Kit file | App route | Status | Notes |
 |---|------|----------|-----------|--------|-------|
 | 0 | Shell + progressive nav | `Admin.html` | `admin/(app)/layout` | **done** | Shipped links only; unshipped disabled |
-| 1 | Settings | `admin-settings.jsx` | `/admin/settings` | **done** | Full kit UI; persist deposit + hub + `ops_rules` (product 30% / 40 mi). Ops not yet driving board/quote. |
+| 1 | Settings | `admin-settings.jsx` | `/admin/settings` | **read_write** | Shell + sections. **Service area live** (hub, free radius, farFee, ZIP). Deposit % live. Hours/work/pricing fields saved; board/quote not fully driven. **Roles pane = kit only** — next: `docs/HANDOFF-settings-next-roles.md`. |
 | — | Leads (pre-kit) | — | `/admin/leads` | **done** | Kept under shell; CSV export |
 | 2 | Email templates | `admin-emails.jsx` | `/admin/emails` | planned | Partial API exists |
 | 3 | Overview | `admin-overview.jsx` | `/admin/overview` | planned | |
