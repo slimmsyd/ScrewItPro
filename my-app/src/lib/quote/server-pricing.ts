@@ -2,8 +2,9 @@
  * Server-only rate card for draft orders / checkout.
  * Client may display the same numbers via pricing.ts — never trust client cents.
  *
- * Travel (Model 1): recomputed from delivery lat/lng + hub/ops — anti-spoof.
- * Stripe deposit = 30% of subtotal including travelCents.
+ * Travel (Model 1): recomputed from delivery lat/lng/zip + hub/ops — anti-spoof.
+ * ZIP exceptions from ops_rules are applied here.
+ * Stripe deposit = 30% of subtotal including travelCents (when allowed).
  */
 import {
   DEFAULT_ASSEMBLY_CENTS,
@@ -17,11 +18,10 @@ import {
   getServiceAreaConfig,
   haversineM,
 } from "@/lib/config/service-area";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { DEFAULT_OPS } from "@/lib/admin/settings";
 import {
   evaluateTravelPricing,
   metersToMiles,
+  type TravelBand,
 } from "@/lib/quote/travel-pricing";
 
 export type DraftLineInput = {
@@ -51,31 +51,6 @@ function assemblyForLine(line: DraftLineInput): number {
   return DEFAULT_ASSEMBLY_CENTS;
 }
 
-async function loadFarFee(): Promise<number> {
-  try {
-    const admin = createAdminClient();
-    const { data, error } = await admin
-      .from("app_settings")
-      .select("value")
-      .eq("key", "ops_rules")
-      .maybeSingle();
-    if (error || !data?.value || typeof data.value !== "object") {
-      return DEFAULT_OPS.farFee;
-    }
-    const o = data.value as Record<string, unknown>;
-    const fee = o.farFee;
-    if (typeof fee === "number" && Number.isFinite(fee) && fee >= 0) {
-      return fee;
-    }
-    if (typeof fee === "string" && fee.trim() !== "" && !Number.isNaN(Number(fee))) {
-      return Math.max(0, Number(fee));
-    }
-    return DEFAULT_OPS.farFee;
-  } catch {
-    return DEFAULT_OPS.farFee;
-  }
-}
-
 export type ServerPricedDraft = {
   assemblyCents: number;
   pickupCents: number;
@@ -84,6 +59,9 @@ export type ServerPricedDraft = {
   travelLabel: string;
   beyondRadius: boolean;
   travelMiles: number;
+  /** False when ZIP refuse — caller must not create a payable order. */
+  travelAllowed: boolean;
+  travelBand: TravelBand | null;
   subtotalCents: number;
   depositCents: number;
   balanceCents: number;
@@ -111,6 +89,8 @@ export async function priceDraftServerSide(input: {
   let travelLabel = "No travel fee";
   let beyondRadius = false;
   let travelMiles = 0;
+  let travelAllowed = true;
+  let travelBand: TravelBand | null = null;
 
   const lat = input.delivery?.lat;
   const lng = input.delivery?.lng;
@@ -120,29 +100,30 @@ export async function priceDraftServerSide(input: {
     typeof lng === "number" &&
     Number.isFinite(lng)
   ) {
-    const [hub, farFee] = await Promise.all([
-      getServiceAreaConfig(),
-      loadFarFee(),
-    ]);
+    const config = await getServiceAreaConfig();
     const miles = metersToMiles(
-      haversineM({ lat: hub.lat, lng: hub.lng }, { lat, lng })
+      haversineM({ lat: config.lat, lng: config.lng }, { lat, lng })
     );
     const travel = evaluateTravelPricing({
       miles,
-      radiusMiles: hub.radiusMiles,
-      farFee,
+      radiusMiles: config.radiusMiles,
+      farFee: config.farFee,
+      exceptions: config.exceptions,
       zip: input.delivery?.zip ?? undefined,
     });
+    travelAllowed = travel.allowed;
+    travelBand = travel.band;
+    travelLabel = travel.label;
+    beyondRadius = travel.beyondRadius;
+    travelMiles = travel.miles;
     if (travel.allowed) {
       travelCents = travel.feeCents;
-      travelLabel = travel.label;
-      beyondRadius = travel.beyondRadius;
-      travelMiles = travel.miles;
     }
   }
 
-  const subtotalCents =
+  const rawSubtotal =
     assemblyCents + pickupCents + deliveryCents + travelCents;
+  const subtotalCents = travelAllowed ? rawSubtotal : 0;
   const depositCents =
     subtotalCents > 0 ? computeDepositCents(subtotalCents) : 0;
   const balanceCents = Math.max(0, subtotalCents - depositCents);
@@ -155,6 +136,8 @@ export async function priceDraftServerSide(input: {
     travelLabel,
     beyondRadius,
     travelMiles,
+    travelAllowed,
+    travelBand,
     subtotalCents,
     depositCents,
     balanceCents,

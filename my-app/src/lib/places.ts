@@ -57,6 +57,7 @@ export function isInHoustonMetro(
     radiusMiles: BUSINESS.geo.radiusMiles,
     radiusM: BUSINESS.geo.radiusM,
     farFee: 45,
+    exceptions: [],
   });
 }
 

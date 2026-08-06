@@ -57,6 +57,10 @@ export type QuoteTotals = {
   beyondRadius: boolean;
   /** Straight-line miles from hub to delivery (0 if unknown). */
   travelMiles: number;
+  /** False when ZIP refuse (or other hard travel block). */
+  travelAllowed: boolean;
+  /** True when delivery ZIP is in ops refuse list. */
+  zipRefused: boolean;
   subtotalCents: number;
   depositCents: number;
   balanceCents: number;

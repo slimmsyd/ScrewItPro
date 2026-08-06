@@ -214,7 +214,8 @@ There is **no org_id multi-tenancy** yet. Do not invent cross-customer reads “
 - **Out-of-area fee:** `ops_rules.farFee` (public as `farFee` on service-area for UI preview only).
 - **Authority:** `evaluateTravelPricing` + `priceDraftServerSide` recompute fee from delivery geo + hub/ops. **Never trust client `travelCents` / total for Stripe.**
 - **Deposit base:** `subtotal = assembly + pickup + delivery + travel`; 30% deposit includes travel.
-- **Hard refuse:** non-TX; ZIP `mode: refuse` exceptions (when wired on book). Not “miles > radius.”
+- **Hard refuse:** non-TX; ZIP `mode: refuse` from `ops_rules.exceptions` (loaded via public service-area + server re-eval). Not “miles > radius.”
+- **ZIP exceptions:** stored in `app_settings.ops_rules.exceptions`; exposed on `GET /api/public/service-area` for quote UX; **server `priceDraftServerSide` re-applies** and rejects `zip_refused` on draft/soft-gate. Never trust client alone.
 - Address UI must fail closed if Maps is missing — no mock autocomplete with invented `inServiceArea: true`.
 
 ---

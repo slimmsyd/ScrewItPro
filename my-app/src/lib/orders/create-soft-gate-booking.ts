@@ -49,6 +49,14 @@ export async function createSoftGateBooking(
     delivery: input.delivery ?? null,
   });
 
+  if (!priced.travelAllowed) {
+    throw new SoftGateBookingError(
+      "zip_refused",
+      priced.travelLabel ||
+        "We can’t serve that delivery ZIP. Choose another address."
+    );
+  }
+
   if (priced.subtotalCents <= 0 || input.items.length === 0) {
     throw new SoftGateBookingError(
       "empty_quote",
@@ -149,7 +157,8 @@ export class SoftGateBookingError extends Error {
     public readonly code:
       | "empty_quote"
       | "order_create_failed"
-      | "demo_booking_disabled",
+      | "demo_booking_disabled"
+      | "zip_refused",
     message: string
   ) {
     super(message);

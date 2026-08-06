@@ -1,8 +1,9 @@
 /**
- * Service area config: hub pin + radius + public farFee (Model 1 travel).
+ * Service area config: hub pin + radius + farFee + ZIP exceptions (Model 1).
  * BUSINESS.geo is the fallback only; live ops edit app_settings.hub / ops_rules.
  */
 import { BUSINESS } from "@/lib/seo/business";
+import type { TravelException } from "@/lib/quote/travel-pricing";
 
 /** Match DEFAULT_OPS.farFee — avoid importing admin/settings (client-safe). */
 const DEFAULT_FAR_FEE = 45;
@@ -18,9 +19,31 @@ export type ServiceAreaConfig = {
    * Public — client preview only; server re-prices for Stripe.
    */
   farFee: number;
+  /**
+   * ZIP overrides from ops_rules.exceptions (refuse | surcharge).
+   * Public so quote Where can soft-block refuse ZIPs; server still authoritative.
+   */
+  exceptions: TravelException[];
 };
 
 const MI_TO_M = 1609.34;
+
+export function parseTravelExceptions(raw: unknown): TravelException[] {
+  if (!Array.isArray(raw)) return [];
+  const out: TravelException[] = [];
+  for (const row of raw) {
+    if (!row || typeof row !== "object" || Array.isArray(row)) continue;
+    const o = row as Record<string, unknown>;
+    const zip = typeof o.zip === "string" ? o.zip.trim() : "";
+    if (!zip) continue;
+    out.push({
+      zip,
+      mode: o.mode === "refuse" ? "refuse" : "surcharge",
+      why: typeof o.why === "string" ? o.why : "",
+    });
+  }
+  return out.slice(0, 50);
+}
 
 export function defaultsFromBusiness(): ServiceAreaConfig {
   return {
@@ -30,6 +53,7 @@ export function defaultsFromBusiness(): ServiceAreaConfig {
     radiusMiles: BUSINESS.geo.radiusMiles,
     radiusM: BUSINESS.geo.radiusM,
     farFee: DEFAULT_FAR_FEE,
+    exceptions: [],
   };
 }
 
@@ -80,6 +104,8 @@ export function normalizeHub(raw: unknown): ServiceAreaConfig {
   const farFee =
     Number.isFinite(farFeeNum) && farFeeNum >= 0 ? farFeeNum : d.farFee;
 
+  const exceptions = parseTravelExceptions(o.exceptions);
+
   return {
     address,
     lat,
@@ -87,6 +113,7 @@ export function normalizeHub(raw: unknown): ServiceAreaConfig {
     radiusMiles: safeMiles,
     radiusM,
     farFee,
+    exceptions,
   };
 }
 
@@ -109,6 +136,7 @@ export function haversineM(
 /**
  * Pure gate: TX-only + distance from hub center.
  * Fail closed for non-TX when state is provided.
+ * Does not apply ZIP refuse (use evaluateTravelPricing for that).
  */
 export function isInServiceArea(
   lat: number,
@@ -124,8 +152,7 @@ export function isInServiceArea(
 }
 
 /**
- * Server: load hub + farFee from app_settings; never throw for missing DB.
- * farFee comes from ops_rules (Model 1 out-of-area travel).
+ * Server: load hub + farFee + ZIP exceptions from app_settings; never throw.
  */
 export async function getServiceAreaConfig(): Promise<ServiceAreaConfig> {
   try {
@@ -144,10 +171,14 @@ export async function getServiceAreaConfig(): Promise<ServiceAreaConfig> {
     const hub = normalizeHub(map.get("hub"));
     const ops = map.get("ops_rules");
     if (ops && typeof ops === "object" && !Array.isArray(ops)) {
-      const far = (ops as Record<string, unknown>).farFee;
-      if (typeof far === "number" && Number.isFinite(far) && far >= 0) {
-        return { ...hub, farFee: far };
-      }
+      const o = ops as Record<string, unknown>;
+      const far = o.farFee;
+      const farFee =
+        typeof far === "number" && Number.isFinite(far) && far >= 0
+          ? far
+          : hub.farFee;
+      const exceptions = parseTravelExceptions(o.exceptions);
+      return { ...hub, farFee, exceptions };
     }
     return hub;
   } catch {

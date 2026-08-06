@@ -43,7 +43,8 @@ export default function WhereStep() {
     canProceedFromWhere,
   } = useQuote();
   const showTravelCallout =
-    totals.beyondRadius && totals.travelCents > 0;
+    totals.beyondRadius && totals.travelCents > 0 && totals.travelAllowed;
+  const showZipRefuse = totals.zipRefused;
   const [hubConfig, setHubConfig] = useState<ServiceAreaConfig | null>(null);
 
   useEffect(() => {
@@ -152,6 +153,28 @@ export default function WhereStep() {
           Two stops. We handle everything in between. No warehouse logistics
           for you to manage.
         </p>
+
+        {showZipRefuse && (
+          <div
+            role="alert"
+            style={{
+              maxWidth: 640,
+              marginBottom: 16,
+              padding: "12px 14px",
+              borderRadius: 10,
+              background: "rgba(198,50,60,0.08)",
+              border: "1px solid rgba(198,50,60,0.25)",
+              fontFamily: "var(--font-body)",
+              fontSize: 13.5,
+              fontWeight: 600,
+              color: "var(--status-error)",
+              lineHeight: 1.45,
+            }}
+          >
+            {totals.travelLabel ||
+              "We can’t serve that delivery ZIP. Choose another address to continue."}
+          </div>
+        )}
 
         {showTravelCallout && (
           <div

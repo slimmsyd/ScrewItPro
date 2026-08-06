@@ -21,6 +21,8 @@ export async function GET() {
         radiusM: c.radiusM,
         /** Model 1 out-of-area travel fee (dollars). Server re-prices at book. */
         farFee: c.farFee,
+        /** ZIP refuse/surcharge overrides from ops_rules (server re-validates). */
+        exceptions: c.exceptions,
       },
       {
         headers: {

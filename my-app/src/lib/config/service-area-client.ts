@@ -1,9 +1,10 @@
 /**
  * Browser fetch of public service-area config (module-level session cache).
- * Includes farFee for Model 1 travel preview (server re-prices for Stripe).
+ * Includes farFee + ZIP exceptions for Model 1 travel preview (server re-prices).
  */
 import {
   defaultsFromBusiness,
+  parseTravelExceptions,
   type ServiceAreaConfig,
 } from "@/lib/config/service-area";
 
@@ -35,6 +36,7 @@ export async function fetchServiceAreaConfig(): Promise<ServiceAreaConfig> {
         radiusMiles?: number;
         radiusM?: number;
         farFee?: number;
+        exceptions?: unknown;
       };
       if (
         !json.ok ||
@@ -59,6 +61,7 @@ export async function fetchServiceAreaConfig(): Promise<ServiceAreaConfig> {
         radiusMiles: json.radiusMiles,
         radiusM: json.radiusM,
         farFee,
+        exceptions: parseTravelExceptions(json.exceptions),
       };
       cached = next;
       return next;
