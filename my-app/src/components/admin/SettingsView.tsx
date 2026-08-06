@@ -252,7 +252,7 @@ export default function SettingsView() {
       k: "access",
       icon: <Shield size={15} />,
       label: "Roles and access",
-      val: "Invite · staff roles",
+      val: "Team · invites",
     },
   ];
 

@@ -33,17 +33,32 @@ type RosterResponse = {
   message?: string;
 };
 
+/** Short labels for tables / messages */
 const ROLE_LABEL: Record<StaffInviteRole, string> = {
   admin: "Admin",
   technician: "Technician",
   driver: "Driver",
 };
 
+/** Plain-language role picker lines */
+const ROLE_OPTION_LABEL: Record<StaffInviteRole, string> = {
+  admin: "Admin — full access to this Admin app",
+  technician: "Technician — shop & build team (app coming soon)",
+  driver: "Driver — delivery team (app coming soon)",
+};
+
 function statusLabel(status: string): string {
-  if (status === "invited") return "Invited";
-  if (status === "active") return "Active";
-  if (status === "suspended") return "Suspended";
+  if (status === "invited") return "Invite sent";
+  if (status === "active") return "Signed in";
+  if (status === "suspended") return "Paused";
   return status;
+}
+
+function roleDisplay(role: string): string {
+  if (role === "admin") return "Admin";
+  if (role === "technician") return "Technician";
+  if (role === "driver") return "Driver";
+  return role;
 }
 
 export default function TeamAccessPanel() {
@@ -66,14 +81,19 @@ export default function TeamAccessPanel() {
       const res = await fetch("/api/admin/team");
       const data = (await res.json()) as RosterResponse;
       if (!res.ok || !data.ok) {
-        setError(data.message ?? data.error ?? "Could not load team");
+        setError(
+          data.message ??
+            "We couldn't load your team list. Try refresh, or sign in again."
+        );
         return;
       }
       setSuperAdmins(data.superAdmins ?? []);
       setMembers(data.members ?? []);
       setInviterIsSuperAdmin(Boolean(data.inviterIsSuperAdmin));
     } catch {
-      setError("Could not load team");
+      setError(
+        "We couldn't load your team list. Check your connection and try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -120,10 +140,10 @@ export default function TeamAccessPanel() {
         setInviteErr(
           data.message ??
             (data.error === "already_staff"
-              ? "That person already has this role."
+              ? "That person is already on the team with this role."
               : data.error === "role_not_allowed"
-                ? "Only super admins can invite admins."
-                : "Invite failed.")
+                ? "Only account owners can add new Admins. You can still add Technicians or Drivers."
+                : "We couldn't send that invite. Try again in a moment.")
         );
         return;
       }
@@ -131,19 +151,19 @@ export default function TeamAccessPanel() {
       const roleName = ROLE_LABEL[role];
       if (data.emailSent) {
         setInviteMsg(
-          `Invited ${who} as ${roleName}. We emailed them a ScrewIt Pros invite link.`
+          `Invite sent to ${who} as ${roleName}. They'll get an email from ScrewIt Pros — after they open the link and sign in, their status becomes “Signed in.”`
         );
       } else {
         setInviteMsg(
-          `Saved ${who} as ${roleName} (Invited). Email not delivered${
-            data.emailError ? `: ${data.emailError}` : ""
-          }. They can still sign in once you fix email, or use Google with that address.`
+          `${who} was added as ${roleName}, but the email didn't go out${
+            data.emailError ? ` (${data.emailError})` : ""
+          }. Ask them to sign in with Google using that same email, or retry after email is fixed.`
         );
       }
       setEmail("");
       await load();
     } catch {
-      setInviteErr("Invite failed.");
+      setInviteErr("We couldn't send that invite. Try again in a moment.");
     } finally {
       setInviting(false);
     }
@@ -173,9 +193,23 @@ export default function TeamAccessPanel() {
     <>
       <Head
         title="Roles and access"
-        sub="care owners + invited staff"
-        help="Super admins are fixed by server config (SUPER_ADMIN_EMAILS). Invite adds admin, technician, or driver on their profile. Field portals may still be building."
+        sub="who can open Admin"
+        help="This page shows who can run the business in Admin, and lets you email invites to teammates. Account owners are set by the company (not from this form). Inviting someone as Technician or Driver saves their role even if their app screens are still coming soon."
       />
+
+      <p
+        style={{
+          margin: "10px 0 0",
+          fontSize: 13,
+          lineHeight: 1.55,
+          color: "var(--ink-700)",
+          maxWidth: 520,
+        }}
+      >
+        Use this page to see who can use Admin and to invite people onto the
+        team. They get an email with a secure link. After they sign in, they
+        show as <strong style={{ fontWeight: 600 }}>Signed in</strong>.
+      </p>
 
       {loading ? (
         <div
@@ -189,7 +223,7 @@ export default function TeamAccessPanel() {
           }}
         >
           <Loader2 size={16} aria-hidden style={{ animation: "spin 1s linear infinite" }} />
-          Loading team…
+          Loading your team…
         </div>
       ) : error ? (
         <Note tone="w" icon={<HelpCircle size={13} />}>
@@ -199,7 +233,7 @@ export default function TeamAccessPanel() {
         <>
           <p
             style={{
-              margin: "12px 0 6px",
+              margin: "18px 0 6px",
               fontSize: 11,
               fontWeight: 700,
               letterSpacing: "0.06em",
@@ -207,7 +241,19 @@ export default function TeamAccessPanel() {
               color: "var(--ink-500)",
             }}
           >
-            Super admins (company care)
+            Account owners
+          </p>
+          <p
+            style={{
+              margin: "0 0 8px",
+              fontSize: 12,
+              lineHeight: 1.45,
+              color: "var(--ink-500)",
+            }}
+          >
+            Full access to Admin (settings, leads, invites). These emails are
+            set by the company — you can&apos;t add or remove owners from this
+            screen.
           </p>
           <div
             style={{
@@ -224,9 +270,9 @@ export default function TeamAccessPanel() {
                   color: "var(--ink-500)",
                 }}
               >
-                None configured. Set{" "}
-                <code style={{ fontSize: 11 }}>SUPER_ADMIN_EMAILS</code> on the
-                server (care owners). Not inviteable here.
+                No account owners are listed yet. Ask your developer or
+                ScrewIt setup contact to add the care team emails on the
+                server.
               </div>
             ) : (
               <table
@@ -238,7 +284,7 @@ export default function TeamAccessPanel() {
                 <thead>
                   <tr>
                     <th style={th}>Email</th>
-                    <th style={th}>Access</th>
+                    <th style={th}>What they can do</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -246,7 +292,7 @@ export default function TeamAccessPanel() {
                     <tr key={s.email}>
                       <td style={{ ...td, fontWeight: 600 }}>{s.email}</td>
                       <td style={{ ...td, color: "var(--ink-500)", fontSize: 11.5 }}>
-                        Full Admin · env allowlist
+                        Full Admin access · company owner
                       </td>
                     </tr>
                   ))}
@@ -254,21 +300,10 @@ export default function TeamAccessPanel() {
               </table>
             )}
           </div>
-          <p
-            style={{
-              margin: "6px 0 0",
-              fontSize: 11,
-              color: "var(--ink-500)",
-              lineHeight: 1.45,
-            }}
-          >
-            Super admins cannot be created or removed from this screen — only via
-            server env.
-          </p>
 
           <p
             style={{
-              margin: "20px 0 6px",
+              margin: "22px 0 6px",
               fontSize: 11,
               fontWeight: 700,
               letterSpacing: "0.06em",
@@ -276,7 +311,25 @@ export default function TeamAccessPanel() {
               color: "var(--ink-500)",
             }}
           >
-            Invited staff
+            Your team
+          </p>
+          <p
+            style={{
+              margin: "0 0 8px",
+              fontSize: 12,
+              lineHeight: 1.45,
+              color: "var(--ink-500)",
+            }}
+          >
+            People you&apos;ve invited.{" "}
+            <strong style={{ fontWeight: 600, color: "var(--ink-700)" }}>
+              Invite sent
+            </strong>{" "}
+            means we emailed them;{" "}
+            <strong style={{ fontWeight: 600, color: "var(--ink-700)" }}>
+              Signed in
+            </strong>{" "}
+            means they accepted and logged in at least once.
           </p>
           <div
             style={{
@@ -293,7 +346,7 @@ export default function TeamAccessPanel() {
                   color: "var(--ink-500)",
                 }}
               >
-                No staff profiles yet. Invite someone below to test the loop.
+                No one invited yet. Use the form below to email a teammate.
               </div>
             ) : (
               <table
@@ -313,8 +366,8 @@ export default function TeamAccessPanel() {
                   {members.map((m) => (
                     <tr key={m.id}>
                       <td style={{ ...td, fontWeight: 600 }}>{m.email}</td>
-                      <td style={{ ...td, fontSize: 11.5, textTransform: "capitalize" }}>
-                        {m.role}
+                      <td style={{ ...td, fontSize: 11.5 }}>
+                        {roleDisplay(m.role)}
                       </td>
                       <td style={{ ...td, fontSize: 11.5, color: "var(--ink-500)" }}>
                         {statusLabel(m.status)}
@@ -328,7 +381,7 @@ export default function TeamAccessPanel() {
 
           <p
             style={{
-              margin: "20px 0 8px",
+              margin: "22px 0 6px",
               fontSize: 11,
               fontWeight: 700,
               letterSpacing: "0.06em",
@@ -336,7 +389,23 @@ export default function TeamAccessPanel() {
               color: "var(--ink-500)",
             }}
           >
-            Invite member
+            Invite someone
+          </p>
+          <p
+            style={{
+              margin: "0 0 8px",
+              fontSize: 12,
+              lineHeight: 1.45,
+              color: "var(--ink-500)",
+            }}
+          >
+            We&apos;ll email them a ScrewIt Pros invite. Pick{" "}
+            <strong style={{ fontWeight: 600, color: "var(--ink-700)" }}>
+              Admin
+            </strong>{" "}
+            only for people who should manage the business here.
+            Technician and Driver roles are for field team (their apps are
+            still being built).
           </p>
           <form
             onSubmit={onInvite}
@@ -363,14 +432,14 @@ export default function TeamAccessPanel() {
                   marginBottom: 4,
                 }}
               >
-                Email
+                Their email
               </span>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
+                placeholder="teammate@company.com"
                 className="sip-admin-focus"
                 style={{
                   width: "100%",
@@ -384,7 +453,7 @@ export default function TeamAccessPanel() {
                 }}
               />
             </label>
-            <label style={{ flex: "0 0 140px" }}>
+            <label style={{ flex: "1 1 220px", minWidth: 160 }}>
               <span
                 style={{
                   display: "block",
@@ -396,7 +465,7 @@ export default function TeamAccessPanel() {
                   marginBottom: 4,
                 }}
               >
-                Role
+                Role on the team
               </span>
               <select
                 value={role}
@@ -415,7 +484,7 @@ export default function TeamAccessPanel() {
               >
                 {roleOptions.map((r) => (
                   <option key={r} value={r}>
-                    {ROLE_LABEL[r]}
+                    {ROLE_OPTION_LABEL[r]}
                   </option>
                 ))}
               </select>
@@ -439,14 +508,14 @@ export default function TeamAccessPanel() {
               ) : (
                 <UserPlus size={14} aria-hidden />
               )}
-              Send invite
+              Send invite email
             </button>
             <button
               type="button"
               onClick={() => void load()}
               style={{ ...btnGhost, height: 36 }}
             >
-              Refresh
+              Refresh list
             </button>
           </form>
 
