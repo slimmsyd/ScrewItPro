@@ -148,6 +148,18 @@ describe("evaluateTravelPricing (Model 1 — free zone)", () => {
     expect(r.fee).toBe(0);
     expect(r.band).toBe("in_zone");
   });
+
+  it("matches ZIP+4 against 5-digit exception", () => {
+    const r = evaluateTravelPricing({
+      miles: 5,
+      radiusMiles: radius,
+      farFee,
+      exceptions: [{ zip: "77001", mode: "refuse", why: "x" }],
+      zip: "77001-1234",
+    });
+    expect(r.allowed).toBe(false);
+    expect(r.band).toBe("zip_refuse");
+  });
 });
 
 describe("coverageFromTravelPricing", () => {

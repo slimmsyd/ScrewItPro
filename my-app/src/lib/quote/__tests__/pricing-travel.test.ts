@@ -8,6 +8,7 @@ const rates = {
   lng: -95.3698,
   radiusMiles: 40,
   farFee: 45,
+  exceptions: [] as { zip: string; mode: "surcharge" | "refuse"; why: string }[],
 };
 
 function draftWithDelivery(lat: number, lng: number): QuoteDraft {
@@ -57,5 +58,22 @@ describe("computeQuoteTotals travel (Model 1)", () => {
     // deposit includes travel
     expect(t.depositCents).toBeGreaterThan(0);
     expect(t.depositCents + t.balanceCents).toBe(t.subtotalCents);
+    expect(t.travelAllowed).toBe(true);
+  });
+
+  it("ZIP refuse zeros payable totals and flags zipRefused", () => {
+    const d = draftWithDelivery(rates.lat, rates.lng);
+    d.deliveryAddress = {
+      ...d.deliveryAddress!,
+      zip: "77001",
+    };
+    const t = computeQuoteTotals(d, {
+      ...rates,
+      exceptions: [{ zip: "77001", mode: "refuse", why: "no parking" }],
+    });
+    expect(t.zipRefused).toBe(true);
+    expect(t.travelAllowed).toBe(false);
+    expect(t.subtotalCents).toBe(0);
+    expect(t.depositCents).toBe(0);
   });
 });

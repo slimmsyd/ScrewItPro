@@ -15,6 +15,7 @@ describe("service-area config", () => {
     expect(d.lat).toBe(BUSINESS.geo.lat);
     expect(d.lng).toBe(BUSINESS.geo.lng);
     expect(d.farFee).toBe(45);
+    expect(d.exceptions).toEqual([]);
   });
 
   it("normalizeHub computes radius_m from miles", () => {

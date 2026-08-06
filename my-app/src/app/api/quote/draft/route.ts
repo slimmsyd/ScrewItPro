@@ -74,6 +74,19 @@ export async function POST(request: Request) {
       },
     });
 
+    if (!priced.travelAllowed) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "zip_refused",
+          message:
+            priced.travelLabel ||
+            "We can’t serve that delivery ZIP. Choose another address.",
+        },
+        { status: 400 }
+      );
+    }
+
     if (priced.subtotalCents <= 0) {
       return NextResponse.json(
         { ok: false, error: "empty_quote", message: "Add items before booking." },

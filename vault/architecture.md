@@ -353,6 +353,7 @@ Health (no secrets): `GET /api/health` via `getEnvStatus()`.
 | 2026-08-06 | Admin port Slice 0–1: `AdminAppShell` + progressive nav + Settings (persist deposit/hub only). Route groups `(app)` vs `(public)/signin`. Home → `/admin/settings`. |
 | 2026-08-06 | **Where we work:** `app_settings.hub` → `/api/public/service-area` → Places gate + HoustonMap. `BUSINESS.geo` is fallback only. Fixed map circle (was 55 km). |
 | 2026-08-06 | **Model 1 travel:** free inside hub radius; outside radius soft-wall + `ops.farFee` on quote Price / server draft. Deposit % includes travel (Stripe-ready). Tiers reserved, not on customer fee. |
+| 2026-08-06 | **ZIP exceptions wired:** `ops_rules.exceptions` → public service-area + client preview + server draft/soft-gate refuse (`zip_refused`). |
 | (prior) | Google Auth unified onto Supabase OAuth; legacy `sip_session` cleared in middleware |
 | (prior) | Interim orders/payments for deposit Checkout scaffold |
 | (prior) | Customer portal Phase 0 shell (church vs state) |

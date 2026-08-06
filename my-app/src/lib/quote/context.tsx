@@ -32,7 +32,7 @@ import type { ResolvedPlace } from "@/lib/places";
 import { fetchServiceAreaConfig } from "@/lib/config/service-area-client";
 
 /** TX-only soft wall: outside radius is bookable; non-TX is not. */
-function isBookablePlace(place: ResolvedPlace | null): boolean {
+function isTxPlace(place: ResolvedPlace | null): boolean {
   if (!place) return false;
   if (place.state && place.state.toUpperCase() !== "TX") return false;
   return true;
@@ -88,6 +88,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         lng: c.lng,
         radiusMiles: c.radiusMiles,
         farFee: c.farFee,
+        exceptions: c.exceptions ?? [],
       });
     });
     return () => {
@@ -213,12 +214,12 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     [draft, travelRates]
   );
 
-  // Model 1 soft wall: outside radius is bookable; fee shows on Price.
+  // Model 1 soft wall: outside radius bookable; ZIP refuse blocks delivery.
   const canProceedFromWhere = Boolean(
-    isBookablePlace(draft.deliveryAddress) &&
-      (draft.pickupMode === "ship"
-        ? true
-        : isBookablePlace(draft.pickupAddress))
+    isTxPlace(draft.deliveryAddress) &&
+      totals.travelAllowed &&
+      !totals.zipRefused &&
+      (draft.pickupMode === "ship" ? true : isTxPlace(draft.pickupAddress))
   );
 
   const canProceedFromItems = draft.items.length > 0;

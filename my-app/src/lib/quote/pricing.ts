@@ -2,7 +2,7 @@
  * Placeholder pricing for the Get-a-Price quote journey.
  * Swap for admin pricing_rules later without changing UI.
  *
- * Travel (Model 1): free inside hub radius; farFee outside.
+ * Travel (Model 1): free inside hub radius; farFee outside; ZIP exceptions.
  * Deposit % applies to subtotal including travel (Stripe-ready).
  */
 import type { HomeCategory, QuoteDraft, QuoteTotals } from "@/lib/quote/types";
@@ -11,6 +11,7 @@ import { haversineM } from "@/lib/config/service-area";
 import {
   evaluateTravelPricing,
   metersToMiles,
+  type TravelException,
   type TravelPricingResult,
 } from "@/lib/quote/travel-pricing";
 
@@ -34,12 +35,13 @@ export function formatUsd(cents: number): string {
   }).format(cents / 100);
 }
 
-/** Hub + farFee needed to price travel on the client (from public service-area). */
+/** Hub + farFee + ZIP exceptions for client travel preview. */
 export type TravelRateCard = {
   lat: number;
   lng: number;
   radiusMiles: number;
   farFee: number;
+  exceptions: TravelException[];
 };
 
 export function travelFromDelivery(
@@ -59,6 +61,7 @@ export function travelFromDelivery(
     miles,
     radiusMiles: rates.radiusMiles,
     farFee: rates.farFee,
+    exceptions: rates.exceptions,
     zip: place.zip,
   });
 }
@@ -76,16 +79,20 @@ export function computeQuoteTotals(
   const deliveryCents = itemCount > 0 ? DELIVERY_CENTS : 0;
 
   const travel = travelFromDelivery(draft, rates);
+  const travelAllowed = travel?.allowed ?? true;
   const travelCents =
     travel && travel.allowed ? travel.feeCents : 0;
   const travelLabel = travel?.label ?? "No travel fee";
   const beyondRadius = travel?.beyondRadius ?? false;
   const travelMiles = travel?.miles ?? 0;
+  const zipRefused = travel?.band === "zip_refuse";
 
   const subtotalCents =
     assemblyCents + pickupCents + deliveryCents + travelCents;
   const depositCents =
-    subtotalCents > 0 ? computeDepositCents(subtotalCents) : 0;
+    subtotalCents > 0 && travelAllowed
+      ? computeDepositCents(subtotalCents)
+      : 0;
   const balanceCents = Math.max(0, subtotalCents - depositCents);
 
   return {
@@ -96,9 +103,11 @@ export function computeQuoteTotals(
     travelLabel,
     beyondRadius,
     travelMiles,
-    subtotalCents,
+    travelAllowed,
+    zipRefused,
+    subtotalCents: travelAllowed ? subtotalCents : 0,
     depositCents,
-    balanceCents,
+    balanceCents: travelAllowed ? balanceCents : 0,
     itemCount,
   };
 }

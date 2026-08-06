@@ -68,13 +68,24 @@ function normalizeMiles(miles: number): number {
   return miles;
 }
 
+/** Normalize ZIP for matching: digits only, first 5 (handles ZIP+4). */
+export function normalizeZip(zip: string | undefined): string {
+  if (!zip?.trim()) return "";
+  const digits = zip.replace(/\D/g, "");
+  if (digits.length >= 5) return digits.slice(0, 5);
+  return digits;
+}
+
 function matchZipException(
   exceptions: TravelException[] | undefined,
   zip: string | undefined
 ): TravelException | undefined {
-  if (!zip?.trim() || !exceptions?.length) return undefined;
-  const needle = zip.trim();
-  return exceptions.find((e) => e.zip.trim() && e.zip.trim() === needle);
+  const needle = normalizeZip(zip);
+  if (!needle || !exceptions?.length) return undefined;
+  return exceptions.find((e) => {
+    const ez = normalizeZip(e.zip);
+    return ez.length > 0 && ez === needle;
+  });
 }
 
 /**

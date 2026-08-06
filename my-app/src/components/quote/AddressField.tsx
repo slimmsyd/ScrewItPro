@@ -18,6 +18,8 @@ import {
   type ResolvedPlace,
 } from "@/lib/places";
 import { BUSINESS } from "@/lib/seo/business";
+import { evaluateTravelPricing, metersToMiles } from "@/lib/quote/travel-pricing";
+import { haversineM } from "@/lib/config/service-area";
 
 const SUPPORT_EMAIL = BUSINESS.email;
 
@@ -124,26 +126,54 @@ export default function AddressField({
           resolvePlace(s.placeId),
           getServiceArea(),
         ]);
-        // Fail closed on non-TX; soft wall outside radius (Model 1).
+        // Fail closed on non-TX; ZIP refuse hard-blocks; soft wall outside radius.
         if (resolved.state && resolved.state.toUpperCase() !== "TX") {
           setError(
             "We currently serve the Houston Metro area in Texas. That address is outside Texas."
           );
           onChange(null);
           setText(resolved.formattedAddress);
-        } else if (!resolved.inServiceArea) {
-          const fee =
-            typeof area.farFee === "number" && area.farFee > 0
-              ? ` A +$${Math.round(area.farFee)} travel fee will appear on your quote.`
-              : "";
-          setNotice(
-            `Outside our usual ${area.radiusMiles} mi area from the hub — still bookable.${fee}`
-          );
-          onChange(resolved);
-          setText(resolved.formattedAddress);
         } else {
-          onChange(resolved);
-          setText(resolved.formattedAddress);
+          const miles = metersToMiles(
+            haversineM(
+              { lat: area.lat, lng: area.lng },
+              { lat: resolved.lat, lng: resolved.lng }
+            )
+          );
+          const travel = evaluateTravelPricing({
+            miles,
+            radiusMiles: area.radiusMiles,
+            farFee: area.farFee,
+            exceptions: area.exceptions,
+            zip: resolved.zip,
+          });
+          if (!travel.allowed) {
+            setError(
+              travel.label ||
+                "We can’t serve that ZIP yet. Try another delivery address."
+            );
+            onChange(null);
+            setText(resolved.formattedAddress);
+          } else if (travel.band === "zip_surcharge") {
+            setNotice(
+              `ZIP surcharge applies — ${travel.label}. Still bookable.`
+            );
+            onChange(resolved);
+            setText(resolved.formattedAddress);
+          } else if (travel.beyondRadius) {
+            const fee =
+              travel.fee > 0
+                ? ` A +$${Math.round(travel.fee)} travel fee will appear on your quote.`
+                : "";
+            setNotice(
+              `Outside our usual ${area.radiusMiles} mi area from the hub — still bookable.${fee}`
+            );
+            onChange(resolved);
+            setText(resolved.formattedAddress);
+          } else {
+            onChange(resolved);
+            setText(resolved.formattedAddress);
+          }
         }
         setOpen(false);
         setSuggestions([]);
