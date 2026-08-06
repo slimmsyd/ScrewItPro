@@ -1225,18 +1225,22 @@ header[id] {
  }
 }
 
-/* Admin Settings: ? help tooltips */
+/* Admin Settings: ? help tooltips (bubble is portaled — fixed, never clipped) */
 .sip-admin-help {
   position: relative;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
   vertical-align: middle;
+  /* Comfortable hit target without growing the label row */
+  min-width: 28px;
+  min-height: 28px;
 }
 
 .sip-admin-help-btn {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 999px;
   border: 1px solid var(--border-default);
   background: #fff;
@@ -1260,29 +1264,36 @@ header[id] {
 }
 
 .sip-admin-help-bubble {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 8px);
-  transform: translateX(-50%);
-  z-index: 40;
   width: max-content;
-  max-width: min(280px, 70vw);
-  padding: 10px 12px;
+  max-width: min(300px, calc(100vw - 24px));
+  padding: 11px 13px;
   border-radius: 10px;
   background: var(--blue-deep);
   color: #fff;
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 500;
-  line-height: 1.45;
-  box-shadow: 0 10px 28px -12px rgba(11, 16, 48, 0.45);
-  opacity: 0;
-  visibility: hidden;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  box-shadow: 0 12px 32px -10px rgba(11, 16, 48, 0.5);
   pointer-events: none;
-  transition: opacity 0.12s ease, visibility 0.12s ease;
+  white-space: normal;
+  text-align: left;
+  hyphens: auto;
 }
 
-.sip-admin-help-bubble::after {
+/* Portaled: fixed to viewport so Settings overflow cannot crop text */
+.sip-admin-help-bubble--fixed {
+  position: fixed;
+  z-index: 10050;
+  transform: translate(-50%, -100%); /* default: above */
+}
+
+.sip-admin-help-bubble--fixed.sip-admin-help-bubble--below {
+  transform: translate(-50%, 0);
+}
+
+.sip-admin-help-bubble--fixed.sip-admin-help-bubble--above::after {
   content: "";
   position: absolute;
   top: 100%;
@@ -1292,15 +1303,18 @@ header[id] {
   border-top-color: var(--blue-deep);
 }
 
-.sip-admin-help:hover .sip-admin-help-bubble,
-.sip-admin-help:focus-within .sip-admin-help-bubble {
-  opacity: 1;
-  visibility: visible;
+.sip-admin-help-bubble--fixed.sip-admin-help-bubble--below::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: var(--blue-deep);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sip-admin-help-btn,
-  .sip-admin-help-bubble {
+  .sip-admin-help-btn {
     transition: none;
   }
 }
